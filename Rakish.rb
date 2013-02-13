@@ -4,6 +4,10 @@
 
 require 'set'
 
+# stupid thing needed because rake doesn't check for "" arguments so we make an explicit task
+task "" do
+end
+
 # rake extensions
 
 module Rake
