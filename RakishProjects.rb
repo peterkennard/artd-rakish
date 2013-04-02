@@ -193,7 +193,7 @@ class Project < ProjectConfig
 	#   :id          => uuid to assign to project in "uuid string format"
 	#                    '2CD0548E-6945-4b77-83B9-D0993009CD75'
 	#
-	# &block is always yeilded to in the directory of the projects file, and the 
+	# &block is always yielded to in the directory of the projects file, and the
 	# Rake namespace of the new project, and called in this instance's context
 		
 	def initialize(args={},&block)
@@ -268,7 +268,7 @@ class Project < ProjectConfig
 	end
 
 	# called after initializers on all projects and before rake 
-	# starts ececuting tasks
+	# starts executing tasks
 	def preBuild	
 		
 		cd @projectDir, :verbose=>verbose? do
