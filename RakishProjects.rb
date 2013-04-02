@@ -16,7 +16,11 @@ class Build
 		@projectsByModule={}
 		
 		task :resolve do |t|
-			puts "Staring build. for #{Rakish::GlobalConfig.instance.CONFIG}\""
+		    if(defined? Rakish::GlobalConfig.instance.CONFIG)
+			    puts "Staring build. for #{Rakish::GlobalConfig.instance.CONFIG}\""
+			else
+                puts "Staring build.";
+            end
 			@projects.each do |p|
 				p.preBuild
 			end
@@ -563,6 +567,6 @@ end
 # global  alias for Rakish::Project.new()
 def ParentProject(args={},&block)
 	puts("##### Parent Project !!!");
-	Rakish::Project.new(args,&block)
+#	Rakish::Project.new(args,&block)
 	puts("##### end Parent Project !!!");
 end
