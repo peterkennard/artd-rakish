@@ -74,12 +74,14 @@ module BuildConfigMod
 	end
 		
 	def configureTools()	
-		require File.join(MAKEDIR,'PlatformTools.rb');		
-		@@tools_ ||= PlatformTools.getConfiguredTools(self.CONFIG,self);
-		@@objx_ = @@tools_.OBJEXT
-		@@libx_ = @@tools_.LIBEXT
-		@@dllx_ = @@tools_.DLLEXT
-		@@dllx_ = @@tools_.EXEEXT
+		if(defined? self.CONFIG)
+            require File.join(MAKEDIR,'PlatformTools.rb');
+            @@tools_ ||= PlatformTools.getConfiguredTools(self.CONFIG,self);
+            @@objx_ = @@tools_.OBJEXT
+            @@libx_ = @@tools_.LIBEXT
+            @@dllx_ = @@tools_.DLLEXT
+            @@dllx_ = @@tools_.EXEEXT
+		end
 	end
 				
 	def OBJEXT
@@ -436,7 +438,6 @@ class GlobalConfig < Module
 			# get config from command line	
 			cfg.CONFIG ||= ENV['CONFIG'];
 			cfg.CONFIG ||= defaultConfig
-
 
 			cfg.thirdPartyPath ||= File.join(MAKEDIR,'../../third-party');
 			cfg.thirdPartyPath = File.expand_path(cfg.thirdPartyPath);

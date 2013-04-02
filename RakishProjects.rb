@@ -19,6 +19,7 @@ class Build
 		    if(defined? Rakish::GlobalConfig.instance.CONFIG)
 			    puts "Staring build. for #{Rakish::GlobalConfig.instance.CONFIG}\""
 			else
+		        Rakish::GlobalConfig.instance.CONFIG = "not set";
                 puts "Staring build.";
             end
 			@projects.each do |p|
@@ -139,7 +140,7 @@ class Project < ProjectConfig
 	task :build   		=> [ :includes ];
 	task :compile 		=> [ :includes ];
 	task :default		=> [ :build ];
-	
+
 	# returns the Rake task namespace for this project
 	attr_reader :myNamespace
 	alias 		:moduleName :myNamespace
@@ -567,6 +568,6 @@ end
 # global  alias for Rakish::Project.new()
 def ParentProject(args={},&block)
 	puts("##### Parent Project !!!");
-#	Rakish::Project.new(args,&block)
+	Rakish::Project.new(args,&block)
 	puts("##### end Parent Project !!!");
 end
