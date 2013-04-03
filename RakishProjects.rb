@@ -263,12 +263,14 @@ class Project < ProjectConfig
 			ensureDirectoryTask(OBJPATH());
 		
 			# call instance initializer block inside local namespace.
-			# we are in the directory the defining file is contained in.
+			# and in the directory the defining file is contained in.
 
 			ns = Rake.application.in_namespace(@myNamespace) do					
 				@myNamespace = "#{Rake.application.current_scope.join(':')}"
-				instance_eval(&block)	
-			end	
+				if(block != NIL)
+				    instance_eval(&block)
+				end
+			end
 		end		
 	end
 
@@ -567,7 +569,5 @@ end
 
 # global  alias for Rakish::Project.new()
 def ParentProject(args={},&block)
-	puts("##### Parent Project !!!");
 	Rakish::Project.new(args,&block)
-	puts("##### end Parent Project !!!");
 end
