@@ -10,7 +10,7 @@ module BuildConfigMod
 	include Rake::DSL
 
     def self.included(base)
-        base.addModInit(self.instance_method(:initializer));
+        base.addModInit(base,self.instance_method(:initializer));
     end
 
  	def initializer(pnt)
@@ -110,16 +110,27 @@ end
 class BuildConfig < Module
     include Util
 
-    @@__inits = Set.new;
+    @@_inits = {};
 
     def initialize(pnt=nil)
-        @@__inits.each do |i|
-            i.bind(self).call(pnt);
+
+        # puts("initalizing #{self}");
+
+        # initalize the included "config" modules from parent config
+        self.class.ancestors.reverse_each do |ancestor|
+            inits = @@_inits[ancestor.hash];
+            if(inits != nil)
+                inits.each do |init|
+            #        puts("   --> init for #{self} for #{init}");
+                    init.bind(self).call(pnt);
+                end
+            end
         end
     end
+
     protected
-    def self.addModInit(mod)
-       @@__inits.add(mod);
+    def self.addModInit(base,init)
+        (@@_inits[base.hash] ||= []) << init;
     end
 
     include BuildConfigMod

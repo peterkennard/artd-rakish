@@ -135,7 +135,7 @@ class Project < BuildConfig
 		task t;
 	end
 
-# TODO: much of this need to be migrated to the C++ project and other project types
+# TODO: much of this needs to be migrated to the C++ project and other project types
 	task :autogen 		=> [ :includes, :vcproj ];
 	task :cleanautogen 	=> [ :cleanincludes, :cleandepends, :vcprojclean ];
 	task :depends		=> [ :includes ];

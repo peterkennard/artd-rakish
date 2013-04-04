@@ -4,20 +4,25 @@ require "#{myPath}/RakishProject.rb"
 module Rakish
 
 
-module JavaUtil
+module JavaProjectConfig
 
-    def self.included(other)
+    def self.included(base)
+        base.addModInit(base,self.instance_method(:initializer));
     end
-
+ 	def initializer(pnt)
+ 	end
 end
 
 class JavaProject < Project
-	include JavaUtil
+	include JavaProjectConfig
 
 	def initialize(args={},&block)
         super(args,&block);
 	end
 end
+
+
+
 
 end # Rakish
 
