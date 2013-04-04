@@ -31,6 +31,16 @@ class JavaProject < Project
 	def initialize(args={},&block)
         super(args,&block);
 	end
+
+    def javac()
+
+        cmdline = "\"#{jdk_}/bin/javac.exe\" -help";
+        puts cmdline
+        system( cmdline );
+
+    end
+
+
 end
 
 

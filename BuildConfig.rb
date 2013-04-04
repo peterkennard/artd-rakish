@@ -121,7 +121,7 @@ class BuildConfig < Module
             inits = @@_inits[ancestor.hash];
             if(inits != nil)
                 inits.each do |init|
-            #        puts("   --> init for #{self} for #{init}");
+                    # puts("   --> init for #{self} for #{init}");
                     init.bind(self).call(pnt);
                 end
             end
