@@ -19,7 +19,6 @@ class JavaProject < Project
 	end
 end
 
-
 end # Rakish
 
 # global  alias for Rakish::JavaProject.new()
