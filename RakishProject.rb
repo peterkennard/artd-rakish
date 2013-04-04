@@ -17,10 +17,10 @@ class Build
 		
 		task :resolve do |t|
 		    if(defined? Rakish::GlobalConfig.instance.CONFIG)
-			    puts "Staring build. for #{Rakish::GlobalConfig.instance.CONFIG}\""
+			    puts "Starting build. for #{Rakish::GlobalConfig.instance.CONFIG}\""
 			else
 		        Rakish::GlobalConfig.instance.CONFIG = "not set";
-                puts "Staring build.";
+                puts "Starting build.";
             end
 			@projects.each do |p|
 				p.preBuild
