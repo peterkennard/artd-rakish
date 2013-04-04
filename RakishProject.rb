@@ -135,6 +135,7 @@ class Project < BuildConfig
 		task t;
 	end
 
+# TODO: much of this need to be migrated to the C++ project and other project types
 	task :autogen 		=> [ :includes, :vcproj ];
 	task :cleanautogen 	=> [ :cleanincludes, :cleandepends, :vcprojclean ];
 	task :depends		=> [ :includes ];
@@ -224,15 +225,11 @@ class Project < BuildConfig
 		#		break
 		# end
 
-		# load all subprojects this is dependent on
-		# unless it is from a vcProject which has already checked dependencies
-
 		dependencies = args[:dependsUpon]
 
 		parent = args[:config]
 		parent ||= GlobalConfig.instance
 
-		super(parent) {}
 
 		@projectFile = myFile
 		@projectDir  = File.dirname(myFile)
@@ -246,33 +243,35 @@ class Project < BuildConfig
 			projName = "#{package}-#{name}";
 		end
 		@myNamespace = projName
-
 		@myName 	= name;
 		@myPackage 	= package;
 
+
+		# load all subprojects this is dependent on
 		@build.loadProjects(dependencies) if dependencies
 		@build.registerProject(self);
 
+        # initialize config properties from the parent and initialize included configuration modules.
+		super(parent) {}
+
 		cd @projectDir, :verbose=>verbose? do
-
-#			addIncludePaths [
-#				"#{@INCDIR}"
-#			];
-
-			ensureDirectoryTask(OBJDIR());
-			ensureDirectoryTask(OBJPATH());
-
 			# call instance initializer block inside local namespace.
 			# and in the directory the defining file is contained in.
 
 			ns = Rake.application.in_namespace(@myNamespace) do
 				@myNamespace = "#{Rake.application.current_scope.join(':')}"
-				if(block != NIL)
+		        initProject(args);
+			    if(block != NIL)
 				    instance_eval(&block)
 				end
 			end
 		end
 	end
+
+    # called before user supplied initializer block is executed
+    # in the project's directory and namespace
+    def initProject(args)
+    end
 
 	# called after initializers on all projects and before rake
 	# starts executing tasks
@@ -331,7 +330,7 @@ class Project < BuildConfig
 
 end
 
-# initialize the build instance
+# initialize the build application instance
 Rakish.build
 
 end # Rakish

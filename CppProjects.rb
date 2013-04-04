@@ -1,7 +1,7 @@
 
 
 
-class OldProject < BuildConfig
+class CppProject < Project
 	include Rakish::Util
 
 	# initialize "static" class variables
@@ -65,23 +65,6 @@ class OldProject < BuildConfig
 		@OUTPUT_SUFFIX||=CONFIG();
 	end
 
-	def project
-		self
-	end
-
-	# add file or files to be deleted in the :clean task
-	def addCleanFiles(*args)
-		unless(@cleanFiles_)
-		@cleanFiles_ = FileSet.new(*args);
-			task :clean do |t|
-				deleteFiles(@cleanFiles_)
-			end
-		else
-			@cleanFiles_.include(*args)
-		end
-	end
-
-
 	# Create a new project
 	#
 	# <b>named args:</b>
@@ -98,77 +81,17 @@ class OldProject < BuildConfig
 	# Rake namespace of the new project, and called in this instance's context
 
 	def initialize(args={},&block)
+        super.initialize(args,block);
+    end
 
-		# derive path to file declaring this project - from loaded file that
-		# called this initializer
+    def initializeProject(args)
+        addIncludePaths [
+            "#{@INCDIR}"
+        ];
 
-		@build = Rakish.build
-
-		myFile = nil
-        regex = Regexp.new(Regexp.escape(File.dirname(__FILE__)));
-		caller.each do |clr|
-			unless(clr =~ regex)
-				clr =~ /\:\d/
-				myFile = $`;
-                break;
-			end
-		end
-
-		# if(clr =~ /:in `<top \(required\)>'$/)
-		#		$` =~ /:\d+$/
-		#		myFile = File.expand_path($`)
-		#		break
-		# end
-
-		# load all subprojects this is dependent on
-		# unless it is from a vcProject which has already checked dependencies
-
-		dependencies = args[:dependsUpon]
-
-		parent = args[:config]
-		parent ||= GlobalConfig.instance
-
-		super(parent) {}
-
-		@projectFile = myFile
-		@projectDir  = File.dirname(myFile)
-		@projectId 	 = args[:id]
-
-		name 	= args[:name];
-		name ||= @projectDir.pathmap('%n') # namespace = projName for this Module
-		projName = name;
-		package = args[:package];
-		if(package)
-			projName = "#{package}-#{name}";
-		end
-		@myNamespace = projName
-
-		@myName 	= name;
-		@myPackage 	= package;
-
-		@build.loadProjects(dependencies) if dependencies
-		@build.registerProject(self);
-
-		cd @projectDir, :verbose=>verbose? do
-
-			addIncludePaths [
-				"#{@INCDIR}"
-			];
-
-			ensureDirectoryTask(OBJDIR());
-			ensureDirectoryTask(OBJPATH());
-
-			# call instance initializer block inside local namespace.
-			# and in the directory the defining file is contained in.
-
-			ns = Rake.application.in_namespace(@myNamespace) do
-				@myNamespace = "#{Rake.application.current_scope.join(':')}"
-				if(block != NIL)
-				    instance_eval(&block)
-				end
-			end
-		end
-	end
+        ensureDirectoryTask(OBJDIR());
+        ensureDirectoryTask(OBJPATH());
+    end
 
 	# called after initializers on all projects and before rake
 	# starts executing tasks
@@ -451,7 +374,7 @@ end
 
 
 # global  alias for Rakish::Project.new()
-def LibraryProject(args={},&block)
-	Rakish::Project.new(args,&block)
+def CppProject(args={},&block)
+	Rakish::CppProject.new(args,&block)
 end
 
