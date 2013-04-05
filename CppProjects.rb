@@ -6,64 +6,12 @@ class CppProject < Project
 
 	# initialize "static" class variables
 
-	@@globalTargets = [
-		:default,
-		:autogen,
-		:cleanautogen,
-		:includes,
-		:cleanincludes,
-		:depends,
-		:cleandepends,
-		:build,
-		:compile,
-		:clean,
-		:vcproj,
-		:vcprojclean
-	];
-
-	# this may need to be changed as rake evolves
-	def Project.task(*args,&block)
-		Rake::Task.define_task(*args, &block)
-	end
-
-	@@globalTargets.each do |t|
-		task t;
-	end
-
 	task :autogen 		=> [ :includes, :vcproj ];
 	task :cleanautogen 	=> [ :cleanincludes, :cleandepends, :vcprojclean ];
 	task :depends		=> [ :includes ];
 	task :build   		=> [ :includes ];
 	task :compile 		=> [ :includes ];
 	task :default		=> [ :build ];
-
-	# returns the Rake task namespace for this project
-	attr_reader :myNamespace
-	alias 		:moduleName :myNamespace
-
-	# full path of the file containing this project
-	attr_reader :projectFile
-	# directory containing the file for this project
-	attr_reader :projectDir
-	# name of this project
-	attr_reader :myName
-	# package name for this project
-	attr_reader :myPackage
-	# UUID of this project
-	attr_reader :projectId
-
-	# output directory common to all configurations
-	def OBJDIR
-		@OBJDIR||="#{BUILDDIR()}/obj/#{moduleName()}";
-	end
-	# configuration specific intermediate output directory
-	def OBJPATH
-		@OBJPATH||="#{OBJDIR()}/#{CONFIG()}";
-	end
-
-	def OUTPUT_SUFFIX
-		@OUTPUT_SUFFIX||=CONFIG();
-	end
 
 	# Create a new project
 	#
@@ -88,64 +36,28 @@ class CppProject < Project
         addIncludePaths [
             "#{@INCDIR}"
         ];
-
         ensureDirectoryTask(OBJDIR());
         ensureDirectoryTask(OBJPATH());
     end
 
 	# called after initializers on all projects and before rake
 	# starts executing tasks
-	def preBuild
-
-		cd @projectDir, :verbose=>verbose? do
-
-			puts("pre building #{moduleName}")
-			tname = "#{@myNamespace}:preBuild"
-
-			ns = Rake.application.in_namespace(@myNamespace) do
-
-				if(@projectId)
-					task :vcproj do |t|
-						require "#{Rakish::MAKEDIR}/BuildVcproj.rb"
-						onVcprojTask
-					end
-					task :vcprojclean do |t|
-						require "#{Rakish::MAKEDIR}/BuildVcproj.rb"
-						onVcprojCleanTask
-					end
-				end
-
-				# optional pre build task
-				doPreBuild = Rake.application.lookup(tname);
-				if(doPreBuild)
-
-					# @myNamespace = "#{Rake.application.current_scope.join(':')}"
-					# instance_eval(&block)
-
-				end
-			end
-
-			# link global tasks to this project's tasks if defined
-			@@globalTargets.each do |gt|
-				tname = "#{@myNamespace}:#{gt}"
-				tsk = Rake.application.lookup(tname);
-				# overide invoke_with_call_chain to print the tasks as they are invoked
-				if(tsk)
-					tsk.instance_eval do
-						alias :_o_iwcc_ :invoke_with_call_chain
-						def invoke_with_call_chain(task_args, invocation_chain)
-							puts("---- #{name()}") unless @already_invoked
-							_o_iwcc_(task_args, invocation_chain);
-						end
-					end
-					task gt => [ tname ];
-				end
-			end
-		end
-	end
-
-	def showScope(here='') # :nodoc:
-		puts("#{here}  #{@myNamespace} ns = :#{Rake.application.current_scope.join(':')}");
+	def preBuild()
+        if(@projectId)
+            cd @projectDir, :verbose=>verbose? do
+                ns = Rake.application.in_namespace(@myNamespace) do
+                    task :vcproj do |t|
+                        require "#{Rakish::MAKEDIR}/BuildVcproj.rb"
+                        onVcprojTask
+                    end
+                    task :vcprojclean do |t|
+                        require "#{Rakish::MAKEDIR}/BuildVcproj.rb"
+                        onVcprojCleanTask
+                    end
+                end
+            end
+        end
+        super.preBuild()
 	end
 
 protected  #### compile target configuration

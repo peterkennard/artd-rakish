@@ -109,9 +109,16 @@ end
 class Project < BuildConfig
 	include Rakish::Util
 
+	# this may need to be changed as rake evolves
+	def self.task(*args,&block)
+		Rake::Task.define_task(*args, &block)
+	end
+
 	# initialize "static" class variables
 
-	@@globalTargets = [
+	@@globalTargets = Set.new;
+
+	[
 		:default,
 		:autogen,
 		:cleanautogen,
@@ -124,16 +131,24 @@ class Project < BuildConfig
 		:clean,
 		:vcproj,
 		:vcprojclean
-	];
+	].each do |gt|
+	    @@globalTargets.add(gt);
+		task gt;
+	end
 
-	# this may need to be changed as rake evolves
-	def Project.task(*args,&block)
+	def task(*args,&block)
 		Rake::Task.define_task(*args, &block)
 	end
 
-	@@globalTargets.each do |t|
-		task t;
+	# this may need to be changed as rake evolves
+	def export(name)
+        @exported_ ||= Set.new;
+        @exported_.add(name);
+        namespace(':') do
+            task name;
+        end
 	end
+
 
 # TODO: much of this needs to be migrated to the C++ project and other project types
 	task :autogen 		=> [ :includes, :vcproj ];
@@ -284,17 +299,6 @@ class Project < BuildConfig
 
 			ns = Rake.application.in_namespace(@myNamespace) do
 
-				if(@projectId)
-					task :vcproj do |t|
-						require "#{Rakish::MAKEDIR}/BuildVcproj.rb"
-						onVcprojTask
-					end
-					task :vcprojclean do |t|
-						require "#{Rakish::MAKEDIR}/BuildVcproj.rb"
-						onVcprojCleanTask
-					end
-				end
-
 				# optional pre build task
 				doPreBuild = Rake.application.lookup(tname);
 				if(doPreBuild)
@@ -305,8 +309,12 @@ class Project < BuildConfig
 				end
 			end
 
-			# link global tasks to this project's tasks if defined
-			@@globalTargets.each do |gt|
+
+			targets = @exported_ || Set.new;
+			targets.merge(@@globalTargets);
+
+			# link global tasks to this project's tasks if defined or set as exported
+			targets.each do |gt|
 				tname = "#{@myNamespace}:#{gt}"
 				tsk = Rake.application.lookup(tname);
 				# overide invoke_with_call_chain to print the tasks as they are invoked
