@@ -109,10 +109,6 @@ module Rakish
         @@_logger_
     end
 
-    def log
-        @@_logger_
-    end
-
 	class ::Module
 		
 		# static method used like ruby's attr_accessor declaration
@@ -158,7 +154,10 @@ module Rakish
 			v.each &b rescue yield v if v
 		end
 
-	
+        def log
+            Rakish.log
+        end
+
 	protected
 		# :nodoc: 
 		SimpleCopyAction_ = lambda { |t| cp(t.source, t.name) }

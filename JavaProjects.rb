@@ -34,8 +34,8 @@ class JavaProject < Project
 
     def javacTask
 
-        Rakish.log.info "javaC task";
-        puts("#{__FILE__}(#{__LINE__}) : autogen in artd-bml-rpc #{jdk_}");
+        log.info "javaC task";
+        log.info { "autogen in artd-bml-rpc #{jdk_}" };
         puts "BUILDDIR = #{BUILDDIR()}"
         puts "outputClasspath = #{outputClasspath}"
     end
