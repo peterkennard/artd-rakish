@@ -163,7 +163,7 @@ module Rakish
 		SimpleCopyAction_ = lambda { |t| cp(t.source, t.name) }
 
         # Task action to do nothing.
-        DoNothingAction_ = lambda { |t| Rakish.log.info("do nothing #{t}"); }
+        DoNothingAction_ = lambda {|t|}
 
 
 	public
