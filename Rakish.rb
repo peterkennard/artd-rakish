@@ -92,6 +92,9 @@ module Rakish
 	MAKEDIR = File.dirname(File.expand_path(__FILE__));
 
     @@_logger_ = Logger.new(STDOUT);
+    def self.log
+        @@_logger_
+    end
     @@_logger_.formatter = proc do |severity, datetime, progname, msg|
         fileLine = "";
         caller.each do |clr|
@@ -105,9 +108,6 @@ module Rakish
         "#{fileLine}) : #{msg}\n"
     end
 
-    def self.log
-        @@_logger_
-    end
 
 	class ::Module
 		
@@ -877,7 +877,7 @@ public
 		def to_ary
 			@h.keys
 		end
-	end
+    end
 
 	class OrderedFileSet < FileSet
 		def initaliaze
@@ -916,7 +916,13 @@ public
 		def []=(k,v)
 			@h[Key.new(k)]=v		
 		end
-		# returns array of all valies in thie hash
+
+		def each_pair(&b)
+		    @h.each_pair do |k,v|
+		        yield k,v
+		    end
+		end
+		# returns array of all values in thie hash
 		def values
 			@h.values
 		end
@@ -1023,7 +1029,7 @@ public
 				f = File.expand_path(f.to_s)
 				isDir = File.directory?(f)
 				f =~ regx
-				if(isDir) 
+				if(isDir)
 					dir = ($') ? ((destdir.length > 0) ? "#{destdir}/#{$'}" : $') : destdir	
 					@byDir_[dir]||=[]
 				else
@@ -1060,13 +1066,16 @@ public
 			basedir = File.expand_path(basedir)	
 			regx = Regexp.new('^' + Regexp.escape(basedir+'/'),Regexp::IGNORECASE);
 			add_filet_a(destdir,regx,files,opts[:data])
+
+            prettyPrint();
+
 		end
 	
 		# retrieve all source files by assigned output directory
 		# one source file may be assigned to more than one output directory
 		#
-		def filesByDir(&block) # :yields: directory,files
-			@byDir_.each do |k,v|
+		def filesByDir(&block) # :yields: directory, iterable of files
+			@byDir_.each_pair do |k,v|
 				yield(k.to_s,v)
 			end
 		end
@@ -1078,12 +1087,15 @@ public
 		end
 		
 		def prettyPrint
-			@byDir_.each do |k,v|
-				puts("directory: \"#{k}\"\n")
-				v.each do |f|
-					puts( "      \"#{f}\"")
-				end
-			end
+            filesByDir do |k,v|
+                if(v.length > 0)
+                    puts("\n");
+                end
+                puts("directory #{k}");
+                v.each do |f|
+                    puts( "      \"#{f}\"")
+                end
+            end
 		end
 		
 		# generate copy tasks for all files in this copy set
