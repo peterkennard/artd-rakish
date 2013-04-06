@@ -3,6 +3,7 @@
 # $Id $
 
 require 'set'
+require 'logger'
 
 # stupid thing needed because rake doesn't check for "" arguments so we make an explicit task
 task "" do
@@ -89,6 +90,28 @@ end
 module Rakish
 
 	MAKEDIR = File.dirname(File.expand_path(__FILE__));
+
+    @@_logger_ = Logger.new(STDOUT);
+    @@_logger_.formatter = proc do |severity, datetime, progname, msg|
+        fileLine = "";
+        caller.each do |clr|
+            unless(/\/logger.rb:/ =~ clr)
+                fileLine = clr;
+                break;
+            end
+        end
+        fileLine = fileLine.split(':in `',2)[0];
+        fileLine.sub!(/:(\d)/, '(\1');
+        "#{fileLine}) : #{msg}\n"
+    end
+
+    def self.log
+        @@_logger_
+    end
+
+    def log
+        @@_logger_
+    end
 
 	class ::Module
 		
@@ -628,7 +651,6 @@ public
 		end
 		
 		def self.included(by)
-			puts("###### PropertyBagMod included by #{by} #{by.include? ::Rakish::PropertyBagMod}")
 		end
 		
 		# set or create property irrespective of property (field) creation lock on this object

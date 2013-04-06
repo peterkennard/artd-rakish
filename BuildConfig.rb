@@ -199,9 +199,9 @@ class GlobalConfig < BuildConfig
 
 		puts("host is #{HOSTTYPE()}") if self.verbose?
 
-		configureTools();
+        ensureDirectoryTask(@BUILDDIR);
 
-		task :includes => [ @BUILDDIR, @INCDIR ]
+		configureTools();
 
 		RakeFileUtils.verbose(@@gcfg.verbose?)
 		if(@@gcfg.verbose?)

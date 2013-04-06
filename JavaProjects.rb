@@ -13,10 +13,6 @@ module JavaProjectConfig
     end
  	def initializer(pnt)
 		@classPaths_= Set.new;
-
-        if(pnt = parent)
-            puts("#{__FILE__}(#{__LINE__}) : #{self.class}")
-        end
  	end
 
     def addClassPaths(*defs)
@@ -28,13 +24,22 @@ module JavaProjectConfig
 end
 
 class JavaProject < Project
-	include JavaProjectConfig
+    include JavaProjectConfig
 
-	def initialize(args={},&block)
+    def initialize(args={},&block)
 
         super(args,&block);
 
-	end
+    end
+
+    def javacTask
+
+        Rakish.log.info "javaC task";
+        puts("#{__FILE__}(#{__LINE__}) : autogen in artd-bml-rpc #{jdk_}");
+        puts "BUILDDIR = #{BUILDDIR()}"
+        puts "outputClasspath = #{outputClasspath}"
+    end
+
 
     def javac()
 
@@ -44,10 +49,10 @@ class JavaProject < Project
 
     end
 
-	# output directory common to all configurations
-	def outputClasspath
-		@outputClasspath||="#{BUILDDIR()}/production/#{moduleName()}";
-	end
+    # output directory common to all configurations
+    def outputClasspath
+        @outputClasspath||="#{BUILDDIR()}/production/#{moduleName()}";
+    end
 
 end
 
