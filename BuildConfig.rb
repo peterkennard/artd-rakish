@@ -67,7 +67,10 @@ module BuildConfigMod
 
 	attr_accessor 	:LIBDIR
 	attr_accessor 	:BINDIR
-	attr_accessor 	:BUILDDIR
+
+	def BUILDDIR
+		@BUILDDIR||=(@parent_ ? @parent_.BUILDDIR : nil)
+	end
 
 	def OBJDIR
 		@OBJDIR||=(@parent_ ? @parent_.OBJDIR : nil)
@@ -119,7 +122,7 @@ class BuildConfig < Module
         # initalize the included "config" modules from parent config
         self.class.ancestors.reverse_each do |ancestor|
             inits = @@_inits[ancestor.hash];
-            if(inits != nil)
+            if(inits)
                 inits.each do |init|
                     # puts("   --> init for #{self} for #{init}");
                     init.bind(self).call(pnt);
@@ -134,6 +137,9 @@ class BuildConfig < Module
     end
 
     include BuildConfigMod
+
+	attr_property 	:BUILDDIR
+
 
 end
 
@@ -173,7 +179,8 @@ class GlobalConfig < BuildConfig
 				defaultConfig = "Win32-VC8-MD-Debug";
 			end
 
-			@BUILDDIR ||= "#{MAKEDIR}/../rakebuild";
+
+			@BUILDDIR ||= "#{Rake.original_dir}/build";
 			@BUILDDIR = File.expand_path(@BUILDDIR);
 
 			# set defaults if not set above

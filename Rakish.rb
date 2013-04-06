@@ -92,22 +92,23 @@ module Rakish
 
 	class ::Module
 		
-		# static method used like ruby's attr_accessor declaration 
+		# static method used like ruby's attr_accessor declaration
 		# for use in declaring added properties on a class
 		# inheriting from a PropertyBag
+
 		def self.attr_property(*args)
 			if(self.include? ::Rakish::PropertyBagMod)
 				args.each do |s|
 					# add "property" assignment operator method s= to this class
 					# equivalent of: def s=(v) { @h_[s]=v }
 					# where s is the input symbol, it is formatted as a string and passed
-					# to eval					
+					# to eval
 					eval("self.send(:define_method,:#{s}=){|v|@h_[:#{s}]=v}")
 				end
 			else
 				raise("can only add properties to PropertyBag object")
 			end
-		end		
+		end
 	end
 	
 	class MultiProcessTask < Rake::Task
@@ -593,7 +594,7 @@ public
 	#
 	
 	module PropertyBagMod
-		
+
 		# constructor for PropertyBagMod to be called by including classes
 		def init_PropertyBag(*args)			
 			@h_ = (Hash === args.last) ? args.pop : {}			
@@ -626,9 +627,9 @@ public
 			@h_[:name]=v		
 		end
 		
-#		def self.included(by)
-#			puts("###### PropertyBag included by #{by}")
-#		end
+		def self.included(by)
+			puts("###### PropertyBagMod included by #{by} #{by.include? ::Rakish::PropertyBagMod}")
+		end
 		
 		# set or create property irrespective of property (field) creation lock on this object
 		def set(k,v)
