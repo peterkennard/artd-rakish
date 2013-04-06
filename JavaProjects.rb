@@ -62,6 +62,7 @@ class JavaProject < Project
         updateDependsFile(t,depfile,included);
     end
 
+public
     def javacTask
 
         log.info "javaC task";
@@ -78,9 +79,9 @@ class JavaProject < Project
             srcFiles.addFileTree(outputClasspath, root, files );
         end
 
-        tasks = srcFiles.generateCopyTasks(:suffixMap=>{ '.java'=>'.class' }) do |t|
-            # do nothing as this is only for making a dependency for the javac compile task
-        end
+        # do nothing as this is only for making a dependency entry for the javac compile task
+        # which compiles all the source files.
+        tasks = srcFiles.generateFileTasks(:suffixMap=>{ '.java'=>'.class' }, &DoNothingAction_);
 
         tsk = task :compile =>tasks do |t|
             config = t.config;

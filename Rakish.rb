@@ -159,8 +159,12 @@ module Rakish
         end
 
 	protected
-		# :nodoc: 
+        # Task action to simply copy source to destination
 		SimpleCopyAction_ = lambda { |t| cp(t.source, t.name) }
+
+        # Task action to do nothing.
+        DoNothingAction_ = lambda { |t| Rakish.log.info("do nothing #{t}"); }
+
 
 	public
 			
@@ -1102,7 +1106,7 @@ public
 		#     :config value to set for task.config
 		#     TODO: :outputDir value of directory to place output files
 
-		def generateCopyTasks(args={}, &block)
+		def generateFileTasks(args={}, &block)
 
 			suffixMap = args[:suffixMap]||{};
 			tasks = [];
