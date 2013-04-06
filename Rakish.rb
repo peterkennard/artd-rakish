@@ -1066,9 +1066,6 @@ public
 			basedir = File.expand_path(basedir)	
 			regx = Regexp.new('^' + Regexp.escape(basedir+'/'),Regexp::IGNORECASE);
 			add_filet_a(destdir,regx,files,opts[:data])
-
-            prettyPrint();
-
 		end
 	
 		# retrieve all source files by assigned output directory
@@ -1098,20 +1095,35 @@ public
             end
 		end
 		
-		# generate copy tasks for all files in this copy set
+		# generate processing tasks for all files in this copy set
 		# using the task action provided or a simple copy if not
-		def generateCopyTasks(destDir,opts={}, &block)
-			
+		# hash args
+		#     :suffixMap map from source suffi to destination suffi
+		#     :config value to set for task.config
+		#     TODO: :outputDir value of directory to place output files
+
+		def generateCopyTasks(args={}, &block)
+
+			suffixMap = args[:suffixMap]||{};
 			tasks = [];
 			block = SimpleCopyAction_ unless block_given?
-			@byDir_.each do |dir,files|
-				dir = File.join(destDir,dir);
+
+			filesByDir do |dir,files|
+				# TODO: maybe have an output directory option and maybe relative path option for destinations ?
+				# dir = File.join(destDir,dir);
 				ensureDirectoryTask(dir)
-				files.each do |file|
-					dest = File.join(dir,File.basename(file));
-					task = file dest=>[file,dir], &block
+				files.each do |srcfile|
+                    destname = File.basename(srcfile);
+                    oldext = File.extname(destname);
+                    if(oldext)
+                        newext = suffixMap[oldext];
+                        destname = destname.pathmap("%n#{newext}") if newext
+                    end
+					dest = File.join(dir, destname);
+			        task = file dest=>[srcfile,dir], &block
 					task.sources = task.prerequisites
-					if(cfg = opts[:config]) # re-use dir
+                    # set configuration data on task if desired
+					if(cfg = args[:config])
 						task.config = cfg
 					end
 					tasks << task

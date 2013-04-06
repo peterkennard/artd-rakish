@@ -62,41 +62,6 @@ class JavaProject < Project
         updateDependsFile(t,depfile,included);
     end
 
-    def createCompileTask(source,obj,cfg)
-
-        action = @@CompileForSuffix[File.extname(source).downcase];
-
-        unless action
-            puts("unrecognized source file type \"#{File.name(source)}\"");
-            return(nil);
-        end
-
-        if(Rake::Task.task_defined? obj)
-            puts("Warning: task already defined for #{obj}")
-            return(nil);
-        end
-
-        tsk = Rake::FileTask.define_task obj
-        tsk.enhance(tsk.sources=[source], &action)
-        tsk.config = cfg;
-        tsk;
-    end
-
-    def createCompileTasks(files,cfg)
-
-        # format object files name
-
-        mapstr = "#{cfg.OBJPATH()}/%n#{OBJEXT()}";
-
-        objs=FileList[];
-        files.each do |source|
-            obj = source.pathmap(mapstr);
-            task = createCompileTask(source,obj,cfg);
-            objs << obj if task;  # will be the same as task.name
-        end
-        objs
-    end
-
     def javacTask
 
         log.info "javaC task";
@@ -110,18 +75,25 @@ class JavaProject < Project
         sourceRoots.each do |root|
             files = FileList.new
             files.include("#{root}/**/*");
-
-            files.each do |f|
-                puts("file #{f}");
-            end
             srcFiles.addFileTree(outputClasspath, root, files );
         end
 
+        tasks = srcFiles.generateCopyTasks(:suffixMap=>{ '.java'=>'.class' }) do |t|
+            # do nothing as this is only for making a dependency for the javac compile task
+        end
+
+        tsk = task :compile =>tasks do |t|
+            config = t.config;
+            cmdline = "\"#{config.jdk_}/bin/javac.exe\"";
+            log.info("command #{cmdline}");
+            log.info("XXXXXXXX attempt to compile java code here");
+        end
+        tsk.config = self;
+        tsk;
     end
 
     def javac()
 
-        cmdline = "\"#{jdk_}/bin/javac.exe\" -help";
         puts cmdline
      #   system( cmdline );
 
