@@ -12,14 +12,13 @@ module JavaProjectConfig
         base.addModInit(base,self.instance_method(:initializer));
     end
  	def initializer(pnt)
-		@classPaths_= Set.new;
  	end
-
-    def addClassPaths(*defs)
-        defs.flatten!()
-        defs.each do |ip|
-            @classPaths_.add(File.expand_path(ip));
-        end
+    def classPaths
+        @classPaths_||=@parent_.classPaths
+    end
+    def addClassPaths(*paths)
+		@classPaths_||= FileSet.new;
+        @classPaths_.include(paths);
     end
 end
 
@@ -84,28 +83,51 @@ public
         tasks = srcFiles.generateFileTasks(:suffixMap=>{ '.java'=>'.class' }, &DoNothingAction_);
 
         tsk = task :compile =>tasks do |t|
+
             config = t.config;
             cmdline = "\"#{config.jdk_}/bin/javac.exe\"";
-            log.info("command #{cmdline}");
-            log.info("XXXXXXXX attempt to compile java code here");
+            cmdline << " -verbose -g -d \"#{outputClasspath}\""
+
+            paths = config.sourceRoots
+            unless(paths.empty?)
+                prepend = " -sourcepath \"";
+                paths.each do |path|
+                    cmdline << "#{prepend}#{path}"
+                    prepend = ';'
+                end
+                cmdline << "\"";
+            end
+
+            paths = config.classPaths
+            unless(paths.empty?)
+                cmdline << " -classpath \"#{outputClasspath}\"";
+                paths.each do |path|
+                    cmdline << ";#{path}"
+                end
+                cmdline << "\"";
+            end
+
+            t.sources.each do |src|
+                cmdline << " \"#{src}\"";
+            end
+
+            puts("#{cmdline}");
+            system( cmdline );
+
         end
         tsk.config = self;
+        tsk.sources = srcFiles.sources
         tsk;
     end
 
     def javac()
 
         puts cmdline
-     #   system( cmdline );
 
     end
 
     def addSourceRoot(*roots)
-        roots.flatten!()
-        @sourceDirs_||=Set.new
-        roots.each do |ip|
-            @sourceDirs_.add(File.expand_path(ip));
-        end
+        (@sourceDirs_||=FileSet.new).include(roots);
     end
     def sourceRoots
         @sourceDirs_||=[File.join(projectDir,'src')];
