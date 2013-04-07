@@ -78,45 +78,54 @@ public
             srcFiles.addFileTree(outputClasspath, root, files );
         end
 
-        # do nothing as this is only for making a dependency entry for the javac compile task
-        # which compiles all the source files.
-        tasks = srcFiles.generateFileTasks(:suffixMap=>{ '.java'=>'.class' }, &DoNothingAction_);
+        tsk = task :compile do |t|
 
-        tsk = task :compile =>tasks do |t|
+            unless(t.sources.empty?)
 
-            config = t.config;
-            cmdline = "\"#{config.jdk_}/bin/javac.exe\"";
-            cmdline << " -verbose -g -d \"#{outputClasspath}\""
+                config = t.config;
 
-            paths = config.sourceRoots
-            unless(paths.empty?)
-                prepend = " -sourcepath \"";
-                paths.each do |path|
-                    cmdline << "#{prepend}#{path}"
-                    prepend = ';'
+                cmdline = "\"#{config.jdk_}/bin/javac.exe\"";
+                cmdline << " -g -d \"#{outputClasspath}\""
+
+                paths = config.sourceRoots
+                unless(paths.empty?)
+                    prepend = " -sourcepath \"";
+                    paths.each do |path|
+                        cmdline << "#{prepend}#{path}"
+                        prepend = ';'
+                    end
+                    cmdline << "\"";
                 end
-                cmdline << "\"";
-            end
 
-            paths = config.classPaths
-            unless(paths.empty?)
-                cmdline << " -classpath \"#{outputClasspath}\"";
-                paths.each do |path|
-                    cmdline << ";#{path}"
+                paths = config.classPaths
+                unless(paths.empty?)
+                    cmdline << " -classpath \"#{outputClasspath}";
+                    paths.each do |path|
+                        cmdline << ";#{path}"
+                    end
+                    cmdline << "\"";
                 end
-                cmdline << "\"";
-            end
 
-            t.sources.each do |src|
-                cmdline << " \"#{src}\"";
-            end
+                t.sources.each do |src|
+                    cmdline << " \"#{src}\"";
+                end
 
-            puts("#{cmdline}");
-            system( cmdline );
+                puts("#{cmdline}") # if verbose?
+                system( cmdline );
+            end
 
         end
+
+        # do nothing as this is only for making a dependency entry for the javac compile task
+        # which compiles all the source files.
+        tasks = srcFiles.generateFileTasks( :config=>tsk, :suffixMap=>{ '.java'=>'.class' }) do |t|  # , &DoNothingAction_);
+            # add this source file to the ones to compile
+            t.config.sources << t.source
+        end
+
+        tsk.enhance(tasks);
         tsk.config = self;
-        tsk.sources = srcFiles.sources
+
         tsk;
     end
 
