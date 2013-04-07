@@ -15,7 +15,15 @@ module Rake
 
 	module DSL  # so if a version doesn't have it it works
 	end
-	
+
+	class << self
+	    def get_unique_name
+	        @_s_||=0
+	        @_s_ += 1
+	        :"_nona_#{@_s_}"
+	    end
+	end
+
 	class Task
 	  rake_extension('config') do
 		# optional "config" field on Rake Task objects
@@ -24,6 +32,13 @@ module Rake
 	  rake_extension('data') do
 		# optional "per instance" field on Rake Task objects
 		attr_accessor :data
+	  end
+	  class << self
+        # define a task with a unique anonymous name
+	    def define_unique_task(*args,&b)
+            args.unshift(Rake.get_unique_name)
+            Rake.application.define_task(self,*args,&b);
+	    end
 	  end
 	end
 	
@@ -51,6 +66,7 @@ module Rake
 			end
 		end
 
+        # this allows for explicitly setting an "absolute" namespace
 		rake_extension('in_namespace_path') do
 		
 			def in_namespace_path(name)			
@@ -145,13 +161,13 @@ module Rakish
 
 		include Rake::DSL
 				
-		# like each but ckecks for null and if object doesn't respond to each
+		# like each but checks for null and if object doesn't respond to each
 		# use like 
 		# eachof [1,2,3] do |v|
 		# end
 		#  
 		def eachof(v,&b)
-			v.each &b rescue yield v if v
+			v.each &b rescue yield v if v # TODO: should use a narrower exception type ?
 		end
 
         def log
@@ -160,14 +176,18 @@ module Rakish
 
 	protected
         # Task action to simply copy source to destination
-		SimpleCopyAction_ = lambda { |t| cp(t.source, t.name) }
+		SimpleCopyAction_ = ->(t) { cp(t.source, t.name) }
 
         # Task action to do nothing.
-        DoNothingAction_ = lambda {|t|}
+        DoNothingAction_ = ->(t) {}
 
 
 	public
-			
+
+        # Generate an anonymous name.
+
+
+
 		# Used like Rake's 'namespace' to execute the block 
 		# in the specified namespace, except it enables
 		# explicit specification of absolute namespace paths
@@ -371,14 +391,6 @@ module Rakish
 			1.upto(diff) { op << '..' }
 			cmpi.upto(pspsz-1) { |i| op << pspl[i] }
 			op.join('/')
-		end
-
-		# define a task with a unique name
-		def defineUniqueTask(*args,&block)
-			@@seed_ ||= 0
-			@@seed_ += 1	
-			args.insert(0,"_nona_#{@@seed_}")
-			Rake::Task.define_task(*args, &block)
 		end
 
 		HostIsCygwin_ = RUBY_PLATFORM =~ /(cygwin)/i

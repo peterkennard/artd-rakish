@@ -95,7 +95,8 @@ public
             srcFiles.addFileTree(outputClasspath, root, files );
         end
 
-        tsk = JavaCTask.define_task :compile, &CompileJavaAction
+        tsk = JavaCTask.define_unique_task &CompileJavaAction
+        task :compile=>[tsk]
 
         tasks = srcFiles.generateFileTasks( :config=>tsk, :suffixMap=>{ '.java'=>'.class' }) do |t|  # , &DoNothingAction_);
             # add this source prerequisite file to the compile task if it is needed.
