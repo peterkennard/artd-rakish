@@ -34,6 +34,8 @@ protected
     @@CompileJavaAction = lambda do |t|
         t.config.doCompileJava(t);
     end
+
+public
     def doCompileJava(t)
 
         return if(t.sources.empty?) # don't bother if no sources have been updated
