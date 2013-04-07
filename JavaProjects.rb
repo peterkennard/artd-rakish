@@ -31,7 +31,7 @@ class JavaProject < Project
 
 protected
 
-    CompileJavaAction = lambda do |t|
+    CompileJavaAction = ->(t) do
         t.config.doCompileJava(t);
     end
 
