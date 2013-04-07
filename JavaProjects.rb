@@ -32,9 +32,9 @@ class JavaProject < Project
 protected
 
     @@CompileJavaAction = lambda do |t|
-        t.config.javac(t);
+        t.config.doCompileJava(t);
     end
-    def javac(t)
+    def doCompileJava(t)
 
         return if(t.sources.empty?) # don't bother if no sources have been updated
 
@@ -84,7 +84,7 @@ public
         tsk = task :compile, &@@CompileJavaAction
 
         tasks = srcFiles.generateFileTasks( :config=>tsk, :suffixMap=>{ '.java'=>'.class' }) do |t|  # , &DoNothingAction_);
-            # add this source file to the ones we need to compile
+            # add this source file to the ones we need to compile im the compile task
             t.config.sources << t.source
         end
 
