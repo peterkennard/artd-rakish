@@ -31,7 +31,7 @@ class JavaProject < Project
 
 protected
 
-    @@CompileJavaAction = lambda do |t|
+    CompileJavaAction = lambda do |t|
         t.config.doCompileJava(t);
     end
 
@@ -88,7 +88,7 @@ public
             srcFiles.addFileTree(outputClasspath, root, files );
         end
 
-        tsk = JavaCTask.define_task :compile, &@@CompileJavaAction
+        tsk = JavaCTask.define_task :compile, &CompileJavaAction
 
         tasks = srcFiles.generateFileTasks( :config=>tsk, :suffixMap=>{ '.java'=>'.class' }) do |t|  # , &DoNothingAction_);
             # add this source prerequisite file to the compile task if it is needed.
