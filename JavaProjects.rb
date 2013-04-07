@@ -81,7 +81,7 @@ public
 
     # Are there any tasks with an earlier time than the given time stamp?
     def any_task_earlier?(tasks,time)
-        tasks.any? { |n| puts("check #{n}"); n.timestamp < time }
+        tasks.any? { |n| n.timestamp < time }
     end
 
 
@@ -102,9 +102,9 @@ public
             t.config.sources << t.source
         end
 
-        if(any_task_earlier?(tasks,File.mtime(File.expand_path(__FILE__))))
-            puts("project is altered");
-        end
+#        if(any_task_earlier?(tasks,File.mtime(File.expand_path(__FILE__))))
+#            puts("project is altered");
+#        end
 
         tsk.enhance(tasks);
         tsk.config = self;
