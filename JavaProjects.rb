@@ -29,47 +29,50 @@ class JavaProject < Project
         super(args,&block);
     end
 
+protected
+
     @@CompileJavaAction = lambda do |t|
-        t.config.tools.doCompileJava(t)
+        t.config.javac(t);
     end
-    def doCompileJava(t)
+    def javac(t)
 
-        cppfile = t.source;
-        objfile = t.name;
-        cfig = t.config;
+        return if(t.sources.empty?) # don't bother if no sources have been updated
 
-        cmdline = "\"#{@MSVC_EXE}\" \"#{cppfile}\" -Fd\"#{cfig.OBJDIR}/vc80.pdb\" -c -Fo\"#{objfile}\" ";
-        cmdline += getFormattedMSCFlags(cfig)
-        cmdline += ' /showIncludes'
+        config = t.config;
 
-        puts("\n#{cmdline}\n") if(cfig.verbose?)
-        included = Rakish::FileSet.new
+        cmdline = "\"#{config.jdk_}/bin/javac.exe\"";
+        cmdline << " -g -d \"#{config.outputClasspath}\""
 
-        IO.popen(cmdline) do |output|
-            while line = output.gets do
-                if line =~ /^Note: including file: +/
-                    line = $'.strip.gsub(/\\/,'/')
-                    next if( line =~ /^[^\/]+\/Program Files\/Microsoft /i )
-                    included << line
-                    next
-                end
-                puts line
+        paths = config.sourceRoots
+        unless(paths.empty?)
+            prepend = " -sourcepath \"";
+            paths.each do |path|
+                cmdline << "#{prepend}#{path}"
+                prepend = ';'
             end
+            cmdline << "\"";
         end
 
-        depfile = objfile.ext('.raked');
-        updateDependsFile(t,depfile,included);
+        paths = config.classPaths
+        unless(paths.empty?)
+            cmdline << " -classpath \"#{outputClasspath}";
+            paths.each do |path|
+                cmdline << ";#{path}"
+            end
+            cmdline << "\"";
+        end
+
+        t.sources.each do |src|
+            cmdline << " \"#{src}\"";
+        end
+
+        puts("#{cmdline}") # if verbose?
+        system( cmdline );
+
     end
 
 public
     def javacTask
-
-        log.info "javaC task";
-        log.info { "autogen in artd-bml-rpc #{jdk_}" };
-        puts "BUILDDIR = #{BUILDDIR()}"
-        puts "outputClasspath = #{outputClasspath}"
-
-        action = @@CompileJavaAction
 
         srcFiles = FileCopySet.new;
         sourceRoots.each do |root|
@@ -78,48 +81,10 @@ public
             srcFiles.addFileTree(outputClasspath, root, files );
         end
 
-        tsk = task :compile do |t|
+        tsk = task :compile, &@@CompileJavaAction
 
-            unless(t.sources.empty?)
-
-                config = t.config;
-
-                cmdline = "\"#{config.jdk_}/bin/javac.exe\"";
-                cmdline << " -g -d \"#{outputClasspath}\""
-
-                paths = config.sourceRoots
-                unless(paths.empty?)
-                    prepend = " -sourcepath \"";
-                    paths.each do |path|
-                        cmdline << "#{prepend}#{path}"
-                        prepend = ';'
-                    end
-                    cmdline << "\"";
-                end
-
-                paths = config.classPaths
-                unless(paths.empty?)
-                    cmdline << " -classpath \"#{outputClasspath}";
-                    paths.each do |path|
-                        cmdline << ";#{path}"
-                    end
-                    cmdline << "\"";
-                end
-
-                t.sources.each do |src|
-                    cmdline << " \"#{src}\"";
-                end
-
-                puts("#{cmdline}") # if verbose?
-                system( cmdline );
-            end
-
-        end
-
-        # do nothing as this is only for making a dependency entry for the javac compile task
-        # which compiles all the source files.
         tasks = srcFiles.generateFileTasks( :config=>tsk, :suffixMap=>{ '.java'=>'.class' }) do |t|  # , &DoNothingAction_);
-            # add this source file to the ones to compile
+            # add this source file to the ones we need to compile
             t.config.sources << t.source
         end
 
@@ -127,12 +92,6 @@ public
         tsk.config = self;
 
         tsk;
-    end
-
-    def javac()
-
-        puts cmdline
-
     end
 
     def addSourceRoot(*roots)
@@ -146,10 +105,7 @@ public
         @outputClasspath||="#{BUILDDIR()}/production/#{moduleName()}";
     end
 
-
 end
-
-
 
 
 end # Rakish
