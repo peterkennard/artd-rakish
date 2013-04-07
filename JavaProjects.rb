@@ -38,8 +38,6 @@ protected
 public
     def doCompileJava(t)
 
-        return if(t.sources.empty?) # don't bother if no sources have been updated
-
         config = t.config;
 
         cmdline = "\"#{config.jdk_}/bin/javac.exe\"";
@@ -73,6 +71,13 @@ public
 
     end
 
+    class JavaCTask < Rake::Task
+        def needed?
+            !sources.empty?
+        end
+    end
+
+
 public
     def javacTask
 
@@ -83,10 +88,10 @@ public
             srcFiles.addFileTree(outputClasspath, root, files );
         end
 
-        tsk = task :compile, &@@CompileJavaAction
+        tsk = JavaCTask.define_task :compile, &@@CompileJavaAction
 
         tasks = srcFiles.generateFileTasks( :config=>tsk, :suffixMap=>{ '.java'=>'.class' }) do |t|  # , &DoNothingAction_);
-            # add this source file to the ones we need to compile im the compile task
+            # add this source prerequisite file to the compile task if it is needed.
             t.config.sources << t.source
         end
 
