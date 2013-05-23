@@ -7,9 +7,9 @@ class CTools
 
 	@@linkIncludeAction_ = lambda do |t|
 		config = t.config;
-		if(config.verbose?)
+		# if(config.verbose?)
 			puts "generating #{t.name} from #{t.source}"
-		end
+		# end
 
 		destfile = t.name;
 		srcpath = config.getRelativePath(t.source,File.dirname(t.name));
@@ -91,7 +91,7 @@ class CppProject < Project
 			destdir = myPackage;
 		end
 		destdir = File.join(INCDIR(),destdir);
-
+		ensureDirectoryTask(destdir);
 		flist = createCopyTasks(destdir,files,:config => self,&ctools.linkIncludeAction())
 		task :includes => flist
 		task :cleanincludes do |t|
