@@ -156,13 +156,32 @@ class GlobalConfig < BuildConfig
 	attr_property :CONFIG
 	attr_property :thirdPartyPath
 
-	def initialize(&b)
+	def self.includeConfigType(mod)
+		unless GlobalConfig.include? mod	
+			include(mod);
+		end
+	end
+
+	def initialize(*args, &b)
 
 		if @@gcfg
 			raise("Exeption !! You can only initialize one GlobalConfig !!!")
 		end
 
 		@@gcfg = self
+
+		opts = {};
+		if(args.length > 0) 
+			arg = args[args.length-1];
+			opts = arg if arg.instance_of? Hash 
+		end
+
+		ensureIncluded = opts[:include];
+		if(ensureIncluded != nil) 
+			ensureIncluded.each do |ei|
+				GlobalConfig.includeConfigType(ei);
+			end
+		end
 
 		super(nil) {}
 

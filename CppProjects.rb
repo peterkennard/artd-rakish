@@ -1,17 +1,20 @@
+myPath = File.dirname(File.expand_path(__FILE__));
+require "#{myPath}/RakishProject.rb"
 
+module Rakish
 
+module CppProjectConfig
+
+    def self.included(base)
+    puts "include CppConfig in #{base}";
+	    base.addModInit(base,self.instance_method(:initializer));
+    end
+ 	def initializer(pnt)
+ 	end
+end
 
 class CppProject < Project
-	include Rakish::Util
-
-	# initialize "static" class variables
-
-	task :autogen 		=> [ :includes, :vcproj ];
-	task :cleanautogen 	=> [ :cleanincludes, :cleandepends, :vcprojclean ];
-	task :depends		=> [ :includes ];
-	task :build   		=> [ :includes ];
-	task :compile 		=> [ :includes ];
-	task :default		=> [ :build ];
+    include CppProjectConfig
 
 	# Create a new project
 	#
@@ -31,6 +34,59 @@ class CppProject < Project
 	def initialize(args={},&block)
         super.initialize(args,block);
     end
+
+	# add tasks to ':includes' to place links to or copy source files to
+	# the specified 'stub' directory.
+	#
+	# Also adds removal of output files or links to task ':cleanincludes'
+	#
+	# <b>named args:</b>
+	#   :destdir => destination directory to place output files, defaults to INCDIR/myPackage
+	#
+	def addPublicIncludes(*args)
+
+		opts = (Hash === args.last) ? args.pop : {}
+		files = FileSet.new(args);
+
+		unless(destdir = opts[:destdir])
+			destdir = myPackage;
+		end
+		destdir = File.join(@INCDIR,destdir);
+
+		flist = createCopyTasks(destdir,files,:config => self,&@@linkPublicInclude_)
+		task :includes => flist
+		task :cleanincludes do |t|
+			deleteFiles(flist)
+		end
+	end
+
+
+end # CppProject
+
+end # Rakish
+
+# global  alias for Rakish::Project.new()
+def CppProject(args={},&block)
+	Rakish::CppProject.new(args,&block)
+end
+
+
+#################################################
+
+if false
+
+class XCppProject < Project
+	include Rakish::Util
+
+	# initialize "static" class variables
+
+	task :autogen 		=> [ :includes, :vcproj ];
+	task :cleanautogen 	=> [ :cleanincludes, :cleandepends, :vcprojclean ];
+	task :depends		=> [ :includes ];
+	task :build   		=> [ :includes ];
+	task :compile 		=> [ :includes ];
+	task :default		=> [ :build ];
+
 
     def initializeProject(args)
         addIncludePaths [
@@ -203,30 +259,6 @@ public
 		end
 	end
 
-	# add tasks to place links to or copy source files to
-	# specified directory and adds tasks to target ':includes'
-	#
-	# Also adds removal of output files or links to task ':cleanincludes'
-	#
-	# <b>named args:</b>
-	#   :destdir => destination directory to place output files, defaults to INCDIR/myPackage
-	#
-	def addPublicIncludes(*args)
-
-		opts = (Hash === args.last) ? args.pop : {}
-		files = FileSet.new(args);
-
-		unless(destdir = opts[:destdir])
-			destdir = myPackage;
-		end
-		destdir = File.join(@INCDIR,destdir);
-
-		flist = createCopyTasks(destdir,files,:config => self,&@@linkPublicInclude_)
-		task :includes => flist
-		task :cleanincludes do |t|
-			deleteFiles(flist)
-		end
-	end
 
 protected
 
@@ -282,11 +314,5 @@ public
 		addCleanFiles(targ.name);
 	end
 end
-
-
-
-# global  alias for Rakish::Project.new()
-def CppProject(args={},&block)
-	Rakish::CppProject.new(args,&block)
-end
+end # false 
 

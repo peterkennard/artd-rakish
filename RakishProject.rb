@@ -19,7 +19,9 @@ class Build
 		    if(defined? Rakish::GlobalConfig.instance.CONFIG)
 			    puts "Starting build. for #{Rakish::GlobalConfig.instance.CONFIG}\""
 			else
-		        Rakish::GlobalConfig.instance.CONFIG = "not set";
+			#	if(Rakish::GlobalConfig.instance)
+			#		Rakish::GlobalConfig.instance.CONFIG() = "not set";
+			#	end
                 puts "Starting build.";
             end
 			@projects.each do |p|
