@@ -111,7 +111,7 @@ end
 
 
 class BuildConfig < Module
-    include Util
+	include Util
 
     @@_inits = {};
 
@@ -170,11 +170,7 @@ class GlobalConfig < BuildConfig
 
 		@@gcfg = self
 
-		opts = {};
-		if(args.length > 0) 
-			arg = args[args.length-1];
-			opts = arg if arg.instance_of? Hash 
-		end
+		opts = (Hash === args.last) ? args.pop : {}
 
 		ensureIncluded = opts[:include];
 		if(ensureIncluded != nil) 

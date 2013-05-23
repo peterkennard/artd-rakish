@@ -3,14 +3,52 @@ require "#{myPath}/RakishProject.rb"
 
 module Rakish
 
+class CTools
+
+	@@linkIncludeAction_ = lambda do |t|
+		config = t.config;
+		if(config.verbose?)
+			puts "generating #{t.name} from #{t.source}"
+		end
+
+		destfile = t.name;
+		srcpath = config.getRelativePath(t.source,File.dirname(t.name));
+		fname = File.basename(t.name);
+		File.open(destfile,'w') do |file|
+			file.puts("/* #{fname} - generated file - do not alter */");
+			file.puts("#include \"#{srcpath}\"");
+		end
+	end
+end
+
+class VisualCTools < CTools
+
+	def linkIncludeAction()
+		@@linkIncludeAction_
+	end
+
+end
+
 module CppProjectConfig
 
     def self.included(base)
-    puts "include CppConfig in #{base}";
 	    base.addModInit(base,self.instance_method(:initializer));
     end
+
+    attr_reader :ctools
+
  	def initializer(pnt)
+		@ctools = pnt != nil ? pnt.ctools() : VisualCTools.new();
  	end
+	def INCDIR
+		@INCDIR||=@parent_?@parent_.INCDIR():"#{BUILDDIR()}/include";
+	end
+	def BINDIR
+		@BINDIR||=@parent_?@parent_.BINDIR():"#{BUILDDIR()}/bin";
+	end
+	def LIBDIR
+		@LIBDIR||=@parent_?@parent_.LIBDIR():"#{BUILDDIR()}/lib";
+	end
 end
 
 class CppProject < Project
@@ -32,7 +70,7 @@ class CppProject < Project
 	# Rake namespace of the new project, and called in this instance's context
 
 	def initialize(args={},&block)
-        super.initialize(args,block);
+        super(args,&block);
     end
 
 	# add tasks to ':includes' to place links to or copy source files to
@@ -46,14 +84,15 @@ class CppProject < Project
 	def addPublicIncludes(*args)
 
 		opts = (Hash === args.last) ? args.pop : {}
+
 		files = FileSet.new(args);
 
 		unless(destdir = opts[:destdir])
 			destdir = myPackage;
 		end
-		destdir = File.join(@INCDIR,destdir);
+		destdir = File.join(INCDIR(),destdir);
 
-		flist = createCopyTasks(destdir,files,:config => self,&@@linkPublicInclude_)
+		flist = createCopyTasks(destdir,files,:config => self,&ctools.linkIncludeAction())
 		task :includes => flist
 		task :cleanincludes do |t|
 			deleteFiles(flist)
@@ -244,20 +283,6 @@ public
 		@build.loadProjects(*args)
 	end
 
-	@@linkPublicInclude_ = lambda do |t|
-		config = t.config;
-		if(config.verbose?)
-			puts "generating #{t.name} from #{t.source}"
-		end
-
-		destfile = t.name;
-		srcpath = config.getRelativePath(t.source,File.dirname(t.name));
-		fname = File.basename(t.name);
-		File.open(destfile,'w') do |file|
-			file.puts("/* #{fname} - generated file - do not alter */");
-			file.puts("#include \"#{srcpath}\"");
-		end
-	end
 
 
 protected
