@@ -36,10 +36,19 @@ module CppProjectConfig
     end
 
     attr_reader :ctools
+	attr_reader :cppDefines
 
  	def initializer(pnt)
-		@ctools = pnt != nil ? pnt.ctools() : VisualCTools.new();
+		@cppIPaths_=[]
+		@cppDefines={}
+		if(pnt != nil)
+			@cppDefines.merge!(pnt.cppDefines);
+			@ctools = pnt.ctools;
+		else
+			@ctools = VisualCTools.new();
+		end
  	end
+
 	def INCDIR
 		@INCDIR||=@parent_?@parent_.INCDIR():"#{BUILDDIR()}/include";
 	end
@@ -49,9 +58,33 @@ module CppProjectConfig
 	def LIBDIR
 		@LIBDIR||=@parent_?@parent_.LIBDIR():"#{BUILDDIR()}/lib";
 	end
+
+	def addIncludePaths(*defs)	
+		defs.flatten!()
+		defs.each do |ip|
+			@cppIPaths_ << File.expand_path(ip);
+		end	
+	end	
+
+	def cppDefine(*args)
+		args.flatten!()
+		args.each do |c|
+			spl = c.split('=',2);
+			# no value is nil, XXX= will have a value of empty string "" 
+			@cppDefines[spl[0]] = spl[1];
+		end
+	end
+
+	def cppUndefine(*args)
+		args.flatten!()
+		args.each do |c|
+			@cppDefines.delete(c)
+		end
+	end
+
 end
 
-class CppProject < Project
+class CppProject < Rakish::Project
     include CppProjectConfig
 
 	# Create a new project
@@ -99,6 +132,29 @@ class CppProject < Project
 		end
 	end
 
+	# called after initializers on all projects and before rake
+	# starts executing tasks
+	def preBuild()
+        super;
+        puts("pre building #{@myNamespace}");
+		if(@projectId)
+			cd @projectDir, :verbose=>verbose? do
+                ns = Rake.application.in_namespace(@myNamespace) do
+                    task :vcproj do |t|
+                        require "#{Rakish::MAKEDIR}/VcprojBuilder.rb"
+                        # onVcprojTask
+                    end
+                    task :vcprojclean do |t|
+                        require "#{Rakish::MAKEDIR}/VcprojBuilder.rb"
+                        # onVcprojCleanTask
+                    end
+				export(:vcproj);
+				export(:vcprojclean);
+                end
+            end
+        end
+	end
+
 
 end # CppProject
 
@@ -135,25 +191,6 @@ class XCppProject < Project
         ensureDirectoryTask(OBJPATH());
     end
 
-	# called after initializers on all projects and before rake
-	# starts executing tasks
-	def preBuild()
-        if(@projectId)
-            cd @projectDir, :verbose=>verbose? do
-                ns = Rake.application.in_namespace(@myNamespace) do
-                    task :vcproj do |t|
-                        require "#{Rakish::MAKEDIR}/BuildVcproj.rb"
-                        onVcprojTask
-                    end
-                    task :vcprojclean do |t|
-                        require "#{Rakish::MAKEDIR}/BuildVcproj.rb"
-                        onVcprojCleanTask
-                    end
-                end
-            end
-        end
-        super.preBuild()
-	end
 
 protected  #### compile target configuration
 

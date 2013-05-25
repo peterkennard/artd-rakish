@@ -26,6 +26,7 @@ class Build
             end
 			@projects.each do |p|
 				p.preBuild
+				p.resolveExports
 			end
 		end
 
@@ -98,7 +99,7 @@ class Build
 end
 
 # --------------------------------------------------------------------------
-# Rakish singleton methods.
+# Rakish module singleton methods.
 #
 class << self
 	# Current Build
@@ -144,11 +145,12 @@ class Project < BuildConfig
 
 	# this may need to be changed as rake evolves
 	def export(name)
-        @exported_ ||= Set.new;
-        @exported_.add(name);
-        namespace(':') do
-            task name;
-        end
+	    @exported_ ||= Set.new;
+        if(@exported_.add?(name))
+			namespace(':') do
+				task name;
+			end
+		end
 	end
 
 
@@ -290,13 +292,34 @@ class Project < BuildConfig
     def initProject(args)
     end
 
+	# link global tasks to this project's tasks if they are defined and set as exported
+	def resolveExports
+		targets = @exported_ || Set.new;
+		targets.merge(@@globalTargets);
+
+		targets.each do |gt|
+			tname = "#{@myNamespace}:#{gt}"
+			tsk = Rake.application.lookup(tname);
+			# overide invoke_with_call_chain to print the tasks as they are invoked
+			if(tsk)
+				tsk.instance_eval do
+					alias :_o_iwcc_ :invoke_with_call_chain
+					def invoke_with_call_chain(task_args, invocation_chain)
+						puts("---- #{name()}") unless @already_invoked
+						_o_iwcc_(task_args, invocation_chain);
+					end
+				end
+				task gt => [ tname ];
+			end
+		end
+	end
+
 	# called after initializers on all projects and before rake
 	# starts executing tasks
 	def preBuild
 
 		cd @projectDir, :verbose=>verbose? do
 
-			puts("pre building #{moduleName}")
 			tname = "#{@myNamespace}:preBuild"
 
 			ns = Rake.application.in_namespace(@myNamespace) do
@@ -308,27 +331,6 @@ class Project < BuildConfig
 					# @myNamespace = "#{Rake.application.current_scope.join(':')}"
 					# instance_eval(&block)
 
-				end
-			end
-
-
-			targets = @exported_ || Set.new;
-			targets.merge(@@globalTargets);
-
-			# link global tasks to this project's tasks if defined or set as exported
-			targets.each do |gt|
-				tname = "#{@myNamespace}:#{gt}"
-				tsk = Rake.application.lookup(tname);
-				# overide invoke_with_call_chain to print the tasks as they are invoked
-				if(tsk)
-					tsk.instance_eval do
-						alias :_o_iwcc_ :invoke_with_call_chain
-						def invoke_with_call_chain(task_args, invocation_chain)
-							puts("---- #{name()}") unless @already_invoked
-							_o_iwcc_(task_args, invocation_chain);
-						end
-					end
-					task gt => [ tname ];
 				end
 			end
 		end

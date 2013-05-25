@@ -168,21 +168,6 @@ module CppConfigMod
 		end		
 	end
 
-	def cppDefine(*args)
-		args.flatten!()
-		args.each do |c|
-			spl = c.split('=',2);
-			# no value is nil, XXX= will have a value of empty string "" 
-			@defines[spl[0]] = spl[1];
-		end
-	end
-
-	def cppUndefine(*args)
-		args.flatten!()
-		args.each do |c|
-			@defines.delete(c)
-		end
-	end
 	
 	def addIncludePaths(*defs)	
 		defs.flatten!()
