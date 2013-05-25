@@ -1,2 +1,2 @@
 
-puts "loading VcprojBuilder"
+# puts "loading VcprojBuilder"
