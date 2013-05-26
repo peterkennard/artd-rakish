@@ -58,6 +58,9 @@ module CppProjectConfig
 	def LIBDIR
 		@LIBDIR||=@parent_?@parent_.LIBDIR():"#{BUILDDIR()}/lib";
 	end
+	def vcprojDir
+		@vcprojDir||=@parent_?@parent_.vcprojDir():"#{BUILDDIR()}/vcproj";
+	end
 
 	def addIncludePaths(*defs)	
 		defs.flatten!()
@@ -140,16 +143,20 @@ class CppProject < Rakish::Project
 		if(@projectId)
 			cd @projectDir, :verbose=>verbose? do
                 ns = Rake.application.in_namespace(@myNamespace) do
-                    task :vcproj do |t|
+                    ensureDirectoryTask(vcprojDir);
+					tsk = task :vcproj=>[vcprojDir] do |t|
                         require "#{Rakish::MAKEDIR}/VcprojBuilder.rb"
-                        # onVcprojTask
+                        VcprojBuilder.onVcprojTask(t);
                     end
-                    task :vcprojclean do |t|
+					
+					tsk.config = self;
+                    tsk = task :vcprojclean do |t|
                         require "#{Rakish::MAKEDIR}/VcprojBuilder.rb"
-                        # onVcprojCleanTask
+                        VcprojBuilder.onVcprojCleanTask(t);
                     end
-				export(:vcproj);
-				export(:vcprojclean);
+					tsk.config = self;
+					export(:vcproj);
+					export(:vcprojclean);
                 end
             end
         end
