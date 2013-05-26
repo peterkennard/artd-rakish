@@ -139,6 +139,7 @@ class BuildConfig < Module
     include BuildConfigMod
 
 	attr_property 	:BUILDDIR
+	attr_property	:thirdPartyPath
 
 
 end
@@ -154,7 +155,6 @@ class GlobalConfig < BuildConfig
 	end
 
 	attr_property :CONFIG
-	attr_property :thirdPartyPath
 
 	def self.includeConfigType(mod)
 		unless GlobalConfig.include? mod	
@@ -189,8 +189,6 @@ class GlobalConfig < BuildConfig
 
 			cfg.thirdPartyPath ||= File.join(ENV['ARTD_TOOLS'],'../.');
 			cfg.thirdPartyPath = File.expand_path(cfg.thirdPartyPath);
-
-			puts("third-party path = #{cfg.thirdPartyPath}");
 
 			@BUILDDIR ||= "#{Rake.original_dir}/build";
 			@BUILDDIR = File.expand_path(@BUILDDIR);

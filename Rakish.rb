@@ -397,6 +397,10 @@ module Rakish
 			op.join('/')
 		end
 
+		def getWindowsRelativePath(path,relto=nil)
+			getRelativePath(path,relto).gsub('/','\\');
+		end
+
 		HostIsCygwin_ = RUBY_PLATFORM =~ /(cygwin)/i
 		HostIsWindows_ = (Rake::application.windows? || HostIsCygwin_ )
 		

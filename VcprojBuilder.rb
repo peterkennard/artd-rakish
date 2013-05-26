@@ -19,7 +19,6 @@ class VcprojBuilder
   <PropertyGroup Label="Globals">
     <ProjectGuid>{\#{projectUuid}}</ProjectGuid>
     <Keyword>MakeFileProj</Keyword>
-    <RootNamespace>\#{projectNamespace}</RootNamespace>
    </PropertyGroup>
   <Import Project="$(VCTargetsPath)\\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -43,9 +42,9 @@ class VcprojBuilder
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <NMakeOutput>makerake.exe</NMakeOutput>
     <NMakePreprocessorDefinitions>WIN32;_DEBUG;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
-    <NMakeBuildCommandLine>..\\..\\third-party\\tools\\exec-rake.bat -f rakefile.rb vcproj</NMakeBuildCommandLine>
-    <NMakeReBuildCommandLine>rake -f rakefile.rb rebuild</NMakeReBuildCommandLine>
-    <NMakeCleanCommandLine>rake -f rakefile.rb clean</NMakeCleanCommandLine>
+    <NMakeBuildCommandLine>\#{buildCommandLine}</NMakeBuildCommandLine>
+    <NMakeReBuildCommandLine>\#{reBuildCommandLine}</NMakeReBuildCommandLine>
+    <NMakeCleanCommandLine>\#{cleanCommandLine}</NMakeCleanCommandLine>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <NMakeOutput>makerake.exe</NMakeOutput>
@@ -67,6 +66,13 @@ EOTEXT
 		cfg = targ.config; # TODO: clean this up ??
 		projectUuid = cfg.projectId;
 		projectNamespace = cfg.moduleName;
+		
+		rakeCommand = getWindowsRelativePath(File.join(cfg.thirdPartyPath,'tools/exec-rake.bat'),cfg.vcprojDir);
+		rakeFile = getWindowsRelativePath(cfg.projectFile,cfg.vcprojDir);
+
+		buildCommandLine = "#{rakeCommand} -f #{rakeFile} build";
+		reBuildCommandLine = "#{rakeCommand} -f #{rakeFile} rebuild";
+		cleanCommandLine = "#{rakeCommand} -f #{rakeFile} clean";
 
 		rubyLinePP(@@rakefileConfigTxt_,file,binding());
 	end
@@ -76,7 +82,7 @@ EOTEXT
 		@@instance_||= VcprojBuilder.new();
 
 		cfg = t.config;
-		defpath = File.join(cfg.vcprojDir, cfg.moduleName + '-rake.vcproj'); 
+		defpath = File.join(cfg.vcprojDir, cfg.moduleName + '-rake.vcxproj'); 
 		puts(" creating vcproj in #{defpath}")
 		begin
 			File.open(defpath,'w') do |f|
