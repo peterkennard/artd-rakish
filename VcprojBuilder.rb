@@ -19,7 +19,7 @@ class VcprojBuilder
   <PropertyGroup Label="Globals">
     <ProjectGuid>{\#{projectUuid}}</ProjectGuid>
     <Keyword>MakeFileProj</Keyword>
-   <RootNamespace>\#{projectNamespace}</RootNamespace>
+    <RootNamespace>\#{projectNamespace}</RootNamespace>
    </PropertyGroup>
   <Import Project="$(VCTargetsPath)\\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">

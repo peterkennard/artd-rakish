@@ -187,6 +187,14 @@ class GlobalConfig < BuildConfig
 
 			enableNewFields(&@initGlobalPaths) if @initGlobalPaths;
 
+			cfg.thirdPartyPath ||= File.join(ENV['ARTD_TOOLS'],'../.');
+			cfg.thirdPartyPath = File.expand_path(cfg.thirdPartyPath);
+
+			puts("third-party path = #{cfg.thirdPartyPath}");
+
+			@BUILDDIR ||= "#{Rake.original_dir}/build";
+			@BUILDDIR = File.expand_path(@BUILDDIR);
+
 			config = nil;
 			if(HOSTTYPE =~ /Macosx/)
 				defaultConfig = "iOS-gcc-fat-Debug";
@@ -194,9 +202,6 @@ class GlobalConfig < BuildConfig
 				defaultConfig = "Win32-VC8-MD-Debug";
 			end
 
-
-			@BUILDDIR ||= "#{Rake.original_dir}/build";
-			@BUILDDIR = File.expand_path(@BUILDDIR);
 
 			# set defaults if not set above
 			@LIBDIR = "#{@BUILDDIR}/lib"
@@ -206,9 +211,6 @@ class GlobalConfig < BuildConfig
 			# get config from command line
 			cfg.CONFIG ||= ENV['CONFIG'];
 			cfg.CONFIG ||= defaultConfig
-
-			cfg.thirdPartyPath ||= File.join(MAKEDIR,'../../third-party');
-			cfg.thirdPartyPath = File.expand_path(cfg.thirdPartyPath);
 
 		end
 
