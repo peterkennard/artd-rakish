@@ -83,9 +83,15 @@ EOTEXT
 		out << "<PropertyGroup Condition=\"'$(Configuration)|$(Platform)\'=='#{config}|Win32'\">";
 		out << "  <NMakeOutput>#{cppProject.moduleName}.exe</NMakeOutput>";
 		out << '  <NMakePreprocessorDefinitions>WIN32;_DEBUG;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>';
-		out << "  <NMakeBuildCommandLine>#{rakeCommandLine} build</NMakeBuildCommandLine>";
-		out << "  <NMakeReBuildCommandLine>#{rakeCommandLine} rebuild</NMakeReBuildCommandLine>";
-		out << "  <NMakeCleanCommandLine>#{rakeCommandLine} clean</NMakeCleanCommandLine>";
+		if(config.to_s === 'Autogen') 
+			out << "  <NMakeBuildCommandLine>#{rakeCommandLine} autogen</NMakeBuildCommandLine>";
+			out << "  <NMakeReBuildCommandLine>#{rakeCommandLine} autogenclean autogen</NMakeReBuildCommandLine>";
+			out << "  <NMakeCleanCommandLine>#{rakeCommandLine} autogenclean</NMakeCleanCommandLine>";
+		else
+			out << "  <NMakeBuildCommandLine>#{rakeCommandLine} build</NMakeBuildCommandLine>";
+			out << "  <NMakeReBuildCommandLine>#{rakeCommandLine} rebuild</NMakeReBuildCommandLine>";
+			out << "  <NMakeCleanCommandLine>#{rakeCommandLine} clean</NMakeCleanCommandLine>";
+		end
 		out << '</PropertyGroup>';
 	end
 
@@ -116,19 +122,12 @@ EOTEXT
 		rakeFile = getWindowsRelativePath(cfg.projectFile,cfg.vcprojDir);
 
 		@rakeCommandLine = "#{rakeCommand} -f #{rakeFile}";
-
-		buildCommandLine = "#{rakeCommand} -f #{rakeFile} build";
-		reBuildCommandLine = "#{rakeCommand} -f #{rakeFile} rebuild";
-		cleanCommandLine = "#{rakeCommand} -f #{rakeFile} clean";
-
 		rubyLinePP(@@rakefileConfigTxt_,file,binding());
 	end
 
 	def VcprojBuilder.onVcprojTask(t)
 		
 		builder = VcprojBuilder.new # do
-		#	@cppProject = t.config.
-		# end
 
 		cfg = t.config;
 		defpath = File.join(cfg.vcprojDir, cfg.moduleName + '-rake.vcxproj'); 
