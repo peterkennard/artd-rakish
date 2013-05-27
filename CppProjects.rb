@@ -85,6 +85,45 @@ module CppProjectConfig
 		end
 	end
 
+	def addSourceFiles(*args)
+
+		opts = (Hash === args.last) ? args.pop : {}
+
+		@sourceFiles ||= FileSet.new;
+		@sourceFiles.include(args);
+
+		files = FileSet.new(args);
+
+		# @srcdirs ||= FileSet.new
+
+if(false)
+		cfg = self
+
+        objs = tools.createCompileTasks(files,cfg);
+
+		unless tsk = Rake.application.lookup("#{@myNamespace}:compile")
+			tsk = tools.initCompileTask(self)
+		end
+		tsk.enhance(objs)
+
+ 		unless tsk = Rake.application.lookup("#{@OBJDIR}/depends.rb")
+            tsk = tools.initDependsTask(self)
+ 		end
+
+		raked=[]
+		objs.each do |obj|
+            obj = obj.ext('.raked');
+            raked << obj if File.exist?(obj)
+		end
+		tsk.enhance(raked);
+
+		@objs ||= [];
+		@objs += objs;
+		return(objs)
+	end
+
+	end
+
 end
 
 class CppProject < Rakish::Project
@@ -169,45 +208,6 @@ class CppProject < Rakish::Project
 		task :cleanincludes do |t|
 			deleteFiles(flist)
 		end
-	end
-
-	def addSourceFiles(*args)
-
-		opts = (Hash === args.last) ? args.pop : {}
-
-		@sourceFiles ||= FileSet.new;
-		@sourceFiles.include(args);
-
-		files = FileSet.new(args);
-
-		# @srcdirs ||= FileSet.new
-
-if(false)
-		cfg = self
-
-        objs = tools.createCompileTasks(files,cfg);
-
-		unless tsk = Rake.application.lookup("#{@myNamespace}:compile")
-			tsk = tools.initCompileTask(self)
-		end
-		tsk.enhance(objs)
-
- 		unless tsk = Rake.application.lookup("#{@OBJDIR}/depends.rb")
-            tsk = tools.initDependsTask(self)
- 		end
-
-		raked=[]
-		objs.each do |obj|
-            obj = obj.ext('.raked');
-            raked << obj if File.exist?(obj)
-		end
-		tsk.enhance(raked);
-
-		@objs ||= [];
-		@objs += objs;
-		return(objs)
-	end
-
 	end
 
 end # CppProject
