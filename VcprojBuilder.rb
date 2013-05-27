@@ -83,9 +83,9 @@ EOTEXT
 		out << "<PropertyGroup Condition=\"'$(Configuration)|$(Platform)\'=='#{config}|Win32'\">";
 		out << "  <NMakeOutput>#{cppProject.moduleName}.exe</NMakeOutput>";
 		out << '  <NMakePreprocessorDefinitions>WIN32;_DEBUG;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>';
-		out << '  <NMakeBuildCommandLine>rake build</NMakeBuildCommandLine>';
-		out << '  <NMakeReBuildCommandLine>rake rebuild</NMakeReBuildCommandLine>';
-		out << '  <NMakeCleanCommandLine>rake clean</NMakeCleanCommandLine>';
+		out << "  <NMakeBuildCommandLine>#{rakeCommandLine} build</NMakeBuildCommandLine>";
+		out << "  <NMakeReBuildCommandLine>#{rakeCommandLine} rebuild</NMakeReBuildCommandLine>";
+		out << "  <NMakeCleanCommandLine>#{rakeCommandLine} clean</NMakeCleanCommandLine>";
 		out << '</PropertyGroup>';
 	end
 
@@ -99,10 +99,11 @@ EOTEXT
 	end
 
 	def eachConfig(&b) 
-		['Autogen','Debug','Release'].each(&b);
+		['Autogen', 'Debug','Release'].each(&b);
 	end
 
 	attr_reader :cppProject
+	attr_reader :rakeCommandLine
 
 	def writeRakefileVCProj(file,targ,diffto)
 		indent = "";
@@ -113,6 +114,8 @@ EOTEXT
 		
 		rakeCommand = getWindowsRelativePath(File.join(cfg.thirdPartyPath,'tools/exec-rake.bat'),cfg.vcprojDir);
 		rakeFile = getWindowsRelativePath(cfg.projectFile,cfg.vcprojDir);
+
+		@rakeCommandLine = "#{rakeCommand} -f #{rakeFile}";
 
 		buildCommandLine = "#{rakeCommand} -f #{rakeFile} build";
 		reBuildCommandLine = "#{rakeCommand} -f #{rakeFile} rebuild";
