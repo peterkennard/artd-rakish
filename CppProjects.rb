@@ -5,6 +5,86 @@ module Rakish
 
 class CTools
 
+	VALID_PLATFORMS = { 
+		:Win32 => {
+			:requires => 'WindowsCTools.rb',
+			:vcproj => true
+		},
+		:Win64 => {
+			:requires => 'WindowsCTools.rb',
+#			:vcproj => true
+		},
+		:iOS => {
+			:requires => 'IOSCTools.rb',
+		},
+		:Linux32 => {
+			:requires => 'GCCCTools.rb',
+#			:vcproj => true
+		},
+		:Linux64 => {
+			:requires => 'GCCCTools.rb',
+#			:vcproj => true
+		},
+	};
+
+	# TODO: these need to be put into the windows tools
+
+				VALID_DEBUGTYPES = { 
+					'Debug'=>true,
+					'Release'=>true,
+				#	'Checked'=>true
+				};
+
+				VALID_LINKTYPES = { 
+					'MT'=>true,
+					'MTd'=>true,
+					'MD'=>true,
+					'MDd'=>true
+				};
+				
+				VALID_COMPILERS = { 
+				#	'VC5'=>true,
+				#	'VC6'=>true,
+				#	'VC7'=>true, 
+				#	'VC8'=>true, 
+				#	'VC9'=>true, 
+					'VC10'=>true,
+				#	'ICL'=>true
+				};
+				
+	@@vcprojConfigs_ = [
+		"Win32-VC10-MD-Debug",
+		"Win32-VC10-MDd-Debug",
+		"Win32-VC10-MT-Debug",
+		"Win32-VC10-MTd-Debug",
+		"Win32-VC10-MD-Release",
+		"Win32-VC10-MT-Release",
+	];
+
+	def self.forEachVcprojConfig(&b)		
+		@@vcprojConfigs_.each(&b);
+	end
+		
+		
+		# Cpp config format  Platform-Compiler-LinkType-DebugType ie: Win32-VC7-MD-Debug
+	if(false)
+		VALID_PLATFORMS.each_pair do |k,v|
+			next unless v[:vcproj];
+			platform = k;
+			VALID_COMPILERS.each_pair do |k,v|
+				compiler = k;
+				VALID_LINKTYPES.each_pair do |k,v|
+					link = k;
+					VALID_DEBUGTYPES.each_pair do |k,v|
+						debug = k;
+						yield("#{platform}-#{compiler}-#{link}-#{debug}");
+					end
+				end
+			end
+		end
+	end
+
+
 	@@linkIncludeAction_ = lambda do |t|
 		config = t.config;
 		# if(config.verbose?)

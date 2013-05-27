@@ -315,15 +315,14 @@ module Rakish
 		#   bnd   = "binding" to context to evaluate substitutions in
 		def rubyLinePP(lines,fout,bnd)
 
-			indented = eval('defined? indent',bnd)
-			puts("indented #{indented}");
+			setIndent = eval('defined? indent',bnd)
 
 			rawline = nil;
 			begin
 				lines.each_line do |line|
 					rawline = line;
 					fout.puts line.gsub(/\#\{[^\#]+\}/) { |m|					
-						eval("indent=#{$`.length}",bnd) if indented;
+						eval("indent=#{$`.length}",bnd) if setIndent;
 						eval('"'+m+'"',bnd)
 					}
 				end
