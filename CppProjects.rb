@@ -105,9 +105,45 @@ class CppProject < Rakish::Project
 	# &block is always yielded to in the directory of the projects file, and the
 	# Rake namespace of the new project, and called in this instance's context
 
+
+	def setupCppConfig(&b)
+		@configurator_ = b;	
+	end
+
 	def initialize(args={},&block)
         super(args,&block);
     end
+
+
+	# called after initializers on all projects and before rake
+	# starts executing tasks
+	def preBuild()
+        super;
+		cd @projectDir, :verbose=>verbose? do		
+            ns = Rake.application.in_namespace(@myNamespace) do
+				if(defined? @configurator_)
+					@configurator_.call(self);
+				end
+				puts("pre building #{@myNamespace}");
+				if(@projectId)
+                    ensureDirectoryTask(vcprojDir);
+					tsk = task :vcproj=>[vcprojDir] do |t|
+                        require "#{Rakish::MAKEDIR}/VcprojBuilder.rb"
+                        VcprojBuilder.onVcprojTask(t);
+                    end
+					
+					tsk.config = self;
+                    tsk = task :vcprojclean do |t|
+                        require "#{Rakish::MAKEDIR}/VcprojBuilder.rb"
+                        VcprojBuilder.onVcprojCleanTask(t);
+                    end
+					tsk.config = self;
+					export(:vcproj);
+					export(:vcprojclean);
+                end
+            end # ns
+        end # cd
+	end
 
 	# add tasks to ':includes' to place links to or copy source files to
 	# the specified 'stub' directory.
@@ -135,33 +171,44 @@ class CppProject < Rakish::Project
 		end
 	end
 
-	# called after initializers on all projects and before rake
-	# starts executing tasks
-	def preBuild()
-        super;
-        puts("pre building #{@myNamespace}");
-		if(@projectId)
-			cd @projectDir, :verbose=>verbose? do
-                ns = Rake.application.in_namespace(@myNamespace) do
-                    ensureDirectoryTask(vcprojDir);
-					tsk = task :vcproj=>[vcprojDir] do |t|
-                        require "#{Rakish::MAKEDIR}/VcprojBuilder.rb"
-                        VcprojBuilder.onVcprojTask(t);
-                    end
-					
-					tsk.config = self;
-                    tsk = task :vcprojclean do |t|
-                        require "#{Rakish::MAKEDIR}/VcprojBuilder.rb"
-                        VcprojBuilder.onVcprojCleanTask(t);
-                    end
-					tsk.config = self;
-					export(:vcproj);
-					export(:vcprojclean);
-                end
-            end
-        end
+	def addSourceFiles(*args)
+
+		opts = (Hash === args.last) ? args.pop : {}
+
+		@sourceFiles ||= FileSet.new;
+		@sourceFiles.include(args);
+
+		files = FileSet.new(args);
+
+		# @srcdirs ||= FileSet.new
+
+if(false)
+		cfg = self
+
+        objs = tools.createCompileTasks(files,cfg);
+
+		unless tsk = Rake.application.lookup("#{@myNamespace}:compile")
+			tsk = tools.initCompileTask(self)
+		end
+		tsk.enhance(objs)
+
+ 		unless tsk = Rake.application.lookup("#{@OBJDIR}/depends.rb")
+            tsk = tools.initDependsTask(self)
+ 		end
+
+		raked=[]
+		objs.each do |obj|
+            obj = obj.ext('.raked');
+            raked << obj if File.exist?(obj)
+		end
+		tsk.enhance(raked);
+
+		@objs ||= [];
+		@objs += objs;
+		return(objs)
 	end
 
+	end
 
 end # CppProject
 
@@ -207,41 +254,6 @@ public
 		yield self
 	end
 
-	def addSourceFiles(*args)
-
-		opts = (Hash === args.last) ? args.pop : {}
-
-		@sourceFiles ||= FileSet.new;
-		@sourceFiles.include(args);
-
-		files = FileSet.new(args);
-
-		# @srcdirs ||= FileSet.new
-
-		cfg = self
-
-        objs = tools.createCompileTasks(files,cfg);
-
-		unless tsk = Rake.application.lookup("#{@myNamespace}:compile")
-			tsk = tools.initCompileTask(self)
-		end
-		tsk.enhance(objs)
-
- 		unless tsk = Rake.application.lookup("#{@OBJDIR}/depends.rb")
-            tsk = tools.initDependsTask(self)
- 		end
-
-		raked=[]
-		objs.each do |obj|
-            obj = obj.ext('.raked');
-            raked << obj if File.exist?(obj)
-		end
-		tsk.enhance(raked);
-
-		@objs ||= [];
-		@objs += objs;
-		return(objs)
-	end
 private
 	def acquireBuildId(dir, map=nil)
 		outOfSync = false;
@@ -316,18 +328,12 @@ public
 		@@buildId_
 	end
 
-	# execute block inside this projects Rake namespace
-	def inMyNamespace(&block)
-		namespace(":#{@myNamespace}",&block)
-	end
 
 public
 
 	def loadProjects(*args)
 		@build.loadProjects(*args)
 	end
-
-
 
 protected
 

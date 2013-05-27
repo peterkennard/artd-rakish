@@ -314,6 +314,12 @@ class Project < BuildConfig
 		end
 	end
 
+	# execute block inside this projects Rake namespace
+	def inMyNamespace(&block)
+		namespace(":#{@myNamespace}",&block)
+	end
+
+	
 	# called after initializers on all projects and before rake
 	# starts executing tasks
 	def preBuild
