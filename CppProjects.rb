@@ -290,6 +290,24 @@ class CppProject < Rakish::Project
 		end
 	end
 
+	# get all include files for generated projects		
+	def getIncludeFiles()
+		unless @allIncludeFiles_;
+			files = FileSet.new();
+			files.include( "#{projectDir}/*.h");
+			files.include( "#{projectDir}/*.hpp");
+			files.include( "#{projectDir}/*.inl");
+			files.include( "#{projectDir}/*.i");
+			@allIncludeFiles_ = files;
+		end
+		@allIncludeFiles_
+	end
+
+	def getSourceFiles()
+		@sourceFiles||=FileSet.new
+	end
+
+
 end # CppProject
 
 end # Rakish

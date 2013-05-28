@@ -109,13 +109,16 @@ EOTEXT
 	def getVCX10FileGroups(indent)
 		indent = "%#{indent}s" % "";
 		out = []
+		files = cppProject.getSourceFiles();
+		unless(files.empty?)
+			out << '<ItemGroup>';
+			files.each do |f|
+				out << "  <ClCompile Include=\"#{vcprojRelative(f)}\" />";
+			end
+			out << '</ItemGroup>';
+		end
 
-		files = FileSet.new();
-		files.include( "#{cppProject.projectDir}/*.h");
-		files.include( "#{cppProject.projectDir}/*.hpp");
-		files.include( "#{cppProject.projectDir}/*.inl");
-		files.include( "#{cppProject.projectDir}/*.i");
-
+		files = cppProject.getIncludeFiles();
 		unless(files.empty?)
 			out << '<ItemGroup>';
 			files.each do |f|
