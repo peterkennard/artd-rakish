@@ -12,6 +12,7 @@ class VcprojBuilder
   <PropertyGroup Label="Globals">
     <ProjectGuid>{\#{projectUuid}}</ProjectGuid>
     <Keyword>MakeFileProj</Keyword>
+	<ProjectName>\#{projectName}</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\\Microsoft.Cpp.Default.props" />
   \#{getVCX10RakefileConfigTypes(indent)}
@@ -50,6 +51,8 @@ EOTEXT
 		out << "<PropertyGroup Condition=\"'$(Configuration)|$(Platform)'=='#{config}|Win32'\" Label=\"Configuration\">";
 		out << '  <ConfigurationType>Makefile</ConfigurationType>';
 		out << '  <UseDebugLibraries>false</UseDebugLibraries>';
+	    out << "  <IntDir>#{cppProject.OBJDIR()}</IntDir>";
+		out << "  <OutDir>#{cppProject.BINDIR()}</OutDir>";
 		out << '</PropertyGroup>';
 	end
 
@@ -144,7 +147,7 @@ EOTEXT
 		indent = "";
 		proj = cppProject;
 		projectUuid = proj.projectId;
-		projectNamespace = proj.moduleName;
+		projectName = proj.moduleName;
 		
 		rakeCommand = vcprojRelative(File.join(proj.thirdPartyPath,'tools/exec-rake.bat'));
 		rakeFile = vcprojRelative(proj.projectFile);
