@@ -23,9 +23,7 @@ class VcprojBuilder
   \#{getVCX10RakefileUserMacros(indent)}   
   <ItemDefinitionGroup>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <None Include="readme.txt" />
-  </ItemGroup>
+  \#{getVCX10FileGroups(indent)}
   <Import Project="$(VCTargetsPath)\\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
@@ -104,6 +102,34 @@ EOTEXT
 		out.join("\n#{indent}");
 	end
 
+	def vcprojRelative(f)
+		getWindowsRelativePath(f,cppProject.vcprojDir);
+	end
+
+	def getVCX10FileGroups(indent)
+		indent = "%#{indent}s" % "";
+		out = []
+
+		files = FileSet.new();
+		files.include( "#{cppProject.projectDir}/*.h");
+		files.include( "#{cppProject.projectDir}/*.hpp");
+		files.include( "#{cppProject.projectDir}/*.inl");
+		files.include( "#{cppProject.projectDir}/*.i");
+
+		unless(files.empty?)
+			out << '<ItemGroup>';
+			files.each do |f|
+				out << "  <ClInclude Include=\"#{vcprojRelative(f)}\" />";
+			end
+			out << '</ItemGroup>';
+		end
+		out << '<ItemGroup>';
+		out << "  <None Include=\"#{vcprojRelative(cppProject.projectFile)}\" />";
+		out << '</ItemGroup>';
+		out.join("\n#{indent}");
+	end
+
+
 	def eachConfig(&b) 
 		['Autogen', 'Debug','Release'].each(&b);
 	end
@@ -118,8 +144,8 @@ EOTEXT
 		projectUuid = cfg.projectId;
 		projectNamespace = cfg.moduleName;
 		
-		rakeCommand = getWindowsRelativePath(File.join(cfg.thirdPartyPath,'tools/exec-rake.bat'),cfg.vcprojDir);
-		rakeFile = getWindowsRelativePath(cfg.projectFile,cfg.vcprojDir);
+		rakeCommand = vcprojRelative(File.join(cfg.thirdPartyPath,'tools/exec-rake.bat'));
+		rakeFile = vcprojRelative(cfg.projectFile);
 
 		@rakeCommandLine = "#{rakeCommand} -f #{rakeFile}";
 		rubyLinePP(@@rakefileConfigTxt_,file,binding());
