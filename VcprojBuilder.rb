@@ -140,35 +140,45 @@ EOTEXT
 	attr_reader :cppProject
 	attr_reader :rakeCommandLine
 
-	def writeRakefileVCProj(file,targ,diffto)
+	def writeRakefileVCProj(file)
 		indent = "";
-		@cppProject = targ.config;
-		cfg = targ.config; # TODO: clean this up ??
-		projectUuid = cfg.projectId;
-		projectNamespace = cfg.moduleName;
+		proj = cppProject;
+		projectUuid = proj.projectId;
+		projectNamespace = proj.moduleName;
 		
-		rakeCommand = vcprojRelative(File.join(cfg.thirdPartyPath,'tools/exec-rake.bat'));
-		rakeFile = vcprojRelative(cfg.projectFile);
+		rakeCommand = vcprojRelative(File.join(proj.thirdPartyPath,'tools/exec-rake.bat'));
+		rakeFile = vcprojRelative(proj.projectFile);
 
 		@rakeCommandLine = "#{rakeCommand} -f #{rakeFile}";
 		rubyLinePP(@@rakefileConfigTxt_,file,binding());
 	end
 
-	def VcprojBuilder.onVcprojTask(t)
-		
-		builder = VcprojBuilder.new # do
+	def writeVCProjFiles(proj)
+		@cppProject = proj;
 
-		cfg = t.config;
-		defpath = File.join(cfg.vcprojDir, cfg.moduleName + '-rake.vcxproj'); 
+		defpath = File.join(proj.vcprojDir, proj.moduleName + '-rake.vcxproj'); 
+		tempPath = File.join(proj.vcprojDir, proj.moduleName + '.temp');
+		
 		puts(" creating vcproj in #{defpath}")
 		begin
-			File.open(defpath,'w') do |f|
-				builder.writeRakefileVCProj(f,t,nil);
+			File.open(tempPath,'w') do |f|
+				writeRakefileVCProj(f);
 			end	
+			if(textFilesDiffer(tempPath,defpath))
+				mv(tempPath, defpath);
+			end
 		rescue => exception
 		  puts exception
 		  # exception.backtrace
 		end	
+		rm_f(tempPath);
+
+	end
+
+	def VcprojBuilder.onVcprojTask(t)
+		proj = t.config;
+		builder = VcprojBuilder.new # do
+		builder.writeVCProjFiles(proj);
 	end
 	
 	def VcprojBuilder.onVcprojCleanTask(t)

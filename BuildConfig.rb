@@ -190,7 +190,7 @@ class GlobalConfig < BuildConfig
 			cfg.thirdPartyPath ||= File.join(ENV['ARTD_TOOLS'],'../.');
 			cfg.thirdPartyPath = File.expand_path(cfg.thirdPartyPath);
 
-			@BUILDDIR ||= "#{Rake.original_dir}/build";
+			@BUILDDIR ||= ENV['RakishBuildRoot']||"#{Rake.original_dir}/build";
 			@BUILDDIR = File.expand_path(@BUILDDIR);
 
 			config = nil;
