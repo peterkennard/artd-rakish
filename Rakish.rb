@@ -107,22 +107,41 @@ module Rakish
 
 	MAKEDIR = File.dirname(File.expand_path(__FILE__));
 
-    @@_logger_ = Logger.new(STDOUT);
-    def self.log
-        @@_logger_
-    end
-    @@_logger_.formatter = proc do |severity, datetime, progname, msg|
-        fileLine = "";
-        caller.each do |clr|
-            unless(/\/logger.rb:/ =~ clr)
-                fileLine = clr;
-                break;
-            end
+	# To use this Looger initialization include it in a class or module
+	# then you can do log.debug { "message" } etc 
+	# from methods or initilaizations in that class 
+
+	module Logger
+
+		@@_logger_ = ::Logger.new(STDOUT);
+		def self.log
+			@@_logger_
+		end
+		@@_logger_.formatter = proc do |severity, datetime, progname, msg|
+			fileLine = "";
+			caller.each do |clr|
+				unless(/\/logger.rb:/ =~ clr)
+					fileLine = clr;
+					break;
+				end
+			end
+			fileLine = fileLine.split(':in `',2)[0];
+			fileLine.sub!(/:(\d)/, '(\1');
+			"#{fileLine}) : #{msg}\n"
+		end
+		def self.included(by)
+			by.class.send(:define_method, :log) do
+				Rakish.log
+			end
+		end
+	    def log
+            Rakish.log
         end
-        fileLine = fileLine.split(':in `',2)[0];
-        fileLine.sub!(/:(\d)/, '(\1');
-        "#{fileLine}) : #{msg}\n"
-    end
+	end
+
+	def self.log
+		Rakish::Logger.log
+	end
 
 
 	class ::Module
@@ -158,8 +177,8 @@ module Rakish
 
 	# a bunch of utility functions used by Projects and configurations
 	module Util
-
 		include Rake::DSL
+		include Rakish::Logger
 				
 		# like each but checks for null and if object doesn't respond to each
 		# use like 
@@ -169,10 +188,6 @@ module Rakish
 		def eachof(v,&b)
 			v.each &b rescue yield v if v # TODO: should use a narrower exception type ?
 		end
-
-        def log
-            Rakish.log
-        end
 
 	protected
         # Task action to simply copy source to destination

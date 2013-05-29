@@ -28,6 +28,7 @@
     <None Include="Rakish.rb" />
     <None Include="RakishProject.rb" />
     <None Include="VcprojBuilder.rb" />
+    <None Include="WindowsCppTools.rb" />
     <None Include="WindowsPlatformTools.rb" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

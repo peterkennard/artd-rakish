@@ -3,29 +3,43 @@ require "#{myPath}/RakishProject.rb"
 
 module Rakish
 
+
+module LoadableModule
+	include Rakish::Logger
+
+	@@loadedByFile_ = {};
+
+	def self.load(fileName)
+		fileName = File.expand_path(fileName);
+		mod = @@loadedByFile_[fileName];
+		return mod if mod;
+		begin			
+			log.debug { "attempting load of #{fileName}" };
+			Thread.current[:loadReturn] = nil;
+			Kernel.load(fileName);
+			loaded = Thread.current[:loadReturn];
+			@@loadedByFile_[fileName] = loaded if(loaded);
+			Thread.current[:loadReturn] = nil;
+		rescue => e
+			puts(e);
+			puts(e.backtrace);
+		end
+
+
+		mod
+	end
+end
+
+
+class InvalidConfigError < Exception
+	def initialize(cfg, msg)
+		super("Invalid Configuration \"#{cfg}\": #{msg}.");
+	end
+end
+
+
 class CTools
 
-	VALID_PLATFORMS = { 
-		:Win32 => {
-			:requires => 'WindowsCTools.rb',
-			:vcproj => true
-		},
-		:Win64 => {
-			:requires => 'WindowsCTools.rb',
-#			:vcproj => true
-		},
-		:iOS => {
-			:requires => 'IOSCTools.rb',
-		},
-		:Linux32 => {
-			:requires => 'GCCCTools.rb',
-#			:vcproj => true
-		},
-		:Linux64 => {
-			:requires => 'GCCCTools.rb',
-#			:vcproj => true
-		},
-	};
 
 	# TODO: these need to be put into the windows tools
 
@@ -99,6 +113,60 @@ class CTools
 			file.puts("#include \"#{srcpath}\"");
 		end
 	end
+
+
+	VALID_PLATFORMS = { 
+		:Win32 => {
+			:requires => 'WindowsCTools.rb',
+			:bits => 32,
+			:vcproj => true,
+		},
+		:Win64 => {
+			:requires => 'WindowsCTools.rb',
+			:bits => 64,
+#			:vcproj => true
+		},
+		:iOS => {
+			:requires => 'IOSCTools.rb',
+			:bits => 32,
+		},
+		:Linux32 => {
+			:requires => 'GCCCTools.rb',
+			:bits => 32,
+#			:vcproj => true
+		},
+		:Linux64 => {
+			:requires => 'GCCCTools.rb',
+			:bits => 64,
+#			:vcproj => true
+		},
+	};
+
+
+	# parses and validates an unknown string configuration name 
+	# of the format [TargetPlatform]-[Compiler]-(items specific to compiler type)
+	def self.validateStringConfig(scfg)
+		
+		splitcfgs = strCfg.split('-');
+		platform  = splitcfgs[0];
+			
+		unless VALID_PLATFORMS[platform]
+			raise InvalidConfigError(scfg, "unrecognized platform \"#{platform}\"");
+		end
+		
+	
+
+#		return({ :platformType=>platform, 
+#			        :platformBits=>platformBits,
+#					:split=>splitcfgs
+#				});
+#		end
+
+
+	end
+
+
+
 end
 
 class VisualCTools < CTools
@@ -231,6 +299,7 @@ class CppProject < Rakish::Project
 
 	def initialize(args={},&block)
         super(args,&block);
+		loaded = LoadableModule.load("#{MAKEDIR}/WindowsCppTools.rb");
     end
 
 
@@ -319,7 +388,7 @@ class CppProject < Rakish::Project
 	# the project's specified values.
 	 
 	def resolveConfiguration(config)
-		if(ret = (@resolvedConfigs||=Hash.new)[config]) 
+		if(ret = (@resolvedConfigs||={})[config]) 
 			return ret;
 		end
 
@@ -374,10 +443,6 @@ class XCppProject < Project
 protected  #### compile target configuration
 
 public
-
-	def compileConfig(&b)
-		yield self
-	end
 
 private
 	def acquireBuildId(dir, map=nil)
@@ -453,12 +518,6 @@ public
 		@@buildId_
 	end
 
-
-public
-
-	def loadProjects(*args)
-		@build.loadProjects(*args)
-	end
 
 protected
 
