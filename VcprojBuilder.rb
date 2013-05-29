@@ -94,7 +94,7 @@ EOTEXT
 			end
 			out << "  <NMakePreprocessorDefinitions>#{cppdefs}</NMakePreprocessorDefinitions>";
 		end
-
+		
 		if(cfg.configName === 'Autogen') 
 			out << "  <NMakeBuildCommandLine>#{rakeCommandLine} autogen</NMakeBuildCommandLine>";
 			out << "  <NMakeReBuildCommandLine>#{rakeCommandLine} autogenclean autogen</NMakeReBuildCommandLine>";

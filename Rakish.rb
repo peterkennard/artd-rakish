@@ -318,8 +318,10 @@ module Rakish
 			setIndent = eval('defined? indent',bnd)
 
 			rawline = nil;
+			lineNum = 0;
 			begin
 				lines.each_line do |line|
+					++lineNum;
 					rawline = line;
 					fout.puts line.gsub(/\#\{[^\#]+\}/) { |m|					
 						eval("indent=#{$`.length}",bnd) if setIndent;
@@ -327,9 +329,12 @@ module Rakish
 					}
 				end
 			rescue => e
-				puts("rubyLinePP(): error processing line:")
+				puts("rubyLinePP(): error processing line #{lineNum}:")
 				puts(rawline);
-				raise e
+				e.backtrace.each do |bline|
+					puts bline;
+					break if bline =~ /(.*)rubyLinePP/;
+				end
 			end
 		end
 

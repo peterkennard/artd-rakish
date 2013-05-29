@@ -152,10 +152,8 @@ module CppProjectConfig
 	def cppDefine(*args)
 		args.flatten!()
 		args.each do |c|
-			puts(" defining #{c}");
 			spl = c.split('=',2);
 			# no value is nil, XXX= will have a value of empty string "" 
-			puts("adding #{self}");
 			@cppDefines[spl[0]] = spl[1];
 		end
 	end
@@ -242,9 +240,6 @@ class CppProject < Rakish::Project
         super;
 		cd @projectDir, :verbose=>verbose? do		
             ns = Rake.application.in_namespace(@myNamespace) do
-				if(defined? @configurator_)
-					@configurator_.call(self);
-				end
 				puts("pre building #{@myNamespace}");
 				if(@projectId)
                     ensureDirectoryTask(vcprojDir);
@@ -329,6 +324,11 @@ class CppProject < Rakish::Project
 		end
 
 		ret = @resolvedConfigs[config] = ResolvedConfig.new(self,config);
+
+		if(defined? @configurator_)
+			@configurator_.call(ret);
+		end
+		
 		ret
 	end
 
