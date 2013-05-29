@@ -1,7 +1,6 @@
 
-# module Rakish
+module Rakish
 
-	puts "loading module #{__FILE__}";
-	Thread.current[:loadReturn] = "a return value from the loaded module";
+	LoadableModule.onLoaded("a return value from the loaded module");
 
-# end
+end

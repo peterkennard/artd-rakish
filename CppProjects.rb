@@ -4,33 +4,6 @@ require "#{myPath}/RakishProject.rb"
 module Rakish
 
 
-module LoadableModule
-	include Rakish::Logger
-
-	@@loadedByFile_ = {};
-
-	def self.load(fileName)
-		fileName = File.expand_path(fileName);
-		mod = @@loadedByFile_[fileName];
-		return mod if mod;
-		begin			
-			log.debug { "attempting load of #{fileName}" };
-			Thread.current[:loadReturn] = nil;
-			Kernel.load(fileName);
-			loaded = Thread.current[:loadReturn];
-			@@loadedByFile_[fileName] = loaded if(loaded);
-			Thread.current[:loadReturn] = nil;
-		rescue => e
-			puts(e);
-			puts(e.backtrace);
-		end
-
-
-		mod
-	end
-end
-
-
 class InvalidConfigError < Exception
 	def initialize(cfg, msg)
 		super("Invalid Configuration \"#{cfg}\": #{msg}.");

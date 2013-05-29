@@ -175,6 +175,34 @@ module Rakish
 		end
 	end
 
+	module LoadableModule
+		include Rakish::Logger
+
+		@@loadedByFile_ = {};
+
+		def self.load(fileName)
+			fileName = File.expand_path(fileName);
+			mod = @@loadedByFile_[fileName];
+			return mod if mod;
+			begin			
+				Thread.current[:loadReturn] = nil;
+				Kernel.load(fileName);
+				mod = Thread.current[:loadReturn];
+				@@loadedByFile_[fileName] = mod if(mod);
+			rescue => e
+				puts(e);
+				puts(e.backtrace);
+				mod = nil;
+			end
+			Thread.current[:loadReturn] = nil;
+			mod
+		end
+		def self.onLoaded(retVal)
+			Thread.current[:loadReturn] = retVal;
+		end
+	end
+
+
 	# a bunch of utility functions used by Projects and configurations
 	module Util
 		include Rake::DSL
