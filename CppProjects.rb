@@ -202,7 +202,7 @@ if(false)
 		return(objs)
 	end
 
-	end
+end
 
 end
 
@@ -248,13 +248,13 @@ class CppProject < Rakish::Project
                     ensureDirectoryTask(vcprojDir);
 					tsk = task :vcproj=>[vcprojDir] do |t|
                         require "#{Rakish::MAKEDIR}/VcprojBuilder.rb"
-                        VcprojBuilder.onVcprojTask(t);
+                        VcprojBuilder.onVcprojTask(self);
                     end
 					
 					tsk.config = self;
                     tsk = task :vcprojclean do |t|
                         require "#{Rakish::MAKEDIR}/VcprojBuilder.rb"
-                        VcprojBuilder.onVcprojCleanTask(t);
+                        VcprojBuilder.onVcprojCleanTask(self);
                     end
 					tsk.config = self;
 					export(:vcproj);
@@ -306,6 +306,32 @@ class CppProject < Rakish::Project
 	def getSourceFiles()
 		@sourceFiles||=FileSet.new
 	end
+
+	class ResolvedConfig < BuildConfig
+		include CppProjectConfig
+
+		attr_reader :configName
+
+		def initialize(parent, cfgName)
+			@configName = cfgName;
+		end
+	end
+
+	# for a specifc named configuraton, resolves the configration and loads it with the
+	# the project's specified values.
+	 
+	def resolveConfiguration(config)
+		if(ret = (@resolvedConfigs||=Hash.new)[config]) 
+			return ret;
+		end
+
+		ret = @resolvedConfigs[config] = ResolvedConfig.new(self,config);
+
+
+		ret
+	end
+
+
 
 
 end # CppProject

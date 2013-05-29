@@ -42,7 +42,7 @@ EOTEXT
 		indent = "%#{indent}s" % "";
 		out = [];
 		eachConfig do |cfg|
-			addVCX10ProjectConfig(out,cfg);
+			addVCX10ProjectConfig(out,cfg.configName);
 		end
 		out.join("\n#{indent}");
 	end
@@ -60,7 +60,7 @@ EOTEXT
 		indent = "%#{indent}s" % "";
 		out = [];
 		eachConfig do |cfg|
-			addVCX10ConfigTypeCondition(out,cfg);
+			addVCX10ConfigTypeCondition(out,cfg.configName);
 		end
 		out.join("\n#{indent}");
 	end
@@ -75,7 +75,7 @@ EOTEXT
 		indent = "%#{indent}s" % "";
 		out = [];
 		eachConfig do |cfg|
-			addVCX10RakefileImportGroup(out, cfg );
+			addVCX10RakefileImportGroup(out, cfg.configName );
 		end
 		out.join("\n#{indent}");
 	end
@@ -100,7 +100,7 @@ EOTEXT
 		indent = "%#{indent}s" % "";
 		out = [];
 		eachConfig do |cfg|
-			addVCX10RakefileUserMacroGroup(out, cfg );
+			addVCX10RakefileUserMacroGroup(out, cfg.configName );
 		end
 		out.join("\n#{indent}");
 	end
@@ -137,7 +137,11 @@ EOTEXT
 
 
 	def eachConfig(&b) 
-		['Autogen', 'Debug','Release'].each(&b);
+		['Autogen', 'Debug','Release'].each do |cfg|
+			cfg = cppProject.resolveConfiguration(cfg);
+			next unless cfg
+			yield(cfg);
+		end
 	end
 
 	attr_reader :cppProject
@@ -178,13 +182,12 @@ EOTEXT
 
 	end
 
-	def VcprojBuilder.onVcprojTask(t)
-		proj = t.config;
+	def VcprojBuilder.onVcprojTask(proj)
 		builder = VcprojBuilder.new # do
 		builder.writeVCProjFiles(proj);
 	end
 	
-	def VcprojBuilder.onVcprojCleanTask(t)
+	def VcprojBuilder.onVcprojCleanTask(proj)
 		puts(" cleaning vcproj ");
 	end 
 
