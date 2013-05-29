@@ -80,11 +80,22 @@ EOTEXT
 		out.join("\n#{indent}");
 	end
 
-	def addVCX10RakefileUserMacroGroup(out, config)
-		out << "<PropertyGroup Condition=\"'$(Configuration)|$(Platform)\'=='#{config}|Win32'\">";
+	def addVCX10RakefileUserMacroGroup(out, cfg)
+		
+		out << "<PropertyGroup Condition=\"'$(Configuration)|$(Platform)\'=='#{cfg.configName}|Win32'\">";
 		out << "  <NMakeOutput>#{cppProject.moduleName}.exe</NMakeOutput>";
-		out << '  <NMakePreprocessorDefinitions>WIN32;_DEBUG;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>';
-		if(config.to_s === 'Autogen') 
+		
+		begin
+			cppdefs = '';
+			delim = '';
+			cfg.cppDefines.each do |k,v|
+				cppdefs += "#{delim}#{k}#{v ? '='+v : ''}"
+				delim =';';
+			end
+			out << "  <NMakePreprocessorDefinitions>#{cppdefs}</NMakePreprocessorDefinitions>";
+		end
+
+		if(cfg.configName === 'Autogen') 
 			out << "  <NMakeBuildCommandLine>#{rakeCommandLine} autogen</NMakeBuildCommandLine>";
 			out << "  <NMakeReBuildCommandLine>#{rakeCommandLine} autogenclean autogen</NMakeReBuildCommandLine>";
 			out << "  <NMakeCleanCommandLine>#{rakeCommandLine} autogenclean</NMakeCleanCommandLine>";
@@ -100,7 +111,7 @@ EOTEXT
 		indent = "%#{indent}s" % "";
 		out = [];
 		eachConfig do |cfg|
-			addVCX10RakefileUserMacroGroup(out, cfg.configName );
+			addVCX10RakefileUserMacroGroup(out, cfg );
 		end
 		out.join("\n#{indent}");
 	end

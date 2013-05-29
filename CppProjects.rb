@@ -152,8 +152,10 @@ module CppProjectConfig
 	def cppDefine(*args)
 		args.flatten!()
 		args.each do |c|
+			puts(" defining #{c}");
 			spl = c.split('=',2);
 			# no value is nil, XXX= will have a value of empty string "" 
+			puts("adding #{self}");
 			@cppDefines[spl[0]] = spl[1];
 		end
 	end
@@ -312,7 +314,8 @@ class CppProject < Rakish::Project
 
 		attr_reader :configName
 
-		def initialize(parent, cfgName)
+		def initialize(pnt, cfgName)
+			super(pnt);
 			@configName = cfgName;
 		end
 	end
@@ -326,8 +329,6 @@ class CppProject < Rakish::Project
 		end
 
 		ret = @resolvedConfigs[config] = ResolvedConfig.new(self,config);
-
-
 		ret
 	end
 
