@@ -45,6 +45,20 @@ LoadableModule.onLoaded(Module.new do
 			'.exe'
 		end
 
+		def initialize(args)
+
+			splitcfgs = args[:split];
+					
+			platform  = splitcfgs[0];
+			platformType = args[:platform];
+			platformBits = args[:platformBits];
+		
+			compiler  = args[:compiler];
+			linkType  = args[:linkType];
+			debugType = args[:debugType];
+							
+		end
+
 		def initCompileTask(cfg)
 			cfg.project.addCleanFiles("#{cfg.OBJPATH()}/*#{OBJEXT()}",
 							"#{cfg.OBJPATH()}/*.sbr");
@@ -97,8 +111,23 @@ LoadableModule.onLoaded(Module.new do
 		cfgs[2] = linkType;
 		cfgs[3] = debugType;
 
+		platformBits = '32';
+		if(cfgs[0] =~ /\d+/)
+			platform = $`;
+			platformBits = $&;
+		end
+		if(platform === 'Win')
+			platform = 'Windows';
+		end
+
 		log.debug { "config validated #{cfgs.join('-')}" };
-		return( Win32Tools.new);
+		return( Win32Tools.new( 
+			:split=>cfgs,
+			:platformBits=>platformBits,
+			:compiler=>compiler,
+			:linkType=>linkType,
+			:debugType=>debugType
+		));
 	end
 
 end);
