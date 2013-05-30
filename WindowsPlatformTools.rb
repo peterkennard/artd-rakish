@@ -30,31 +30,6 @@ module Rakish
 					'ICL'=>true
 				};
 				
-				def validateConfig(cfgs)
-					found = 0;
-					configs={}
-					cfgs.each do |cfg|
-						cmp = VALID_COMPILERS[cfg];
-						if(cmp)
-							configs[:compiler] = cfg;
-							found |= 1;
-							next
-						end
-						cmp = VALID_LINKTYPES[cfg];
-						if(cmp)
-							configs[:linkType] = cfg;
-							found |= 2;
-							next
-						end
-						cmp = VALID_DEBUGTYPES[cfg];
-						if(cmp)
-							configs[:debugType] = cfg;
-							found |= 4;
-							next
-						end
-					end
-					return(configs);
-				end
 				
 				@@globalInit = nil;
 				

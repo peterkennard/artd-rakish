@@ -13,65 +13,6 @@ end
 
 class CTools
 
-
-	# TODO: these need to be put into the windows tools
-
-				VALID_DEBUGTYPES = { 
-					'Debug'=>true,
-					'Release'=>true,
-				#	'Checked'=>true
-				};
-
-				VALID_LINKTYPES = { 
-					'MT'=>true,
-					'MTd'=>true,
-					'MD'=>true,
-					'MDd'=>true
-				};
-				
-				VALID_COMPILERS = { 
-				#	'VC5'=>true,
-				#	'VC6'=>true,
-				#	'VC7'=>true, 
-				#	'VC8'=>true, 
-				#	'VC9'=>true, 
-					'VC10'=>true,
-				#	'ICL'=>true
-				};
-				
-	@@vcprojConfigs_ = [
-		"Win32-VC10-MD-Debug",
-		"Win32-VC10-MDd-Debug",
-		"Win32-VC10-MT-Debug",
-		"Win32-VC10-MTd-Debug",
-		"Win32-VC10-MD-Release",
-		"Win32-VC10-MT-Release",
-	];
-
-	def self.forEachVcprojConfig(&b)		
-		@@vcprojConfigs_.each(&b);
-	end
-		
-		
-		# Cpp config format  Platform-Compiler-LinkType-DebugType ie: Win32-VC7-MD-Debug
-	if(false)
-		VALID_PLATFORMS.each_pair do |k,v|
-			next unless v[:vcproj];
-			platform = k;
-			VALID_COMPILERS.each_pair do |k,v|
-				compiler = k;
-				VALID_LINKTYPES.each_pair do |k,v|
-					link = k;
-					VALID_DEBUGTYPES.each_pair do |k,v|
-						debug = k;
-						yield("#{platform}-#{compiler}-#{link}-#{debug}");
-					end
-				end
-			end
-		end
-	end
-
-
 	@@linkIncludeAction_ = lambda do |t|
 		config = t.config;
 		# if(config.verbose?)
@@ -87,66 +28,55 @@ class CTools
 		end
 	end
 
+	def linkIncludeAction()
+		@@linkIncludeAction_
+	end
 
 	VALID_PLATFORMS = { 
 		:Win32 => {
-			:requires => 'WindowsCTools.rb',
+			:module => "#{MAKEDIR}/WindowsCppTools.rb",
 			:bits => 32,
 			:vcproj => true,
 		},
 		:Win64 => {
-			:requires => 'WindowsCTools.rb',
+			:module => "#{MAKEDIR}/WindowsCppTools.rb",
 			:bits => 64,
 #			:vcproj => true
 		},
 		:iOS => {
-			:requires => 'IOSCTools.rb',
+			:module => "#{MAKEDIR}/IOSCTools.rb",
 			:bits => 32,
 		},
 		:Linux32 => {
-			:requires => 'GCCCTools.rb',
+			:module => "#{MAKEDIR}/GCCCTools.rb",
 			:bits => 32,
 #			:vcproj => true
 		},
 		:Linux64 => {
-			:requires => 'GCCCTools.rb',
+			:module => "#{MAKEDIR}/GCCCTools.rb",
 			:bits => 64,
 #			:vcproj => true
 		},
 	};
 
-
 	# parses and validates an unknown string configuration name 
 	# of the format [TargetPlatform]-[Compiler]-(items specific to compiler type)
-	def self.validateStringConfig(scfg)
+	
+	def self.validateStringConfig(strCfg)
 		
 		splitcfgs = strCfg.split('-');
-		platform  = splitcfgs[0];
+		platform  = VALID_PLATFORMS[splitcfgs[0].to_sym];
 			
-		unless VALID_PLATFORMS[platform]
-			raise InvalidConfigError(scfg, "unrecognized platform \"#{platform}\"");
+		unless platform
+			raise InvalidConfigError.new(strCfg, "unrecognized platform \"#{splitcfgs[0]}\"");
 		end
-		
-	
+		factory = LoadableModule.load(platform[:module]);
 
-#		return({ :platformType=>platform, 
-#			        :platformBits=>platformBits,
-#					:split=>splitcfgs
-#				});
-#		end
-
-
+		factory.validateConfig(splitcfgs);
 	end
-
-
-
 end
 
 class VisualCTools < CTools
-
-	def linkIncludeAction()
-		@@linkIncludeAction_
-	end
 
 end
 
@@ -351,9 +281,10 @@ class CppProject < Rakish::Project
 
 		attr_reader :configName
 
-		def initialize(pnt, cfgName)
+		def initialize(pnt, cfgName, tools)
 			super(pnt);
 			@configName = cfgName;
+	#		@ctools = tools;
 		end
 	end
 
@@ -361,11 +292,13 @@ class CppProject < Rakish::Project
 	# the project's specified values.
 	 
 	def resolveConfiguration(config)
+		
 		if(ret = (@resolvedConfigs||={})[config]) 
 			return ret;
 		end
 
-		ret = @resolvedConfigs[config] = ResolvedConfig.new(self,config);
+		tools = CTools.validateStringConfig(config);
+		ret = @resolvedConfigs[config] = ResolvedConfig.new(self,config,tools);
 
 		if(defined? @configurator_)
 			@configurator_.call(ret);

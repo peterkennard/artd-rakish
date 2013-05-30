@@ -372,7 +372,7 @@ module Rakish
 					}
 				end
 			rescue => e
-				puts("rubyLinePP(): error processing line #{lineNum}:")
+				puts("rubyLinePP(): error processing line #{lineNum}: #{e}")
 				puts(rawline);
 				e.backtrace.each do |bline|
 					puts bline;

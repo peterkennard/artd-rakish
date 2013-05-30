@@ -148,7 +148,7 @@ EOTEXT
 
 
 	def eachConfig(&b) 
-		['Autogen', 'Debug','Release'].each do |cfg|
+		['Win32-Debug','Win32-Release'].each do |cfg|
 			cfg = cppProject.resolveConfiguration(cfg);
 			next unless cfg
 			yield(cfg);
