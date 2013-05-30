@@ -5,8 +5,6 @@ LoadableModule.onLoaded(Module.new do
 
 	include Logger;
 
-	nil.blah;
-
 	VALID_DEBUGTYPES = { 
 		'Debug'=>true,
 		'Release'=>true,
