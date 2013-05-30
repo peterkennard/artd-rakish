@@ -398,6 +398,68 @@ LoadableModule.onLoaded(Module.new do
 
 		end
 
+		# will format and cache into the config the /I and /D and other constant
+		# compiler flags for the spcific configuration and cache it in the configuration
+		def getFormattedMSCFlags(cfig)
+											
+			unless(cfl = cfig.getMy(:msvcFlags_))			
+				# if not cached build command line string
+				cfl = @CPP_OPTIONS;
+				cfl += @CPP_WARNINGS;
+						
+				cfig.cflags.each do |cf|
+					cfl += (' ' + cf)
+				end
+
+				# format include paths
+				cfig.incPaths.each do |dir| 
+					cfl += " /I\"#{dir}\"";
+				end
+						
+				# format CPP macro defs
+				cfig.defines.each do |k,v| 
+					cfl += " /D\"#{k}#{v ? '='+v : ''}\""
+				end
+				cfig.set(:msvcFlags_,cfl)
+			end
+			cfl					
+		end
+
+		@@compileCPPAction = lambda do |t|
+			t.config.ctools.doCompileCpp(t)
+		end
+		@@compileCAction = @@compileCPPAction;
+		
+		def doCompileCpp(t)
+
+			cppfile = t.source;
+			objfile = t.name;
+			cfig = t.config;
+
+			cmdline = "\"#{@MSVC_EXE}\" \"#{cppfile}\" -Fd\"#{cfig.OBJDIR}/vc80.pdb\" -c -Fo\"#{objfile}\" "; 
+			cmdline += getFormattedMSCFlags(cfig)
+			cmdline += ' /showIncludes'
+
+			puts("\n#{cmdline}\n") if(cfig.verbose?) 
+			included = Rakish::FileSet.new
+					
+			IO.popen(cmdline) do |output| 
+				while line = output.gets do
+					if line =~ /^Note: including file: +/
+						line = $'.strip.gsub(/\\/,'/')
+						next if( line =~ /^[^\/]+\/Program Files\/Microsoft /i )
+						included << line
+						next
+					end
+					puts line
+				end
+			end
+					
+			depfile = objfile.ext('.raked');
+			updateDependsFile(t,depfile,included);
+		end
+
+		# Override for CTools
 		def initCompileTask(cfg)
 			cfg.project.addCleanFiles("#{cfg.OBJPATH()}/*#{OBJEXT()}",
 							"#{cfg.OBJPATH()}/*.sbr");

@@ -48,7 +48,44 @@ module CTools
 
 	end
 
+    # given a list of dependencies will write out a '.raked' format dependencies file 
+    # for the target task
+	def updateDependsFile(task, outName, dependencies)
+				
+		srcfile = task.source
+		tempfile = "#{outName}.temp";
+				
+		File.open(tempfile,'w') do |out|			
+			if(dependencies.size > 0)
+				out.puts "t = Rake::Task[\'#{task.name}\'];"
+				out.puts 'if(t)'
+				out.puts ' t.enhance ['
+				out.puts " \'#{srcfile}\',"
+				dependencies.each do |f|
+					out.puts " \'#{f}\',"
+				end
+				out.puts ' ]'
+				out.puts 'end'
+			end
+		end
+				
+        # only touch file if new file differs from old one
+		if(textFilesDiffer(outName,tempfile)) 
+            # @#$#@$#@ messed up. set time of new file ahead by one second.
+            # seems rake time resolution is low enough that the comparison often says 
+            # times are equal between depends files and depends.rb.
+            mv(tempfile, outName, :force=>true);
+            time = Time.at(Time.new.to_f + 1.0);
+            File.utime(time,time,outName);
+		else
+			rm(tempfile, :force=>true);
+		end	
+	end
+
+
 	## Overidables for specific toolsets to use or supply
+
+
 
 	# override to make sure options such as cppDefines, system library paths,
 	# system include paths and the like are enforced as needed for this toolset
