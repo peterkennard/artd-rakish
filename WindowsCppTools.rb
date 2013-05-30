@@ -1,70 +1,84 @@
 
 module Rakish
 
-	LoadableModule.onLoaded(Class.new do
+LoadableModule.onLoaded(Module.new do
 
-		include Logger;
+	include Logger;
 
-		VALID_DEBUGTYPES = { 
-			'Debug'=>true,
-			'Release'=>true,
-			'Checked'=>true
-		};
+	VALID_DEBUGTYPES = { 
+		'Debug'=>true,
+		'Release'=>true,
+#		'Checked'=>true
+	};
 
-		VALID_LINKTYPES = { 
-			'MT'=>true,
-			'MTd'=>true,
-			'MD'=>true,
-			'MDd'=>true
-		};
+	VALID_LINKTYPES = { 
+		'MT'=>true,
+		'MTd'=>true,
+		'MD'=>true,
+		'MDd'=>true
+	};
 				
-		VALID_COMPILERS = { 
-			'VC5'=>true,
-			'VC6'=>true,
-			'VC7'=>true, 
-			'VC8'=>true, 
-			'VC9'=>true, 
-			'VC10'=>true,
-			'ICL'=>true
-		};
+	VALID_COMPILERS = { 
+#		'VC5'=>true,
+#		'VC6'=>true,
+#		'VC7'=>true, 
+#		'VC8'=>true, 
+#		'VC9'=>true, 
+		'VC10'=>true,
+#		'ICL'=>true
+	};
 	
-		class Win32Tools < CTools
+	class Win32Tools < CTools
 
 
+	end
+
+
+	def self.validateConfig(cfgs,strCfg)
+		
+		if(cfgs.length != 4) 
+			raise InvalidConfigError.new(strCfg, "must be 4 \"-\" separated elements");
 		end
 
+		error = false;		
+		compiler = nil
+		linkType = nil;
+		debugType = nil;
 
-		def self.validateConfig(cfgs)
-			found = 0;
-			configs={}
-			cfgs.each do |cfg|
-				cmp = VALID_COMPILERS[cfg];
-				if(cmp)
-					configs[:compiler] = cfg;
-					found |= 1;
-					next
-				end
-				cmp = VALID_LINKTYPES[cfg];
-				if(cmp)
-					configs[:linkType] = cfg;
-					found |= 2;
-					next
-				end
-				cmp = VALID_DEBUGTYPES[cfg];
-				if(cmp)
-					configs[:debugType] = cfg;
-					found |= 4;
-					next
-				end
+		cfgs.each do |cfg|
+			cmp = VALID_COMPILERS[cfg];
+			if(cmp)
+				error = compiler;
+				compiler = cfg;
+				next
 			end
-
-			log.debug { "config validated" };
-
-			return(configs);
+			cmp = VALID_LINKTYPES[cfg];
+			if(cmp)
+				error = linkType;
+				linkType = cfg;
+				next
+			end
+			cmp = VALID_DEBUGTYPES[cfg];
+			if(cmp)
+				error = debugType;
+				debugType = cfg;
+				next
+			end
 		end
 
+		if(error)
+			raise InvalidConfigError.new(strCfg, "element present more than once");
+		end
 
+		# ensure order of elements is "standard"
+		cfgs[1] = compiler;
+		cfgs[2] = linkType;
+		cfgs[3] = debugType;
 
-	end);
+		log.debug { "config validated #{cfgs.join('-')}" };
+		return( Win32Tools.new);
+	end
 
-end
+end);
+
+end  # Rakish

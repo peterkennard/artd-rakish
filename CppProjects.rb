@@ -71,8 +71,8 @@ class CTools
 			raise InvalidConfigError.new(strCfg, "unrecognized platform \"#{splitcfgs[0]}\"");
 		end
 		factory = LoadableModule.load(platform[:module]);
+		factory.validateConfig(splitcfgs,strCfg);
 
-		factory.validateConfig(splitcfgs);
 	end
 end
 
