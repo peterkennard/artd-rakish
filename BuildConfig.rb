@@ -17,7 +17,7 @@ module BuildConfigMod
  		init_PropertyBag(pnt);
  		enableNewFields do |cfg|
  			if(pnt)
- 				cfg.CONFIG = pnt.CONFIG
+ 				cfg.CPP_CONFIG = pnt.CPP_CONFIG
  			end
  		end
  	end
@@ -76,33 +76,6 @@ module BuildConfigMod
 		@OBJDIR||=(@parent_ ? @parent_.OBJDIR : nil)
 	end
 
-	def configureTools()
-		if(defined? self.CONFIG)
-            require File.join(MAKEDIR,'PlatformTools.rb');
-            @@tools_ ||= PlatformTools.getConfiguredTools(self.CONFIG,self);
-            @@objx_ = @@tools_.OBJEXT
-            @@libx_ = @@tools_.LIBEXT
-            @@dllx_ = @@tools_.DLLEXT
-            @@dllx_ = @@tools_.EXEEXT
-		end
-	end
-
-	def OBJEXT
-		@@objx_
-	end
-	def LIBEXT
-		@@libx_
-	end
-	def DLLEXT
-		@@dllx_
-	end
-	def EXEEXT
-		@@dllx_
-	end
-	def tools
-		@@tools_
-	end
-
 	attr_accessor 	:verbose
 	def verbose?
 		@verbose ||= (@parent_ ? @parent_.verbose? : nil)
@@ -154,7 +127,7 @@ class GlobalConfig < BuildConfig
 		@initGlobalPaths = b;
 	end
 
-	attr_property :CONFIG
+	attr_property :CPP_CONFIG
 
 	def self.includeConfigType(mod)
 		unless GlobalConfig.include? mod	
@@ -207,16 +180,14 @@ class GlobalConfig < BuildConfig
 			@INCDIR = "#{@BUILDDIR}/include"
 
 			# get config from command line
-			cfg.CONFIG ||= ENV['CONFIG'];
-			cfg.CONFIG ||= defaultConfig
+			cfg.CPP_CONFIG ||= ENV['CPP_CONFIG'];
+			cfg.CPP_CONFIG ||= defaultConfig
 
 		end
 
 		puts("host is #{HOSTTYPE()}") if self.verbose?
 
         ensureDirectoryTask(@BUILDDIR);
-
-		configureTools();
 
 		RakeFileUtils.verbose(@@gcfg.verbose?)
 		if(@@gcfg.verbose?)

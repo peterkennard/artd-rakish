@@ -67,38 +67,11 @@ module BuildConfigMod
 	
 		enableNewFields do |cfg|
 			if(pnt) 
-				cfg.CONFIG = pnt.CONFIG
+				cfg.CPP_CONFIG = pnt.CPP_CONFIG
 			end
 		end	
 	end
 		
-	def configureTools()	
-		if(defined? self.CONFIG)
-            require File.join(MAKEDIR,'PlatformTools.rb');
-            @@tools_ ||= PlatformTools.getConfiguredTools(self.CONFIG,self);
-            @@objx_ = @@tools_.OBJEXT
-            @@libx_ = @@tools_.LIBEXT
-            @@dllx_ = @@tools_.DLLEXT
-            @@dllx_ = @@tools_.EXEEXT
-		end
-	end
-				
-	def OBJEXT
-		@@objx_
-	end
-	def LIBEXT
-		@@libx_
-	end
-	def DLLEXT
-		@@dllx_
-	end
-	def EXEEXT
-		@@dllx_
-	end
-	def tools
-		@@tools_
-	end
-
 	attr_accessor 	:verbose
 	def verbose?
 		@verbose ||= (@parent_ ? @parent_.verbose? : nil)
@@ -148,7 +121,7 @@ module CppConfigMod
 		
 		enableNewFields do |cfg|
 			if(pnt = parent) 
-				cfg.CONFIG = pnt.CONFIG
+				cfg.CPP_CONFIG = pnt.CPP_CONFIG
 			end
 		end	
 			
@@ -232,7 +205,7 @@ module LinkTargetMod
 		
         cd(dir, :verbose=>false) do
 			(list||[]).flatten.each do |libdef|
-				libdef = File.expand_path("#{libdef}-#{CONFIG()}.linkref");
+				libdef = File.expand_path("#{libdef}-#{CPP_CONFIG()}.linkref");
 				begin
 					libpaths=nil
 					libs=nil
@@ -350,8 +323,6 @@ class ProjectConfig < Module
 			# for now default to non-verbose if no global config is set
 			RakeFileUtils.verbose(false) unless GlobalConfig.instance
 			
-			configureTools();
-			
 		rescue => e
 			puts e
 			# puts("#{__FILE__}(#{__LINE__}) : #{e}")
@@ -383,7 +354,7 @@ class GlobalConfig < Module
 		@initGlobalPaths = b;
 	end
 
-	attr_property :CONFIG
+	attr_property :CPP_CONFIG
 	attr_property :thirdPartyPath
 	
 	def initialize(&b)	
@@ -420,8 +391,8 @@ class GlobalConfig < Module
 			@INCDIR = "#{@BUILDDIR}/include"
 
 			# get config from command line	
-			cfg.CONFIG ||= ENV['CONFIG'];
-			cfg.CONFIG ||= defaultConfig
+			cfg.CPP_CONFIG ||= ENV['CPP_CONFIG'];
+			cfg.CPP_CONFIG ||= defaultConfig
 
 			cfg.thirdPartyPath ||= File.join(MAKEDIR,'../../third-party');
 			cfg.thirdPartyPath = File.expand_path(cfg.thirdPartyPath);
@@ -498,8 +469,6 @@ class GlobalConfig < Module
 		end
 		
 		puts("host is #{HOSTTYPE()}") if self.verbose?
-
-		configureTools();
 
 		task :includes => [ @BUILDDIR, @INCDIR ]
 

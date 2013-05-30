@@ -68,7 +68,7 @@ module Rakish
 		
 			def writeLinkref(cfg,baseName,targetName)
 				
-				defpath = "#{cfg.LIBDIR}/#{baseName}-#{cfg.CONFIG}.linkref"
+				defpath = "#{cfg.LIBDIR}/#{baseName}-#{cfg.CPP_CONFIG}.linkref"
 				reltarget = getRelativePath(targetName,cfg.LIBDIR);
 			
 # puts("####### writing #{defpath} with #{reltarget} from #{targetName}");

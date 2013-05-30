@@ -22,19 +22,33 @@ LoadableModule.onLoaded(Module.new do
 #		'VC5'=>true,
 #		'VC6'=>true,
 #		'VC7'=>true, 
-#		'VC8'=>true, 
+		'VC8'=>true, 
 #		'VC9'=>true, 
 		'VC10'=>true,
 #		'ICL'=>true
 	};
 	
-	class Win32Tools < CTools
+	class Win32Tools 
+		include CTools
 
+		# platform specific file extensions
+		def OBJEXT
+			'.obj'
+		end	
+		def LIBEXT 
+			'.lib'
+		end
+		def DLLEXT 
+			'.dll'
+		end
+		def EXEEXT 
+			'.exe'
+		end
 
 	end
 
 
-	def self.validateConfig(cfgs,strCfg)
+	def self.getConfiguredTools(cfgs,strCfg)
 		
 		if(cfgs.length != 4) 
 			raise InvalidConfigError.new(strCfg, "must be 4 \"-\" separated elements");

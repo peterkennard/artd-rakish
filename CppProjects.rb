@@ -11,50 +11,26 @@ class InvalidConfigError < Exception
 end
 
 
-class CTools
-
-	@@linkIncludeAction_ = lambda do |t|
-		config = t.config;
-		# if(config.verbose?)
-			puts "generating #{t.name} from #{t.source}"
-		# end
-
-		destfile = t.name;
-		srcpath = config.getRelativePath(t.source,File.dirname(t.name));
-		fname = File.basename(t.name);
-		File.open(destfile,'w') do |file|
-			file.puts("/* #{fname} - generated file - do not alter */");
-			file.puts("#include \"#{srcpath}\"");
-		end
-	end
-
-	def linkIncludeAction()
-		@@linkIncludeAction_
-	end
+module CTools
 
 	VALID_PLATFORMS = { 
 		:Win32 => {
 			:module => "#{MAKEDIR}/WindowsCppTools.rb",
-			:bits => 32,
 			:vcproj => true,
 		},
 		:Win64 => {
 			:module => "#{MAKEDIR}/WindowsCppTools.rb",
-			:bits => 64,
 #			:vcproj => true
 		},
 		:iOS => {
 			:module => "#{MAKEDIR}/IOSCTools.rb",
-			:bits => 32,
 		},
 		:Linux32 => {
 			:module => "#{MAKEDIR}/GCCCTools.rb",
-			:bits => 32,
 #			:vcproj => true
 		},
 		:Linux64 => {
 			:module => "#{MAKEDIR}/GCCCTools.rb",
-			:bits => 64,
 #			:vcproj => true
 		},
 	};
@@ -62,7 +38,7 @@ class CTools
 	# parses and validates an unknown string configuration name 
 	# of the format [TargetPlatform]-[Compiler]-(items specific to compiler type)
 	
-	def self.validateStringConfig(strCfg)
+	def self.loadConfiguredTools(strCfg)
 		
 		splitcfgs = strCfg.split('-');
 		platform  = VALID_PLATFORMS[splitcfgs[0].to_sym];
@@ -71,12 +47,21 @@ class CTools
 			raise InvalidConfigError.new(strCfg, "unrecognized platform \"#{splitcfgs[0]}\"");
 		end
 		factory = LoadableModule.load(platform[:module]);
-		factory.validateConfig(splitcfgs,strCfg);
+		factory.getConfiguredTools(splitcfgs,strCfg);
 
 	end
-end
 
-class VisualCTools < CTools
+	def createCompileTasks(sources,cfg)
+		puts("create compile");
+	end
+	
+	def initCompileTask(project)
+		puts("init compile");
+	end
+
+	def initDependsTask(project)
+		puts("init depends");
+	end
 
 end
 
@@ -95,8 +80,6 @@ module CppProjectConfig
 		if(pnt != nil)
 			@cppDefines.merge!(pnt.cppDefines);
 			@ctools = pnt.ctools;
-		else
-			@ctools = VisualCTools.new();
 		end
  	end
 
@@ -109,6 +92,7 @@ module CppProjectConfig
 	def LIBDIR
 		@LIBDIR||=@parent_?@parent_.LIBDIR():"#{BUILDDIR()}/lib";
 	end
+
 	def vcprojDir
 		@vcprojDir||=@parent_?@parent_.vcprojDir():"#{BUILDDIR()}/vcproj";
 	end
@@ -142,44 +126,15 @@ module CppProjectConfig
 
 		@sourceFiles ||= FileSet.new;
 		@sourceFiles.include(args);
-
-		files = FileSet.new(args);
-
-		# @srcdirs ||= FileSet.new
-
-if(false)
-		cfg = self
-
-        objs = tools.createCompileTasks(files,cfg);
-
-		unless tsk = Rake.application.lookup("#{@myNamespace}:compile")
-			tsk = tools.initCompileTask(self)
-		end
-		tsk.enhance(objs)
-
- 		unless tsk = Rake.application.lookup("#{@OBJDIR}/depends.rb")
-            tsk = tools.initDependsTask(self)
- 		end
-
-		raked=[]
-		objs.each do |obj|
-            obj = obj.ext('.raked');
-            raked << obj if File.exist?(obj)
-		end
-		tsk.enhance(raked);
-
-		@objs ||= [];
-		@objs += objs;
-		return(objs)
 	end
-
-end
-
 end
 
 class CppProject < Rakish::Project
     include CppProjectConfig
 
+	task :autogen 		=> [ :includes, :vcproj ];
+
+	
 	# Create a new project
 	#
 	# <b>named args:</b>
@@ -206,10 +161,42 @@ class CppProject < Rakish::Project
     end
 
 
+	def resolveCompileTasks()
+
+		cfg = @buildConfig
+		tools = cfg.ctools;
+
+        objs = tools.createCompileTasks(getSourceFiles(),cfg);
+
+		unless tsk = Rake.application.lookup("#{@myNamespace}:compile")
+			tsk = tools.initCompileTask(self)
+		end
+		tsk.enhance(objs)
+
+ 		unless tsk = Rake.application.lookup("#{@OBJDIR}/depends.rb")
+            tsk = tools.initDependsTask(self)
+ 		end
+
+		raked=[]
+		objs.each do |obj|
+            obj = obj.ext('.raked');
+            raked << obj if File.exist?(obj)
+		end
+		tsk.enhance(raked);
+
+		@objs ||= [];
+		@objs += objs;
+		return(objs)
+	end
+
 	# called after initializers on all projects and before rake
 	# starts executing tasks
 	def preBuild()
         super;
+
+		@buildConfig = resolveConfiguration(CPP_CONFIG());
+#		resolveCompileTasks();
+
 		cd @projectDir, :verbose=>verbose? do		
             ns = Rake.application.in_namespace(@myNamespace) do
 				puts("pre building #{@myNamespace}");
@@ -233,6 +220,22 @@ class CppProject < Rakish::Project
         end # cd
 	end
 
+	@@linkIncludeAction_ = lambda do |t|
+		config = t.config;
+		# if(config.verbose?)
+			puts "generating #{t.name} from #{t.source}"
+		# end
+
+		destfile = t.name;
+		srcpath = config.getRelativePath(t.source,File.dirname(t.name));
+		fname = File.basename(t.name);
+		File.open(destfile,'w') do |file|
+			file.puts("/* #{fname} - generated file - do not alter */");
+			file.puts("#include \"#{srcpath}\"");
+		end
+	end
+
+
 	# add tasks to ':includes' to place links to or copy source files to
 	# the specified 'stub' directory.
 	#
@@ -252,7 +255,7 @@ class CppProject < Rakish::Project
 		end
 		destdir = File.join(INCDIR(),destdir);
 		ensureDirectoryTask(destdir);
-		flist = createCopyTasks(destdir,files,:config => self,&ctools.linkIncludeAction())
+		flist = createCopyTasks(destdir,files,:config => self,&@@linkIncludeAction_)
 		task :includes => flist
 		task :cleanincludes do |t|
 			deleteFiles(flist)
@@ -284,7 +287,7 @@ class CppProject < Rakish::Project
 		def initialize(pnt, cfgName, tools)
 			super(pnt);
 			@configName = cfgName;
-	#		@ctools = tools;
+			@ctools = tools;
 		end
 	end
 
@@ -297,7 +300,7 @@ class CppProject < Rakish::Project
 			return ret;
 		end
 
-		tools = CTools.validateStringConfig(config);
+		tools = CTools.loadConfiguredTools(config);
 		ret = @resolvedConfigs[config] = ResolvedConfig.new(self,config,tools);
 
 		if(defined? @configurator_)
@@ -306,9 +309,6 @@ class CppProject < Rakish::Project
 		
 		ret
 	end
-
-
-
 
 end # CppProject
 

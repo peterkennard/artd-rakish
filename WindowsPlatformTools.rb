@@ -460,19 +460,6 @@ module Rakish
 				addCompileAction('.cpp', @@compileCPPAction);
 				addCompileAction('.c', @@compileCAction);
 				
-				# platform specific file extensions
-				def OBJEXT
-					'.obj'
-				end	
-				def LIBEXT 
-					'.lib'
-				end
-				def DLLEXT 
-					'.dll'
-				end
-				def EXEEXT 
-					'.exe'
-				end
 
 				@@makeManifestAction = lambda do |t|
 					t.config.tools.doMakeManifest(t)
@@ -753,7 +740,7 @@ module Rakish
 						
 					isolationAware = false;	
 						
-					targetName = "#{config.baseName}-#{config.CONFIG}"
+					targetName = "#{config.baseName}-#{config.CPP_CONFIG}"
 					tpath = File.join(config.BINDIR,targetName+'.exe');
 					
 					ensureDirectoryTask(config.BINDIR);

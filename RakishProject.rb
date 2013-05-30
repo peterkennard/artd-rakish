@@ -16,11 +16,11 @@ class Build
 		@projectsByModule={}
 		
 		task :resolve do |t|
-		    if(defined? Rakish::GlobalConfig.instance.CONFIG)
-			    puts "Starting build. for #{Rakish::GlobalConfig.instance.CONFIG}\""
+		    if(defined? Rakish::GlobalConfig.instance.CPP_CONFIG)
+			    puts "Starting build. for #{Rakish::GlobalConfig.instance.CPP_CONFIG}\""
 			else
 			#	if(Rakish::GlobalConfig.instance)
-			#		Rakish::GlobalConfig.instance.CONFIG() = "not set";
+			#		Rakish::GlobalConfig.instance.CPP_CONFIG() = "not set";
 			#	end
                 puts "Starting build.";
             end
@@ -155,7 +155,6 @@ class Project < BuildConfig
 
 
 # TODO: much of this needs to be migrated to the C++ project and other project types
-#	task :autogen 		=> [ :includes, :vcproj ];
 #	task :cleanautogen 	=> [ :cleanincludes, :cleandepends, :vcprojclean ];
 #	task :depends		=> [ :includes ];
 #	task :build   		=> [];
@@ -181,13 +180,14 @@ class Project < BuildConfig
 	def OBJDIR
 		@OBJDIR||="#{BUILDDIR()}/obj/#{moduleName()}";
 	end
+
 	# configuration specific intermediate output directory
 	def OBJPATH
-		@OBJPATH||="#{OBJDIR()}/#{CONFIG()}";
+		@OBJPATH||="#{OBJDIR()}/#{CPP_CONFIG()}";
 	end
 
 	def OUTPUT_SUFFIX
-		@OUTPUT_SUFFIX||=CONFIG();
+		@OUTPUT_SUFFIX||=CPP_CONFIG();
 	end
 
 	def project
