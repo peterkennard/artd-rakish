@@ -9,7 +9,70 @@ require 'logger'
 task "" do
 end
 
+# define the Logger first so we can uset it to abort
+module Rakish
+
+	# To use this Looger initialization include it in a class or module
+	# then you can do log.debug { "message" } etc 
+	# from methods or initilaizations in that class 
+
+	module Logger
+
+		@@_logger_ = ::Logger.new(STDOUT);
+		def self.log
+			@@_logger_
+		end
+		@@_logger_.formatter = proc do |severity, datetime, progname, msg|
+			fileLine = "";
+			caller.each do |clr|
+				unless(/\/logger.rb:/ =~ clr)
+					fileLine = clr;
+					break;
+				end
+			end
+			fileLine = fileLine.split(':in `',2)[0];
+			fileLine.sub!(/:(\d)/, '(\1');
+			if(msg.is_a? Exception)
+				"#{fileLine}) : #{msg}\n    #{formatBacktraceLine(msg.backtrace[0])}\n"
+			else
+				"#{fileLine}) : #{msg}\n"
+			end
+		end
+		
+		# format a backtrace line appropriately for the IDE we are using.
+		def self.formatBacktraceLine(line)
+			sp = line.split(':in `',2);
+			sp0 = sp[0].sub(/:(\d)/, '(\1');
+			sp1 = sp.length > 1 ? "in `#{sp[1]}" : "";
+			"#{sp0}) : #{sp1}";
+		end
+
+		def self.formatBacktrace(backtrace)
+			out=[];
+			backtrace.each do |line|
+				out << formatBacktraceLine(line);
+			end
+			out.join("\n");
+		end
+		
+		def self.included(by)
+			by.class.send(:define_method, :log) do
+				Rakish.log
+			end
+		end
+	    def log
+            Rakish.log
+        end
+	end
+
+	def self.log
+		Rakish::Logger.log
+	end
+
+end
+
 # rake extensions
+
 
 module Rake
 
@@ -24,6 +87,29 @@ module Rake
 	    end
 	end
 
+	class Application
+
+		# Display the error message that caused the exception.
+		# formatted the way we like it for a particualar IDE
+
+		def display_error_message(ex)
+		  
+		  $stderr.puts "#{name} aborted!"
+		  backtrace = ex.backtrace;
+
+		  if options.trace
+			$stderr.puts ex.message
+			$stderr.puts Rakish::Logger.formatBacktrace(backtrace)
+		  else
+			$stderr.puts(Rakish::Logger.formatBacktraceLine(backtrace[0]));
+			$stderr.puts rakefile_location(backtrace)
+		  end
+
+		  $stderr.puts "Tasks: #{ex.chain}" if has_chain?(ex)
+		  $stderr.puts "(See full trace by running task with --trace)" unless options.trace
+		end
+	end
+	
 	class Task
 	  rake_extension('config') do
 		# optional "config" field on Rake Task objects
@@ -107,50 +193,13 @@ module Rakish
 
 	MAKEDIR = File.dirname(File.expand_path(__FILE__));
 
-	# To use this Looger initialization include it in a class or module
-	# then you can do log.debug { "message" } etc 
-	# from methods or initilaizations in that class 
-
-	module Logger
-
-		@@_logger_ = ::Logger.new(STDOUT);
-		def self.log
-			@@_logger_
-		end
-		@@_logger_.formatter = proc do |severity, datetime, progname, msg|
-			fileLine = "";
-			caller.each do |clr|
-				unless(/\/logger.rb:/ =~ clr)
-					fileLine = clr;
-					break;
-				end
-			end
-			fileLine = fileLine.split(':in `',2)[0];
-			fileLine.sub!(/:(\d)/, '(\1');
-			"#{fileLine}) : #{msg}\n"
-		end
-		def self.included(by)
-			by.class.send(:define_method, :log) do
-				Rakish.log
-			end
-		end
-	    def log
-            Rakish.log
-        end
-	end
-
-	def self.log
-		Rakish::Logger.log
-	end
-
-
 	class ::Module
 		
 		# static method used like ruby's attr_accessor declaration
 		# for use in declaring added properties on a class
 		# inheriting from a PropertyBag
 
-		def self.attr_property(*args)
+		def attr_property(*args)
 			if(self.include? ::Rakish::PropertyBagMod)
 				args.each do |s|
 					# add "property" assignment operator method s= to this class
@@ -190,8 +239,7 @@ module Rakish
 				mod = Thread.current[:loadReturn];
 				@@loadedByFile_[fileName] = mod if(mod);
 			rescue => e
-				puts(e);
-				puts(e.backtrace);
+				log.error { e };
 				mod = nil;
 			end
 			Thread.current[:loadReturn] = nil;

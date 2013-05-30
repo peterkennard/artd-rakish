@@ -16,28 +16,25 @@ module CTools
 	VALID_PLATFORMS = { 
 		:Win32 => {
 			:module => "#{MAKEDIR}/WindowsCppTools.rb",
-			:vcproj => true,
 		},
 		:Win64 => {
 			:module => "#{MAKEDIR}/WindowsCppTools.rb",
-#			:vcproj => true
 		},
 		:iOS => {
 			:module => "#{MAKEDIR}/IOSCTools.rb",
 		},
 		:Linux32 => {
 			:module => "#{MAKEDIR}/GCCCTools.rb",
-#			:vcproj => true
 		},
 		:Linux64 => {
 			:module => "#{MAKEDIR}/GCCCTools.rb",
-#			:vcproj => true
 		},
 	};
 
 	# parses and validates an unknown string configuration name 
 	# of the format [TargetPlatform]-[Compiler]-(items specific to compiler type)
-	
+	# and loads if possible an instance of a set of configured "CTools" 
+	# for the specified "CPP_CONFIG" configuration.
 	def self.loadConfiguredTools(strCfg)
 		
 		splitcfgs = strCfg.split('-');
@@ -51,13 +48,64 @@ module CTools
 
 	end
 
-	def createCompileTasks(sources,cfg)
-		puts("create compile");
+	## Overidables for specific toolsets to use or supply
+
+	# override to make sure options such as cppDefines, system library paths,
+	# system include paths and the like are enforced as needed for this toolset
+	def ensureConfigOptions(cfg)
 	end
+
+	@@doNothingAction_ = lambda do |t|
+		puts("attempting to compile #{t.source}");
+	end
+
+	# return the approriate compile action to creat an object files from
+	# a source file with the specified suffix.
+	# nil if not action is available in this toolset. 
+	def getCompileActionForSuffix(suff)
+		@@doNothingAction_
+	end
+
+	def createCompileTask(source,obj,cfg)
+
+		action = getCompileActionForSuffix(File.extname(source).downcase);
+
+		unless action
+			puts("unrecognized source file type \"#{File.name(source)}\"");
+			return(nil);				
+		end
+
+		if(Rake::Task.task_defined? obj)
+			puts("Warning: task already defined for #{obj}")
+			return(nil);
+		end
+
+		tsk = Rake::FileTask.define_task obj
+		tsk.enhance(tsk.sources=[source], &action)
+		tsk.config = cfg;
+		tsk;				
+	end
+
+    def createCompileTasks(files,cfg)                
+        # format object files name
+	                                 
+        mapstr = "#{cfg.OBJPATH()}/%n#{OBJEXT()}";
+
+        objs=FileList[];
+        files.each do |source|
+            obj = source.pathmap(mapstr);                                                         
+            task = createCompileTask(source,obj,cfg);
+            objs << obj if task;  # will be the same as task.name
+        end
+        objs
+    end
 	
-	def initCompileTask(project)
-		puts("init compile");
-	end
+	def initCompileTask(cfg)
+		cfg.project.addCleanFiles("#{cfg.OBJPATH()}/*#{OBJEXT()}");
+		Rake::Task.define_task :compile => [:includes,
+											cfg.OBJPATH(),
+											:depends]
+	end	
 
 	def initDependsTask(project)
 		puts("init depends");
@@ -133,8 +181,10 @@ class CppProject < Rakish::Project
     include CppProjectConfig
 
 	task :autogen 		=> [ :includes, :vcproj ];
+	task :compile 		=> [ :includes ];
+	task :depends		=> [ :includes ];
 
-	
+
 	# Create a new project
 	#
 	# <b>named args:</b>
@@ -177,12 +227,14 @@ class CppProject < Rakish::Project
             tsk = tools.initDependsTask(self)
  		end
 
-		raked=[]
-		objs.each do |obj|
-            obj = obj.ext('.raked');
-            raked << obj if File.exist?(obj)
+		if(tsk) 
+			raked=[]
+			objs.each do |obj|
+				obj = obj.ext('.raked');
+				raked << obj if File.exist?(obj)
+			end
+			tsk.enhance(raked);
 		end
-		tsk.enhance(raked);
 
 		@objs ||= [];
 		@objs += objs;
@@ -195,7 +247,7 @@ class CppProject < Rakish::Project
         super;
 
 		@buildConfig = resolveConfiguration(CPP_CONFIG());
-#		resolveCompileTasks();
+		resolveCompileTasks();
 
 		cd @projectDir, :verbose=>verbose? do		
             ns = Rake.application.in_namespace(@myNamespace) do
@@ -288,6 +340,7 @@ class CppProject < Rakish::Project
 			super(pnt);
 			@configName = cfgName;
 			@ctools = tools;
+			tools.ensureConfigOptions(self);
 		end
 	end
 

@@ -5,6 +5,8 @@ LoadableModule.onLoaded(Module.new do
 
 	include Logger;
 
+	nil.blah;
+
 	VALID_DEBUGTYPES = { 
 		'Debug'=>true,
 		'Release'=>true,
@@ -44,6 +46,14 @@ LoadableModule.onLoaded(Module.new do
 		def EXEEXT 
 			'.exe'
 		end
+
+		def initCompileTask(cfg)
+			cfg.project.addCleanFiles("#{cfg.OBJPATH()}/*#{OBJEXT()}",
+							"#{cfg.OBJPATH()}/*.sbr");
+			Rake::Task.define_task :compile => [:includes,
+												cfg.OBJPATH(),
+												:depends]
+		end	
 
 	end
 

@@ -16,7 +16,7 @@ module BuildConfigMod
  	def initializer(pnt)
  		init_PropertyBag(pnt);
  		enableNewFields do |cfg|
- 			if(pnt)
+			if(pnt)
  				cfg.CPP_CONFIG = pnt.CPP_CONFIG
  			end
  		end
@@ -67,6 +67,8 @@ module BuildConfigMod
 
 	attr_accessor 	:LIBDIR
 	attr_accessor 	:BINDIR
+ 	attr_property	:thirdPartyPath
+
 
 	def BUILDDIR
 		@BUILDDIR||=(@parent_ ? @parent_.BUILDDIR : nil)
@@ -77,14 +79,16 @@ module BuildConfigMod
 	end
 
 	attr_accessor 	:verbose
+
 	def verbose?
 		@verbose ||= (@parent_ ? @parent_.verbose? : nil)
 	end
 end
 
 
-class BuildConfig < Module
+class BuildConfig
 	include Util
+
 
     @@_inits = {};
 
@@ -110,10 +114,6 @@ class BuildConfig < Module
     end
 
     include BuildConfigMod
-
-	attr_property 	:BUILDDIR
-	attr_property	:thirdPartyPath
-
 
 end
 
@@ -214,9 +214,3 @@ end
 def ProjectConfig(&block)
 #	Rakish::ProjectConfig.new(&block)
 end
-
-
-
-
-# require("#{Rakish::MAKEDIR}/RakishProjects.rb");
-

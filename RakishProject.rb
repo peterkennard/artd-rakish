@@ -156,9 +156,7 @@ class Project < BuildConfig
 
 # TODO: much of this needs to be migrated to the C++ project and other project types
 #	task :cleanautogen 	=> [ :cleanincludes, :cleandepends, :vcprojclean ];
-#	task :depends		=> [ :includes ];
 #	task :build   		=> [];
-#	task :compile 		=> [];
 	task :default		=> [ :build ];
 
 	# returns the Rake task namespace for this project

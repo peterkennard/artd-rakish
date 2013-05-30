@@ -333,9 +333,6 @@ class ProjectConfig < Module
 	
 public
 	
-	def tools=(bt)
-		setTools(bt)
-	end
 	def debug=(d)
 		@debug=d 
 	end
