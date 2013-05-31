@@ -94,15 +94,14 @@ module Rake
 
 		def display_error_message(ex)
 		  
-		  $stderr.puts "#{name} aborted!"
+		  $stderr.puts "#{name} aborted!: #{ex.message}"
 		  backtrace = ex.backtrace;
 
 		  if options.trace
-			$stderr.puts ex.message
 			$stderr.puts Rakish::Logger.formatBacktrace(backtrace)
 		  else
 			$stderr.puts(Rakish::Logger.formatBacktraceLine(backtrace[0]));
-			$stderr.puts rakefile_location(backtrace)
+			$stderr.puts rakefile_location(backtrace);
 		  end
 
 		  $stderr.puts "Tasks: #{ex.chain}" if has_chain?(ex)

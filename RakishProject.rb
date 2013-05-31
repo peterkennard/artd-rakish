@@ -263,24 +263,22 @@ class Project < BuildConfig
 		@myName 	= name;
 		@myPackage 	= package;
 
-
-		# load all subprojects this is dependent on
-		@build.loadProjects(dependencies) if dependencies
-		@build.registerProject(self);
-
         # initialize config properties from the parent and initialize included configuration modules.
 		super(parent) {}
 
 		cd @projectDir, :verbose=>verbose? do
-			# call instance initializer block inside local namespace.
-			# and in the directory the defining file is contained in.
 
+			# load all subprojects this is dependent on relative to this project's directory
+			@build.loadProjects(dependencies) if dependencies
+			# register after the others are loaded for proper dependency initialization order
+			@build.registerProject(self);
+
+			# call instance initializer block inside local namespace and project's directory.
+			# and in the directory the defining file is contained in.
 			ns = Rake.application.in_namespace(@myNamespace) do
 				@myNamespace = "#{Rake.application.current_scope.join(':')}"
 		        initProject(args);
-			    if(block != NIL)
-				    instance_eval(&block)
-				end
+				instance_eval(&block) if block;
 			end
 		end
 	end
