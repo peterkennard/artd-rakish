@@ -13,6 +13,7 @@ end
 
 module CTools
 	include Rakish::Logger
+	include Rakish::Util
 
 	VALID_PLATFORMS = { 
 		:Win32 => {
@@ -276,7 +277,7 @@ class CppProject < Rakish::Project
 
 	def initialize(args={},&block)
         super(args,&block);
-		loaded = LoadableModule.load("#{MAKEDIR}/WindowsCppTools.rb");
+		addIncludePaths(OBJPATH(),INCDIR());
     end
 
 
@@ -296,13 +297,13 @@ class CppProject < Rakish::Project
             tsk = tools.initDependsTask(self)
  		end
 
-		if(false && tsk) 
+		if(tsk) 
 			raked=[]
 			objs.each do |obj|
 				obj = obj.ext('.raked');
 				raked << obj if File.exist?(obj)
 			end
-			tsk.enhance(raked);
+		#	tsk.enhance(raked);
 		end
 
 		@objs ||= [];
@@ -317,7 +318,6 @@ class CppProject < Rakish::Project
 		cd @projectDir, :verbose=>verbose? do		
             ns = Rake.application.in_namespace(@myNamespace) do
 				puts("pre building #{@myNamespace}");
-
 				@buildConfig = resolveConfiguration(CPP_CONFIG());
 				resolveCompileTasks();
 				ensureDirectoryTask(OBJPATH());

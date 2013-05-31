@@ -456,9 +456,8 @@ LoadableModule.onLoaded(Module.new do
 			cmdline += getFormattedMSCFlags(cfig)
 			cmdline += ' /showIncludes'
 
-			puts("\n#{cmdline}\n") # if(cfig.verbose?) 
+			puts("\n#{cmdline}\n") if(cfig.verbose?) 
 
-if(false)
 			included = Rakish::FileSet.new
 					
 			IO.popen(cmdline) do |output| 
@@ -472,10 +471,11 @@ if(false)
 					puts line
 				end
 			end
+
+			STDOUT.flush # for the visual C command window.
 					
 			depfile = objfile.ext('.raked');
 			updateDependsFile(t,depfile,included);
-end # false
 		end
 
 		# Override for CTools

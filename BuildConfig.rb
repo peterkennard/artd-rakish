@@ -170,7 +170,7 @@ class GlobalConfig < BuildConfig
 			if(HOSTTYPE =~ /Macosx/)
 				defaultConfig = "iOS-gcc-fat-Debug";
 			else
-				defaultConfig = "Win32-VC8-MD-Debug";
+				defaultConfig = "Win32-VC10-MD-Debug";
 			end
 
 
