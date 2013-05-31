@@ -103,11 +103,8 @@ EOTEXT
 			out << "  <NMakeBuildCommandLine>#{rakeCommandLine} build</NMakeBuildCommandLine>";
 			out << "  <NMakeReBuildCommandLine>#{rakeCommandLine} rebuild</NMakeReBuildCommandLine>";
 			out << "  <NMakeCleanCommandLine>#{rakeCommandLine} clean</NMakeCleanCommandLine>";
-			ipaths=[];
-			cfg.includePaths.each do |ip|
-				ipaths << vcprojRelative(ip)
-			end
-			out << "  <NMakeIncludeSearchPath>#{ipaths.join(';')}</NMakeIncludeSearchPath>";
+			# note intellisense doesn't like relative include paths.
+			out << "  <NMakeIncludeSearchPath>#{cfg.includePaths.join(';')}</NMakeIncludeSearchPath>";
 		end
 		out << '</PropertyGroup>';
 	end

@@ -213,7 +213,7 @@ module CppProjectConfig
 		defs.each do |ip|
 			@addedIncludePaths_ << File.expand_path(ip);
 		end	
-		@incPaths_=nil;
+		@incPaths_=nil
 	end	
 
 	def addedIncludePaths
@@ -298,8 +298,8 @@ class CppProject < Rakish::Project
 
 	def initialize(args={},&block)
         super(args,&block);
-		addIncludePaths(OBJPATH(),INCDIR());
-    end
+		addIncludePaths( [ OBJPATH(),INCDIR() ] );
+	end
 
 
 	def resolveCompileTasks()
