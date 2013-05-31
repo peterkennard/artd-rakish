@@ -95,7 +95,7 @@ module CTools
 	end
 
 	@@doNothingAction_ = lambda do |t|
-		puts("attempting to compile #{t.source}");
+		log.debug("attempting to compile #{t.source}");
 	end
 
 	# return the approriate compile action to creat an object files from
