@@ -172,7 +172,7 @@ EOTEXT
 		rakeCommand = vcprojRelative(File.join(proj.thirdPartyPath,'tools/exec-rake.bat'));
 		rakeFile = vcprojRelative(proj.projectFile);
 
-		@rakeCommandLine = "#{rakeCommand} -f #{rakeFile}";
+		@rakeCommandLine = "#{rakeCommand} -f #{rakeFile} \"RakishBuildRoot=$(SolutionDir)build\"";
 		rubyLinePP(@@rakefileConfigTxt_,file,binding());
 	end
 

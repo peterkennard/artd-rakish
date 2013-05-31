@@ -250,6 +250,7 @@ class CppProject < Rakish::Project
 	task :autogen 		=> [ :includes, :vcproj ];
 	task :compile 		=> [ :includes ];
 	task :depends		=> [ :includes ];
+	task :build 		=> [ :compile ];
 
 
 	# Create a new project
@@ -312,13 +313,14 @@ class CppProject < Rakish::Project
 	# starts executing tasks
 	def preBuild()
         super;
-
-		@buildConfig = resolveConfiguration(CPP_CONFIG());
-		resolveCompileTasks();
-
 		cd @projectDir, :verbose=>verbose? do		
             ns = Rake.application.in_namespace(@myNamespace) do
 				puts("pre building #{@myNamespace}");
+
+				@buildConfig = resolveConfiguration(CPP_CONFIG());
+				resolveCompileTasks();
+				ensureDirectoryTask(OBJPATH());
+
 				if(@projectId)
                     ensureDirectoryTask(vcprojDir);
 					tsk = task :vcproj=>[vcprojDir] do |t|

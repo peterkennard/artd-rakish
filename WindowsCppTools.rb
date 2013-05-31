@@ -509,6 +509,10 @@ LoadableModule.onLoaded(Module.new do
 			raise InvalidConfigError.new(strCfg, "element present more than once");
 		end
 
+		if(!(compiler && linkType && debugType))
+			raise InvalidConfigError.new(strCfg, "invalid or missing element");
+		end
+
 		# ensure order of elements is "standard"
 		cfgs[1] = compiler;
 		cfgs[2] = linkType;
@@ -531,9 +535,8 @@ LoadableModule.onLoaded(Module.new do
 			:linkType=>linkType,
 			:debugType=>debugType
 		}
-
-		log.debug { "config validated #{cfgs.join('-')}" };
 		return( Win32Tools.new(args));
+	#	log.debug { "config validated #{cfgs.join('-')}" };
 	end
 
 end);
