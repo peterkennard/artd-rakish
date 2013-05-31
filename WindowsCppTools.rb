@@ -365,7 +365,7 @@ LoadableModule.onLoaded(Module.new do
 			@systemIncludePaths = ipaths;
 		end
 
-		def sytemIncludePaths
+		def systemIncludePaths 
 			@systemIncludePaths
 		end
 
@@ -408,9 +408,11 @@ LoadableModule.onLoaded(Module.new do
 				# if not cached build command line string
 				cfl = @CPP_OPTIONS;
 				cfl += @CPP_WARNINGS;
-						
-				cfig.cflags.each do |cf|
-					cfl += (' ' + cf)
+				
+				if(false)		
+					cfig.cflags.each do |cf|
+						cfl += (' ' + cf)
+					end
 				end
 
 				# format include paths
@@ -419,7 +421,7 @@ LoadableModule.onLoaded(Module.new do
 				end
 						
 				# format CPP macro defs
-				cfig.defines.each do |k,v| 
+				cfig.cppDefines.each do |k,v| 
 					cfl += " /D\"#{k}#{v ? '='+v : ''}\""
 				end
 				cfig.set(:msvcFlags_,cfl)
@@ -431,7 +433,19 @@ LoadableModule.onLoaded(Module.new do
 			t.config.ctools.doCompileCpp(t)
 		end
 		@@compileCAction = @@compileCPPAction;
-		
+
+		@@CompileForSuffix = {};
+		def self.addCompileAction(suff,action)
+			@@CompileForSuffix[suff] = action;
+		end
+
+		addCompileAction('.cpp', @@compileCPPAction);
+		addCompileAction('.c', @@compileCAction);
+
+		def getCompileActionForSuffix(suff)
+			@@CompileForSuffix[suff]
+		end
+
 		def doCompileCpp(t)
 
 			cppfile = t.source;
@@ -442,7 +456,9 @@ LoadableModule.onLoaded(Module.new do
 			cmdline += getFormattedMSCFlags(cfig)
 			cmdline += ' /showIncludes'
 
-			puts("\n#{cmdline}\n") if(cfig.verbose?) 
+			puts("\n#{cmdline}\n") # if(cfig.verbose?) 
+
+if(false)
 			included = Rakish::FileSet.new
 					
 			IO.popen(cmdline) do |output| 
@@ -459,6 +475,7 @@ LoadableModule.onLoaded(Module.new do
 					
 			depfile = objfile.ext('.raked');
 			updateDependsFile(t,depfile,included);
+end # false
 		end
 
 		# Override for CTools

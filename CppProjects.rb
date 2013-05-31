@@ -12,6 +12,7 @@ end
 
 
 module CTools
+	include Rakish::Logger
 
 	VALID_PLATFORMS = { 
 		:Win32 => {
@@ -110,12 +111,12 @@ module CTools
 		action = getCompileActionForSuffix(File.extname(source).downcase);
 
 		unless action
-			puts("unrecognized source file type \"#{File.name(source)}\"");
+			log.debug("unrecognized source file type \"#{File.name(source)}\"");
 			return(nil);				
 		end
 
 		if(Rake::Task.task_defined? obj)
-			puts("Warning: task already defined for #{obj}")
+			log.debug("Warning: task already defined for #{obj}")
 			return(nil);
 		end
 
@@ -147,7 +148,7 @@ module CTools
 	end	
 
 	def initDependsTask(project)
-		puts("init depends");
+		log.debug("init depends");
 	end
 
 end
@@ -295,7 +296,7 @@ class CppProject < Rakish::Project
             tsk = tools.initDependsTask(self)
  		end
 
-		if(tsk) 
+		if(false && tsk) 
 			raked=[]
 			objs.each do |obj|
 				obj = obj.ext('.raked');

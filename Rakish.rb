@@ -856,7 +856,7 @@ public
 						caller.each do |clr|
 							c.shift
 							unless(clr =~ /\/Rakish.rb:\d+:in `(method_missing|__send__)'/)
-								raise RuntimeError, "#{clr}: undefined property or method \"#{sym}\"", c
+								raise RuntimeError, "\n#{Logger.formatBacktraceLine(clr)} - undefined property or method \"#{sym}\"", c
 							end
 						end
 						super
