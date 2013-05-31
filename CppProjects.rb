@@ -148,8 +148,29 @@ module CTools
 											:depends]
 	end	
 
-	def initDependsTask(project)
-		log.debug("init depends");
+	def initDependsTask(cfg) # :nodoc:		
+               
+		# create dependencies file by concatenating all .raked files				
+		tsk = file "#{cfg.OBJPATH()}/depends.rb" => [ :includes, cfg.OBJPATH() ] do |t|
+			cd(cfg.OBJPATH(),:verbose=>false) do					
+				File.open('depends.rb','w') do |out|
+					out.puts("# puts \"loading #{t.name}\"");
+				end
+				t.prerequisites.each do |dep|
+					next unless (dep.pathmap('%x') == '.raked')
+					system "cat \'#{dep}\' >> depends.rb"
+				end
+			end
+		end
+		# build and import the consolidated dependencies file
+		task :depends => [ "#{cfg.OBJPATH()}/depends.rb" ] do |t|
+			load("#{cfg.OBJPATH()}/depends.rb")
+		end		
+		task :cleandepends do
+			deleteFiles("#{cfg.OBJPATH()}/*.raked",
+						"#{cfg.OBJPATH()}/depends.rb");
+		end
+		tsk
 	end
 
 end
@@ -297,17 +318,14 @@ class CppProject < Rakish::Project
             tsk = tools.initDependsTask(self)
  		end
 
-		if(tsk) 
-			raked=[]
-			objs.each do |obj|
-				obj = obj.ext('.raked');
-				raked << obj if File.exist?(obj)
-			end
-		#	tsk.enhance(raked);
+		raked=[]
+		objs.each do |obj|
+			obj = obj.ext('.raked');
+			raked << obj if File.exist?(obj)
 		end
+		tsk.enhance(raked);
 
-		@objs ||= [];
-		@objs += objs;
+		@objs = objs;
 		return(objs)
 	end
 
