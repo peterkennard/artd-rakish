@@ -85,11 +85,13 @@ module CTools
 
 	## Overidables for specific toolsets to use or supply
 
-
-
 	# override to make sure options such as cppDefines, system library paths,
 	# system include paths and the like are enforced as needed for this toolset
 	def ensureConfigOptions(cfg)
+	end
+	
+	def systemIncludePaths
+		[]
 	end
 
 	@@doNothingAction_ = lambda do |t|
@@ -160,8 +162,9 @@ module CppProjectConfig
 	attr_reader :cppDefines
 
  	def initializer(pnt)
-		@cppIPaths_=[]
+		@addedIncludePaths_=[]
 		@cppDefines={}
+		@incPaths_=nil;
 		if(pnt != nil)
 			@cppDefines.merge!(pnt.cppDefines);
 			@ctools = pnt.ctools;
@@ -185,9 +188,14 @@ module CppProjectConfig
 	def addIncludePaths(*defs)	
 		defs.flatten!()
 		defs.each do |ip|
-			@cppIPaths_ << File.expand_path(ip);
+			@addedIncludePaths_ << File.expand_path(ip);
 		end	
+		@incPaths_=nil;
 	end	
+
+	def addedIncludePaths
+		@addedIncludePaths_
+	end
 
 	def cppDefine(*args)
 		args.flatten!()
@@ -206,11 +214,33 @@ module CppProjectConfig
 	end
 
 	def addSourceFiles(*args)
-
 		opts = (Hash === args.last) ? args.pop : {}
-
 		@sourceFiles ||= FileSet.new;
 		@sourceFiles.include(args);
+	end
+
+	#returns include path "set" with parent's entries after this ones entries
+	# followed by the system include paths from the currently configured tools
+	def includePaths()
+		unless @incPaths_
+			s=FileSet.new;
+			ips=[];
+			pnt=self
+			s.add(project.projectDir); # covers for implicit './'
+			begin
+				pnt.addedIncludePaths.each do |ip|
+					ips << ip if s.add?(ip)
+				end
+				pnt = pnt.parent
+			end until !pnt
+			if(ctools) 
+				ctools.systemIncludePaths.each do |ip|
+					ips << ip if s.add?(ip)
+				end
+			end
+			@incPaths_ = ips;
+		end
+		@incPaths_
 	end
 end
 

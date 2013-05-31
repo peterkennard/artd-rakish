@@ -61,6 +61,7 @@ LoadableModule.onLoaded(Module.new do
 			cppWarnings = '';
 			linkOpts = '';
 			sdkLibs = [];
+			ipaths=[];
 			
 			tpp = GlobalConfig.instance.thirdPartyPath;
 					
@@ -214,9 +215,9 @@ LoadableModule.onLoaded(Module.new do
 					@LINK_EXE = "#{tpp}/tools/msvc6/bin/link.exe"
 
 					cppOpts += " -GX";						
-					cppOpts += " -I#{tpp}/tools/msvc6/include";
-					cppOpts += " -I#{tpp}/tools/msvc7/include";
-					cppOpts += " -I#{tpp}/tools/msvc8/include";
+					 " -I#{tpp}/tools/msvc6/include";
+					ipaths << "#{tpp}/tools/msvc7/include";
+					ipaths << "#{tpp}/tools/msvc8/include";
 					cppOpts += " -libpath:#{tpp}/tools/msvc6/lib";
 				when 'VC7'
 					@CVTRES_EXE = "#{tpp}/tools/msvc7/bin/cvtres.exe"
@@ -224,14 +225,14 @@ LoadableModule.onLoaded(Module.new do
 					@LINK_EXE = "#{tpp}/tools/msvc7/bin/link.exe"
 
 					cppOpts += " -GX"
-					cppOpts += " -I\"#{tpp}/tools/msvc7/include\""
-					cppOpts += " -I\"#{tpp}/tools/msvc7/atlmfc/include\""
+					ipaths << "#{tpp}/tools/msvc7/include\""
+					ipaths << "#{tpp}/tools/msvc7/atlmfc/include\""
 					linkOpts += " -libpath:\"#{tpp}/tools/msvc7/lib\""
 					linkOpts += " -libpath:\"#{tpp}/tools/msvc7/atlmfc/lib\""
 				when 'VC8'
 					@CVTRES_EXE = "#{tpp}/tools/msvc8/bin/cvtres.exe"
-					cppOpts += " -I\"#{tpp}/tools/msvc8/include\""
-					cppOpts += " -I\"#{tpp}/tools/msvc8/atlmfc/include\""
+					ipaths << "#{tpp}/tools/msvc8/include"
+					ipaths << "#{tpp}/tools/msvc8/atlmfc/include"
 
 					if(@platform === "Win32")
 						@MSVC_EXE ="#{tpp}/tools/msvc8/bin/cl.exe"
@@ -248,8 +249,8 @@ LoadableModule.onLoaded(Module.new do
 					end
 				when 'VC9'
 					@CVTRES_EXE = "#{tpp}/tools/msvc9/bin/cvtres.exe"
-					cppOpts += " -I\"#{tpp}/tools/msvc9/include\""
-					cppOpts += " -I\"#{tpp}/tools/msvc9/atlmfc/include\""
+					ipaths << "#{tpp}/tools/msvc9/include"
+					ipaths << "#{tpp}/tools/msvc9/atlmfc/include"
 					if(@platform === "Win32")
 						@MSVC_EXE = "#{tpp}/tools/msvc9/bin/cl.exe"
 						@LINK_EXE = "#{tpp}/tools/msvc9/bin/link.exe"
@@ -263,8 +264,8 @@ LoadableModule.onLoaded(Module.new do
 					end
 				when 'VC10'
 					@CVTRES_EXE = "#{tpp}/tools/msvc10/bin/cvtres.exe"
-					cppOpts += " -I\"#{tpp}/tools/msvc10/include\""
-					cppOpts += " -I\"#{tpp}/tools/msvc10/atlmfc/include\""
+					ipaths << "#{tpp}/tools/msvc10/include"
+					ipaths << "#{tpp}/tools/msvc10/atlmfc/include"
 					if(@platform === "Win32")
 						@MSVC_EXE = "#{tpp}/tools/msvc10/bin/cl.exe"
 						@LINK_EXE = "#{tpp}/tools/msvc10/bin/link.exe"
@@ -279,9 +280,11 @@ LoadableModule.onLoaded(Module.new do
 			end
 
 			@RC_EXE =  "#{tpp}/tools/winsdk/bin/rc.exe"
-					
+
 			# items from appropriate windows SDKs
-			cppOpts += " -I\"#{tpp}/tools/winsdk/Include\""
+			ipaths << "#{tpp}/tools/winsdk/Include"
+			ipaths << "#{tpp}/include/Win32"
+			ipaths << "#{tpp}/include"
 					
 			if(@platform === "Win32")
 				sdkLibPath = "#{tpp}/tools/winsdk/lib"
@@ -352,12 +355,18 @@ LoadableModule.onLoaded(Module.new do
 				else
 					includesManifest = false;
 			end
-										
+							
+			# assign results to instance variables			
 			@CPP_OPTIONS 	= cppOpts;
 			@CPP_WARNINGS 	= cppWarnings;
 			@SDK_LIBS 		= sdkLibs;
 			@LINK_OPTS 		= linkOpts;
 			@MACHINE_SPEC 	= machineSpec;
+			@systemIncludePaths = ipaths;
+		end
+
+		def sytemIncludePaths
+			@systemIncludePaths
 		end
 
 		def ensureConfigOptions(cfg)
@@ -389,13 +398,6 @@ LoadableModule.onLoaded(Module.new do
 				"ARTD_DEBUGTYPE=#{@debugType}"
 			);
 			
-			tpp = cfg.thirdPartyPath;
-
-			cfg.addIncludePaths(
-				"#{tpp}/include/Win32",
-				"#{tpp}/include"
-			);
-
 		end
 
 		# will format and cache into the config the /I and /D and other constant
@@ -412,7 +414,7 @@ LoadableModule.onLoaded(Module.new do
 				end
 
 				# format include paths
-				cfig.incPaths.each do |dir| 
+				cfig.includePaths.each do |dir| 
 					cfl += " /I\"#{dir}\"";
 				end
 						

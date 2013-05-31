@@ -420,11 +420,13 @@ module Rakish
 					}
 				end
 			rescue => e
-				puts("rubyLinePP(): error processing line #{lineNum}: #{e}")
-				puts(rawline);
-				e.backtrace.each do |bline|
-					puts bline;
-					break if bline =~ /(.*)rubyLinePP/;
+				log.error do 
+					bt=[]
+					e.backtrace.each do |bline|
+						bt << Logger.formatBacktraceLine(bline);
+						break if bline =~ /(.*)rubyLinePP/;
+					end
+					"error processing line #{lineNum}: #{e}\n\"#{rawline.chomp}\"\n#{bt.join("\n")}" 
 				end
 			end
 		end
