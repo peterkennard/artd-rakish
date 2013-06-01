@@ -181,14 +181,20 @@ module CppProjectConfig
 	    base.addModInit(base,self.instance_method(:initializer));
     end
 
+	APP = :APP;
+	DLL = :DLL;
+	LIB = :LIB;
+
     attr_reader :ctools
 	attr_reader :cppDefines
+	attr_reader :linkType
 
  	def initializer(pnt)
 		@addedIncludePaths_=[]
 		@cppDefines={}
 		@incPaths_=nil;
 		if(pnt != nil)
+			@linkType = pnt.linkType;
 			@cppDefines.merge!(pnt.cppDefines);
 			@ctools = pnt.ctools;
 		end
@@ -274,6 +280,7 @@ class CppProject < Rakish::Project
 	task :compile 		=> [ :includes ];
 	task :depends		=> [ :includes ];
 	task :build 		=> [ :compile ];
+	task :default		=> [ :build ];
 
 
 	# Create a new project
@@ -292,12 +299,8 @@ class CppProject < Rakish::Project
 	# Rake namespace of the new project, and called in this instance's context
 
 
-	def setupCppConfig(&b)
-		@configurator_ = b;	
-	end
-
 	def initialize(args={},&block)
-        super(args,&block);
+		super(args,&block);
 		addIncludePaths( [ OBJPATH(),INCDIR() ] );
 	end
 
@@ -419,6 +422,19 @@ class CppProject < Rakish::Project
 		@sourceFiles||=FileSet.new
 	end
 
+
+	# define a configurator to load a configuration for a specific ( string )
+	# configruation
+
+	def setupCppConfig(&b)
+		@cppConfigurator_ = b;	
+	end
+
+	def configureLink(args, &b)
+		@linkType = args[:type];
+		@linkConfigurator_ = b;
+	end
+
 	class ResolvedConfig < BuildConfig
 		include CppProjectConfig
 
@@ -444,8 +460,8 @@ class CppProject < Rakish::Project
 		tools = CTools.loadConfiguredTools(config);
 		ret = @resolvedConfigs[config] = ResolvedConfig.new(self,config,tools);
 
-		if(defined? @configurator_)
-			@configurator_.call(ret);
+		if(defined? @cppConfigurator_)
+			@cppConfigurator_.call(ret);
 		end
 		
 		ret
@@ -472,24 +488,6 @@ class XCppProject < Project
 
 	task :autogen 		=> [ :includes, :vcproj ];
 	task :cleanautogen 	=> [ :cleanincludes, :cleandepends, :vcprojclean ];
-	task :depends		=> [ :includes ];
-	task :build   		=> [ :includes ];
-	task :compile 		=> [ :includes ];
-	task :default		=> [ :build ];
-
-
-    def initializeProject(args)
-        addIncludePaths [
-            "#{@INCDIR}"
-        ];
-        ensureDirectoryTask(OBJDIR());
-        ensureDirectoryTask(OBJPATH());
-    end
-
-
-protected  #### compile target configuration
-
-public
 
 private
 	def acquireBuildId(dir, map=nil)

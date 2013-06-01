@@ -106,6 +106,7 @@ class BuildConfig
                 end
             end
         end
+		yield if block_given?
     end
 
     protected
