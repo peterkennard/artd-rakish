@@ -110,6 +110,8 @@ module Rake
 	end
 	
 	class Task
+	  include Rakish::Logger
+	  
 	  rake_extension('config') do
 		# optional "config" field on Rake Task objects
 		attr_accessor :config

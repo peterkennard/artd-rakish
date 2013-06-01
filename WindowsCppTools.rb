@@ -487,6 +487,211 @@ LoadableModule.onLoaded(Module.new do
 												:depends]
 		end	
 
+
+		@@buildLibAction = lambda do |t|
+			t.config.ctools.doBuildLib(t)
+		end
+		def doBuildLib(t)
+
+			cfg = t.config;
+
+			log.debug("build lib #{t.name}");
+			return; # not yet
+					
+			#STATIC_LIB_FILES += $(addsuffix .lib,$(call GET_REFERENCES,$(STATIC_LIBS),$(OUTPUT_PATH)))
+			#SHARED_LIBS_FILES := $(addsuffix .lib,$(call GET_REFERENCES,$(SHARED_LIBS),$(OUTPUT_PATH)))
+			#
+			#$(TARGET_FILE): $(OBJS) $(STATIC_LIB_FILES)
+				
+			# assemble a static library 
+			puts("linking #{File.basename(t.name)}")
+			deleteFile(t.name)
+			writeLinkref(cfg,cfg.baseName,t.name);
+			lnkfile = t.name.pathmap("#{cfg.OBJPATH}/%f.response");
+
+			#	echo -n $(PROJECT_TARGET_NAME)-$(OUTPUT_SUFFIX) > $(TARGET_REF)
+			#	@echo -n "$(CPP_OBJS_BASE) $(C_OBJS_BASE)" > $(TARGET_LOBJ)
+
+			File.open(lnkfile,'w') do |f|
+						
+				f.puts("#{@LIB_OPTIONS} -nodefaultlib -out:\"#{t.name}\"" );
+							
+				# object files
+				objs = cfg.objs
+				objs.flatten.each do |obj|
+					obj = obj.to_s
+					next unless obj.pathmap('%x') == '.obj' 
+					f.puts("\"#{obj}\"");
+				end		
+				# library files
+			#	@echo -n " $(STATIC_LIB_FILES) $(SHARED_LIBS_FILES)" >> $(TARGET_LNK)
+			end
+			cmdline = "\"#{@LINK_EXE}\" -lib -nologo @#{lnkfile}\""
+			system( cmdline );
+		end
+
+		@@linkDllAction = lambda do |t|
+			t.config.ctools.doLinkDll(t)
+		end
+		def doLinkDll(t)
+					
+			# link a dynamic library
+			cfg = t.config;
+				
+			log.debug("link dll #{t.name}");
+			return; # not yet
+				
+			puts("linking #{File.basename(t.name)}")					
+			#	rm -f $(TARGET_FILE) $(TARGET_REF) $(TARGET_LOBJ); \
+			deleteFile(t.name);
+			writeLinkref(cfg,cfg.baseName,t.sources[:implib]);
+			#	@echo -n "$(CPP_OBJS_BASE) $(C_OBJS_BASE)" > $(TARGET_LOBJ)
+
+			lnkfile = t.name.pathmap("#{cfg.OBJPATH}/%f.response");
+					
+			# build linker source file
+			begin
+
+				#STATIC_LIB_FILES += $(addprefix $(OUTPUT_PATH)/,$(addsuffix -$(UNVERSIONED_SUFFIX).lobj,$(STATIC_LIBS)))
+				#SHARED_LIBS_FILES := $(addsuffix .lib,$(call GET_REFERENCES,$(SHARED_LIBS),$(OUTPUT_PATH)))
+				#
+
+				File.open(lnkfile,'w') do |f|
+					f.puts("-map:\"#{t.sources[:mapfile]}\"");
+					f.puts("-pdb:\"#{t.sources[:pdbfile]}\"");
+					f.puts("-implib:\"#{t.sources[:implib]}\"");
+					f.puts("-DLL #{@LINK_OPTS}");
+
+					# library search paths
+					eachof cfg.libpaths do |lpath|
+						f.puts("-libpath:\"#{lpath}\"");
+					end
+							
+					# libraries							
+					libs=[]
+						
+					# $(SHARED_LIBS_FILES) 
+					# $(THIRD_PARTY_LIB_FILES) 
+					# $(SPECIFIC_LIBS) 
+					# $(EXTRA_LIBS_WINDOWS) 
+					libs << @SDK_LIBS;
+					libs << cfg.libs
+					libs.flatten.each do |obj|
+						f.puts("\"#{obj}\"");
+					end
+							
+					f.puts("-nodefaultlib -out:\"#{t.name}\"");
+							
+					# object files
+					objs = [cfg.objs]
+					objs <<= t.sources[:autores];
+					objs.flatten.each do |obj|
+						obj = obj.to_s
+						next unless obj.pathmap('%x') == '.obj' 
+						f.puts("\"#{obj}\"");
+					end			
+					# static libs
+					#	@$(PARSEREF) --spaces --prepend $(OUTPUT_PATH)/ $(STATIC_LIB_FILES) >> $(TARGET_LNK)
+				end
+			rescue => e
+				puts("error precessing: #{lnkfile} #{e}")			
+				raise e
+			end
+					
+			cmdline = "\"#{@LINK_EXE}\" -nologo @\"#{lnkfile}\"";					
+			puts(cmdline) if(cfg.verbose?)
+			system( cmdline );
+					
+			#ifeq ($(RUN_SIGNTOOL),1)
+			#	@echo "Signing $(notdir $(TARGET_FILE))"; \
+			#	$(SIGNTOOL_EXE) -in $(TARGET_FILE) -out $(TARGET_FILE).signed
+			#	@rm $(TARGET_FILE); \
+			#	mv $(TARGET_FILE).signed $(TARGET_FILE)
+			#endif
+		end
+
+		@@linkAppAction = lambda do |t|
+			t.config.ctools.doLinkApp(t)
+		end
+		def doLinkApp(t)
+
+			log.debug("link app #{t.name}");
+			return; # not yet
+
+			cfg = t.config;
+			# assemble a static library 
+			puts("linking #{File.basename(t.name)}")
+					
+			deleteFile(t.name);
+			lnkfile = t.name.pathmap("#{cfg.OBJPATH}/%f.response");
+					
+			# build linker source file
+			begin
+				File.open(lnkfile,'w') do |f|
+					f.puts("-out:\"#{t.name}\"");
+					f.puts("-map:\"#{t.sources[:mapfile]}\"");
+					f.puts("-pdb:\"#{t.sources[:pdbfile]}\"");							
+					f.puts("#{@LINK_OPTS}");
+	
+					# object files
+					objs=[]
+					objs << cfg.objs
+					objs <<= t.sources[:autores];
+					objs.flatten.each do |obj|
+						obj = obj.to_s
+						next unless obj.pathmap('%x') == '.obj' 
+						f.puts("\"#{obj}\"");
+					end			
+														
+					libs=[]
+					libs << @SDK_LIBS;
+					libs << cfg.libs
+					libs.flatten.each do |obj|
+						f.puts("\"#{obj}\"");
+					end
+				end
+			rescue => e
+				puts("error precessing: #{lnkfile} #{e}")			
+				raise e
+			end
+					
+			cmdline = "\"#{@LINK_EXE}\" -nologo @\"#{lnkfile}\"";					
+			puts(cmdline) if(cfg.verbose?)
+			system( cmdline );
+		end
+
+		@@resolveLinkAction_ = lambda do |t|
+			log.debug("preparing to build #{t.config.name}");
+		end
+
+		def createLinkTask(objs,cfg)
+		
+			case(cfg.targetType)
+				when CppProjectConfig::APP
+					targetName = "#{cfg.BINDIR()}/#{cfg.targetName}.exe";
+					action = @@linkAppAction;
+				when CppProjectConfig::LIB
+					targetName = "#{cfg.BINDIR()}/#{cfg.targetName}.lib";
+					action = @@buildLibAction;
+				when CppProjectConfig::DLL
+					targetName = "#{cfg.BINDIR()}/#{cfg.targetName}.dll";
+					action = @@linkDllAction;
+				else
+					return(false);
+			end
+
+			cfg.project.addCleanFiles(targetName);
+
+			doLink = Rake::FileTask.define_task targetName, &action;
+			doLink.config = cfg;
+
+			# create a "setup" task to resolve everything and set up the link.
+			tsk = task "#{cfg.targetName}.#{cfg.targetType}.resolve", &@@resolveLinkAction_;
+			tsk.config = doLink; 
+
+			[ tsk, doLink ] # note this returns an array !!!
+		end
+
 	end
 
 

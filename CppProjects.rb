@@ -173,6 +173,11 @@ module CTools
 		tsk
 	end
 
+	def createLinkTask(objs,cfg)
+		log.debug("creating link task");
+		false
+	end
+
 end
 
 module CppProjectConfig
@@ -187,14 +192,15 @@ module CppProjectConfig
 
     attr_reader :ctools
 	attr_reader :cppDefines
-	attr_reader :linkType
+	attr_reader :targetType
+#	attr_reader	:cflags  had this in old one for added VC flags.
 
  	def initializer(pnt)
 		@addedIncludePaths_=[]
 		@cppDefines={}
 		@incPaths_=nil;
 		if(pnt != nil)
-			@linkType = pnt.linkType;
+			@targetType = pnt.targetType;
 			@cppDefines.merge!(pnt.cppDefines);
 			@ctools = pnt.ctools;
 		end
@@ -305,7 +311,7 @@ class CppProject < Rakish::Project
 	end
 
 
-	def resolveCompileTasks()
+	def resolveConfiguredTasks()
 
 		cfg = @buildConfig
 		tools = cfg.ctools;
@@ -329,7 +335,15 @@ class CppProject < Rakish::Project
 		tsk.enhance(raked);
 
 		@objs = objs;
-		return(objs)
+		ensureDirectoryTask(OBJPATH());
+
+		## link tasks
+		tsk = tools.createLinkTask(objs,cfg);
+		if(tsk)
+			ensureDirectoryTask(LIBDIR());
+			task :build => [ :compile, cfg.LIBDIR(), tsk ].flatten
+		end
+
 	end
 
 	# called after initializers on all projects and before rake
@@ -340,9 +354,7 @@ class CppProject < Rakish::Project
             ns = Rake.application.in_namespace(@myNamespace) do
 				puts("pre building #{@myNamespace}");
 				@buildConfig = resolveConfiguration(CPP_CONFIG());
-				resolveCompileTasks();
-				ensureDirectoryTask(OBJPATH());
-
+				resolveConfiguredTasks();
 				if(@projectId)
                     ensureDirectoryTask(vcprojDir);
 					tsk = task :vcproj=>[vcprojDir] do |t|
@@ -426,25 +438,34 @@ class CppProject < Rakish::Project
 	# define a configurator to load a configuration for a specific ( string )
 	# configruation
 
-	def setupCppConfig(&b)
+	def setupCppConfig(args={}, &b)
+		@targetType = args[:targetType];
 		@cppConfigurator_ = b;	
 	end
 
-	def configureLink(args, &b)
-		@linkType = args[:type];
-		@linkConfigurator_ = b;
-	end
-
-	class ResolvedConfig < BuildConfig
+	class TargetConfig < BuildConfig
 		include CppProjectConfig
 
-		attr_reader :configName
+		attr_reader		:configName
+		attr_accessor	:targetBaseName
+		attr_reader 	:libpaths
+		attr_accessor   :targetName
 
 		def initialize(pnt, cfgName, tools)
 			super(pnt);
+			@libpaths=[]; # ???
 			@configName = cfgName;
 			@ctools = tools;
+			@targetBaseName = pnt.moduleName;
 			tools.ensureConfigOptions(self);
+		end
+
+		def addLibPaths(*lpaths)
+			@libpaths << lpaths
+		end
+
+		def targetName
+			@targetName||="#{targetBaseName}-#{configName}";
 		end
 	end
 
@@ -458,7 +479,7 @@ class CppProject < Rakish::Project
 		end
 
 		tools = CTools.loadConfiguredTools(config);
-		ret = @resolvedConfigs[config] = ResolvedConfig.new(self,config,tools);
+		ret = @resolvedConfigs[config] = TargetConfig.new(self,config,tools);
 
 		if(defined? @cppConfigurator_)
 			@cppConfigurator_.call(ret);
@@ -481,15 +502,6 @@ end
 
 if false
 
-class XCppProject < Project
-	include Rakish::Util
-
-	# initialize "static" class variables
-
-	task :autogen 		=> [ :includes, :vcproj ];
-	task :cleanautogen 	=> [ :cleanincludes, :cleandepends, :vcprojclean ];
-
-private
 	def acquireBuildId(dir, map=nil)
 		outOfSync = false;
 		rev = 'test'
@@ -563,60 +575,5 @@ public
 		@@buildId_
 	end
 
-
-protected
-
-############## link configurations
-
-	class LinkConfig # nodoc: all
-		include LinkTargetMod
-
-		attr_accessor :baseName
-		attr_reader	  :isLibrary
-		attr_accessor :SHARED_LIBRARY
-
-		def initialize(cfg,lib,&b)
-			@isLibrary = lib;
-			init_LinkTarget(cfg)
-		end
-		alias :superResolve :resolve
-		def resolve
-			superResolve
-		end
-	end
-
-public
-
-	def libraryConfig(&b)
-
-		config = LinkConfig.new(self,true,&b);
-		config.baseName = moduleName();
-		config.addObjs(@objs);
-		yield config;
-		targ = tools.createLibraryTarget(config);
-		tsk = task "#{config.baseName}.lib.resolve" do |t|
-			config.resolve
-		end
-		ensureDirectoryTask(LIBDIR());
-        task :build => [ :compile, config.LIBDIR(), tsk, targ ];
-		task :clean do
-			addCleanFiles(targ.name);
-		end
-	end
-
-	def exeConfig(&b)
-
-		config = LinkConfig.new(self,false,&b);
-		config.baseName = moduleName();
-		config.addObjs(@objs);
-		yield config;
-		tsk = task "#{config.baseName}.exe.resolve" do |t|
-			config.resolve
-		end
-		targ = tools.createExeTarget(config);
-        task :build => [ :compile, tsk, targ ];
-		addCleanFiles(targ.name);
-	end
-end
-end # false 
+end # false
 
