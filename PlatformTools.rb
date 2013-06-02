@@ -66,17 +66,6 @@ module Rakish
 		class ToolsBase
 			include Rakish::Util
 		
-			def writeLinkref(cfg,baseName,targetName)
-				
-				defpath = "#{cfg.LIBDIR}/#{baseName}-#{cfg.CPP_CONFIG}.linkref"
-				reltarget = getRelativePath(targetName,cfg.LIBDIR);
-			
-# puts("####### writing #{defpath} with #{reltarget} from #{targetName}");
- 
-				File.open(defpath,'w') do |f|
-					f.puts("libs = [\'#{reltarget}\']")
-				end
-			end
             
             # given a list of dependencies will write out a '.raked' format dependencies file 
             # for the target task

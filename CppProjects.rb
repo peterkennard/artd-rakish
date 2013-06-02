@@ -50,6 +50,18 @@ module CTools
 
 	end
 
+	def writeLinkref(cfg,baseName,targetName)
+				
+		defpath = "#{cfg.LIBDIR}/#{baseName}-#{cfg.CPP_CONFIG}.linkref"
+		reltarget = getRelativePath(targetName,cfg.LIBDIR);
+			
+# log.debug("writing #{defpath} with #{reltarget} from #{targetName}");
+ 
+		File.open(defpath,'w') do |f|
+			f.puts("libs = [\'#{reltarget}\']")
+		end
+	end
+
     # given a list of dependencies will write out a '.raked' format dependencies file 
     # for the target task
 	def updateDependsFile(task, outName, dependencies)
@@ -466,6 +478,10 @@ class CppProject < Rakish::Project
 
 		def targetName
 			@targetName||="#{targetBaseName}-#{configName}";
+		end
+
+		def objectFiles
+			[]
 		end
 	end
 

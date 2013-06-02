@@ -495,8 +495,6 @@ LoadableModule.onLoaded(Module.new do
 
 			cfg = t.config;
 
-			log.debug("build lib #{t.name}");
-			return; # not yet
 					
 			#STATIC_LIB_FILES += $(addsuffix .lib,$(call GET_REFERENCES,$(STATIC_LIBS),$(OUTPUT_PATH)))
 			#SHARED_LIBS_FILES := $(addsuffix .lib,$(call GET_REFERENCES,$(SHARED_LIBS),$(OUTPUT_PATH)))
@@ -504,20 +502,18 @@ LoadableModule.onLoaded(Module.new do
 			#$(TARGET_FILE): $(OBJS) $(STATIC_LIB_FILES)
 				
 			# assemble a static library 
-			puts("linking #{File.basename(t.name)}")
+			puts("asembling #{File.basename(t.name)}")
 			deleteFile(t.name)
-			writeLinkref(cfg,cfg.baseName,t.name);
+			writeLinkref(cfg,cfg.targetBaseName,t.name);
 			lnkfile = t.name.pathmap("#{cfg.OBJPATH}/%f.response");
 
 			#	echo -n $(PROJECT_TARGET_NAME)-$(OUTPUT_SUFFIX) > $(TARGET_REF)
 			#	@echo -n "$(CPP_OBJS_BASE) $(C_OBJS_BASE)" > $(TARGET_LOBJ)
 
 			File.open(lnkfile,'w') do |f|
-						
-				f.puts("#{@LIB_OPTIONS} -nodefaultlib -out:\"#{t.name}\"" );
-							
+				f.puts("#{@LIB_OPTIONS} -nodefaultlib -out:\"#{t.name}\"" );							
 				# object files
-				objs = cfg.objs
+				objs = t.prerequisites
 				objs.flatten.each do |obj|
 					obj = obj.to_s
 					next unless obj.pathmap('%x') == '.obj' 
@@ -526,6 +522,7 @@ LoadableModule.onLoaded(Module.new do
 				# library files
 			#	@echo -n " $(STATIC_LIB_FILES) $(SHARED_LIBS_FILES)" >> $(TARGET_LNK)
 			end
+
 			cmdline = "\"#{@LINK_EXE}\" -lib -nologo @#{lnkfile}\""
 			system( cmdline );
 		end
@@ -661,7 +658,6 @@ LoadableModule.onLoaded(Module.new do
 		end
 
 		@@resolveLinkAction_ = lambda do |t|
-			log.debug("preparing to build #{t.config.name}");
 		end
 
 		def createLinkTask(objs,cfg)
@@ -671,7 +667,7 @@ LoadableModule.onLoaded(Module.new do
 					targetName = "#{cfg.BINDIR()}/#{cfg.targetName}.exe";
 					action = @@linkAppAction;
 				when CppProjectConfig::LIB
-					targetName = "#{cfg.BINDIR()}/#{cfg.targetName}.lib";
+					targetName = "#{cfg.LIBDIR()}/#{cfg.targetName}.lib";
 					action = @@buildLibAction;
 				when CppProjectConfig::DLL
 					targetName = "#{cfg.BINDIR()}/#{cfg.targetName}.dll";
@@ -684,6 +680,7 @@ LoadableModule.onLoaded(Module.new do
 
 			doLink = Rake::FileTask.define_task targetName, &action;
 			doLink.config = cfg;
+			doLink.enhance(objs);
 
 			# create a "setup" task to resolve everything and set up the link.
 			tsk = task "#{cfg.targetName}.#{cfg.targetType}.resolve", &@@resolveLinkAction_;
