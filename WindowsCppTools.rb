@@ -555,15 +555,16 @@ LoadableModule.onLoaded(Module.new do
 					f.puts("-DLL #{@LINK_OPTS}");
 
 					# library search paths
-				#	eachof cfg.libpaths do |lpath|
-				#		f.puts("-libpath:\"#{lpath}\"");
-				#	end
+					eachof cfg.libpaths do |lpath|
+						f.puts("-libpath:\"#{lpath}\"");
+					end
 							
 					# libraries							
 					libs=[]
 						
 					libs << @SDK_LIBS;
-				#	libs << cfg.libs
+				    libs << cfg.dependencyLibs
+					libs << cfg.libs
 					libs.flatten.each do |obj|
 						f.puts("\"#{obj}\"");
 					end
@@ -617,6 +618,11 @@ LoadableModule.onLoaded(Module.new do
 					f.puts("-pdb:\"#{t.sources[:pdbfile]}\"");							
 					f.puts("#{@LINK_OPTS}");
 	
+					# library search paths
+					eachof cfg.libpaths do |lpath|
+						f.puts("-libpath:\"#{lpath}\"");
+					end
+
 					# object files
 					objs=[]
 					objs << t.sources[:userobjs];
@@ -629,7 +635,8 @@ LoadableModule.onLoaded(Module.new do
 														
 					libs=[]
 					libs << @SDK_LIBS;
-				  # libs << cfg.libs
+				    libs << cfg.dependencyLibs
+					libs << cfg.libs
 					libs.flatten.each do |obj|
 						f.puts("\"#{obj}\"");
 					end

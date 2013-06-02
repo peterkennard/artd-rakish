@@ -51,14 +51,38 @@ module CTools
 	end
 
 	def writeLinkref(cfg,baseName,targetName)
-				
+					
 		defpath = "#{cfg.LIBDIR}/#{baseName}-#{cfg.CPP_CONFIG}.linkref"
 		reltarget = getRelativePath(targetName,cfg.LIBDIR);
-			
-# log.debug("writing #{defpath} with #{reltarget} from #{targetName}");
- 
 		File.open(defpath,'w') do |f|
 			f.puts("libs = [\'#{reltarget}\']")
+		end
+	end
+
+	# real bodge for now need to clean this up somehow.
+	def loadLinkref(libdir,cfg,baseName)
+		cd libdir, :verbose=>false do
+			log.debug("#{baseName}"); # -#{cfg}.linkref");
+			libdef = File.expand_path("#{baseName}-#{cfg}.linkref");
+			begin
+				libpaths=nil
+				libs=nil
+				eval(File.new(libdef).read)
+				if(libpaths)
+					libpaths.collect! do |lp|
+						File.expand_path(lp)
+					end
+				end
+				if(libs)
+					libs.collect! do |lp|
+						File.expand_path(lp)
+					end
+				end
+				return({libpaths: libpaths, libs: libs});
+			rescue => e
+				log.debug(e);
+			end
+			{}
 		end
 	end
 
@@ -295,10 +319,10 @@ class CppProject < Rakish::Project
     include CppProjectConfig
 
 	task :autogen 		=> [ :includes, :vcproj ];
+	task :cleanautogen 	=> [ :cleanincludes, :cleandepends, :vcprojclean ];
 	task :compile 		=> [ :includes ];
 	task :depends		=> [ :includes ];
 	task :build 		=> [ :compile ];
-	task :default		=> [ :build ];
 
 
 	# Create a new project
@@ -467,11 +491,13 @@ class CppProject < Rakish::Project
 		attr_reader		:configName
 		attr_accessor	:targetBaseName
 		attr_reader 	:libpaths
+		attr_reader 	:libs
 		attr_accessor   :targetName
 
 		def initialize(pnt, cfgName, tools)
 			super(pnt);
 			@libpaths=[]; # ???
+			@libs=[];
 			@configName = cfgName;
 			@ctools = tools;
 			@targetBaseName = pnt.moduleName;
@@ -484,6 +510,16 @@ class CppProject < Rakish::Project
 
 		def targetName
 			@targetName||="#{targetBaseName}-#{configName}";
+		end
+
+		def dependencyLibs
+			libs=[]
+			project.dependencies.each do |dep|
+				ldef = ctools.loadLinkref(dep.LIBDIR,configName,dep.moduleName);
+				deflibs = ldef[:libs];
+				libs += deflibs if deflibs;
+			end
+			libs
 		end
 
 		def objectFiles

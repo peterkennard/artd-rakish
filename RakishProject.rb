@@ -14,6 +14,7 @@ class Build
 
 		@projects=[]
 		@projectsByModule={}
+		@projectsByFile={}
 		
 		task :resolve do |t|
 		    if(defined? Rakish::GlobalConfig.instance.CPP_CONFIG)
@@ -55,6 +56,7 @@ class Build
 		end
 		@projects << p;
 		@projectsByModule[pname]=p;
+		@projectsByFile[p.projectFile]=p;
 	end
 
 
@@ -63,8 +65,8 @@ class Build
 	# selects namespace appropriately
 
 		rakefiles = FileSet.new(args);
-		
-			namespace ':' do
+		projs=[];
+		namespace ':' do
 			path = ''
 			dir = File.expand_path(pwd)
 			begin
@@ -83,18 +85,20 @@ class Build
 						if(require(path)) 
 						#	puts "project #{path} loaded" if verbose?
 						end
-					end	
+					end
+					projs << @projectsByFile[path];	
 				end
 			rescue => e
 				cd dir
-				puts "failure loading #{path}" 
+				log.error("failure loading #{path}"); 
 				if(verbose?)
 					puts e
 					puts e.backtrace.join("\n\t")
 				end
 				raise e			
 			end
-		end
+		end # namespace
+		projs
 	end
 end
 
@@ -153,10 +157,6 @@ class Project < BuildConfig
 		end
 	end
 
-
-# TODO: much of this needs to be migrated to the C++ project and other project types
-#	task :cleanautogen 	=> [ :cleanincludes, :cleandepends, :vcprojclean ];
-#	task :build   		=> [];
 	task :default		=> [ :build ];
 
 	# returns the Rake task namespace for this project
@@ -173,6 +173,8 @@ class Project < BuildConfig
 	attr_reader :myPackage
 	# UUID of this project
 	attr_reader :projectId
+	# list of projects specified that this is dependent on ( not recursive )
+	attr_reader :dependencies
 
 	# output directory common to all configurations
 	def OBJDIR
@@ -242,7 +244,7 @@ class Project < BuildConfig
 		#		break
 		# end
 
-		dependencies = args[:dependsUpon]
+		fileDependencies = args[:dependsUpon]
 
 		parent = args[:config]
 		parent ||= GlobalConfig.instance
@@ -269,7 +271,8 @@ class Project < BuildConfig
 		cd @projectDir, :verbose=>verbose? do
 
 			# load all subprojects this is dependent on relative to this project's directory
-			@build.loadProjects(dependencies) if dependencies
+			@dependencies = (fileDependencies ? @build.loadProjects(fileDependencies) : []);
+
 			# register after the others are loaded for proper dependency initialization order
 			@build.registerProject(self);
 
