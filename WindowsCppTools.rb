@@ -651,6 +651,36 @@ LoadableModule.onLoaded(Module.new do
 			system( cmdline );
 		end
 
+		@@makeManifestAction = lambda do |t|
+			t.config.tools.doMakeManifest(t)
+		end
+		def doMakeManifest(t)
+			puts("Generating #{File.basename(t.name)}");
+			data = t.data;
+			cp(@ManifestSource, data[:txt],:verbose => false) 
+			File.open(t.name,'w') do |f|
+				f.puts "#include <windows.h>"						
+				if(@BASELINKAGE === 'Dynamic' && t.config.isLibrary)
+					id = 'ISOLATIONAWARE_MANIFEST_RESOURCE_ID'
+				else
+					id = 'CREATEPROCESS_MANIFEST_RESOURCE_ID'
+				end		
+				f.puts "#{id} RT_MANIFEST \"#{File.basename(data[:txt])}\""
+			end
+		end
+				
+		def compileRcFile(cfg,rc,res)
+			cmdline = "\"#{@RC_EXE}\" -nologo -I\"#{cfg.thirdPartyPath}/tools/winsdk/include\""
+			cmdline += " -I\"#{cfg.thirdPartyPath}/tools/msvc9/include\""
+			cmdline += " -I\"#{cfg.thirdPartyPath}/tools/msvc9/atlmfc/include\""
+			cmdline += " -fo\"#{res}\"  \"#{rc}\""
+			system cmdline
+		end
+
+		def compileResFile(cfg,res,obj)
+			cmdline = "\"#{@CVTRES_EXE}\" #{@MACHINE_SPEC} -nologo -out:\"#{obj}\" \"#{res}\""
+			system(cmdline)
+		end
 
 		def getAutoResourcesObjs(cfg)
 

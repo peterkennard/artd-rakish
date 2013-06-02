@@ -23,7 +23,6 @@
     <None Include="CppProjects.rb" />
     <None Include="JavaProjects.rb" />
     <None Include="OldBuildConfig.rb" />
-    <None Include="PlatformTools.rb" />
     <None Include="raketest.rb" />
     <None Include="Rakish.rb" />
     <None Include="RakishProject.rb" />

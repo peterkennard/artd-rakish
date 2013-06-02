@@ -515,6 +515,13 @@ class CppProject < Rakish::Project
 			@libpaths << lpaths
 		end
 
+		def addLibs(*l)
+			l.flatten.each do |lib|
+				lib = File.expand_path(lib) if(lib =~ /\.\//); 
+				@libs << lib
+			end
+		end
+
 		def targetName
 			@targetName||="#{targetBaseName}-#{configName}";
 		end
