@@ -150,7 +150,14 @@ EOTEXT
 
 
 	def eachConfig(&b) 
-		['Win32-VC10-MTd-Debug','Win32-VC10-MTd-Release'].each do |cfg|
+		[	
+			"Win32-VC10-MD-Debug",
+			"Win32-VC10-MDd-Debug",
+			"Win32-VC10-MT-Debug",
+			"Win32-VC10-MTd-Debug",
+			"Win32-VC10-MD-Release",
+			"Win32-VC10-MT-Release" 
+		].each do |cfg|
 			cfg = cppProject.resolveConfiguration(cfg);
 			next unless cfg
 			yield(cfg);

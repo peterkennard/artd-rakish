@@ -535,14 +535,9 @@ LoadableModule.onLoaded(Module.new do
 			# link a dynamic library
 			cfg = t.config;
 				
-			log.debug("link dll #{t.name}");
-			return; # not yet
-				
 			puts("linking #{File.basename(t.name)}")					
-			#	rm -f $(TARGET_FILE) $(TARGET_REF) $(TARGET_LOBJ); \
 			deleteFile(t.name);
-			writeLinkref(cfg,cfg.baseName,t.sources[:implib]);
-			#	@echo -n "$(CPP_OBJS_BASE) $(C_OBJS_BASE)" > $(TARGET_LOBJ)
+			writeLinkref(cfg,cfg.targetBaseName,t.sources[:implib]);
 
 			lnkfile = t.name.pathmap("#{cfg.OBJPATH}/%f.response");
 					
@@ -560,19 +555,15 @@ LoadableModule.onLoaded(Module.new do
 					f.puts("-DLL #{@LINK_OPTS}");
 
 					# library search paths
-					eachof cfg.libpaths do |lpath|
-						f.puts("-libpath:\"#{lpath}\"");
-					end
+				#	eachof cfg.libpaths do |lpath|
+				#		f.puts("-libpath:\"#{lpath}\"");
+				#	end
 							
 					# libraries							
 					libs=[]
 						
-					# $(SHARED_LIBS_FILES) 
-					# $(THIRD_PARTY_LIB_FILES) 
-					# $(SPECIFIC_LIBS) 
-					# $(EXTRA_LIBS_WINDOWS) 
 					libs << @SDK_LIBS;
-					libs << cfg.libs
+				#	libs << cfg.libs
 					libs.flatten.each do |obj|
 						f.puts("\"#{obj}\"");
 					end
@@ -580,18 +571,17 @@ LoadableModule.onLoaded(Module.new do
 					f.puts("-nodefaultlib -out:\"#{t.name}\"");
 							
 					# object files
-					objs = [cfg.objs]
-					objs <<= t.sources[:autores];
+					objs=[]
+					objs << t.sources[:userobjs];
+					objs << t.sources[:autores];
 					objs.flatten.each do |obj|
 						obj = obj.to_s
 						next unless obj.pathmap('%x') == '.obj' 
 						f.puts("\"#{obj}\"");
 					end			
-					# static libs
-					#	@$(PARSEREF) --spaces --prepend $(OUTPUT_PATH)/ $(STATIC_LIB_FILES) >> $(TARGET_LNK)
 				end
 			rescue => e
-				puts("error precessing: #{lnkfile} #{e}")			
+				log.error("error precessing: #{lnkfile} #{e}")			
 				raise e
 			end
 					
@@ -639,7 +629,7 @@ LoadableModule.onLoaded(Module.new do
 														
 					libs=[]
 					libs << @SDK_LIBS;
-					# libs << cfg.libs
+				  # libs << cfg.libs
 					libs.flatten.each do |obj|
 						f.puts("\"#{obj}\"");
 					end
@@ -657,9 +647,11 @@ LoadableModule.onLoaded(Module.new do
 
 		def getAutoResourcesObjs(cfg)
 
+			return []; # for now
+			
 			resobjs=[]
 			rcobjs=[]
-			basePath = File.join(cfg.OBJPATH,cfg.baseName);
+			basePath = File.join(cfg.OBJPATH,cfg.targetBaseName);
 					
 			if(@ManifestSource) # not present if not needed
 				manifest_rc = "#{basePath}.manifest.rc"
@@ -711,9 +703,8 @@ LoadableModule.onLoaded(Module.new do
 				when CppProjectConfig::APP
 
 					targetName = "#{cfg.BINDIR()}/#{cfg.targetName}.exe";
-
-					ensureDirectoryTask(cfg.BINDIR);
-					resobjs = [] # getAutoResourcesObjs(config)
+					
+					resobjs = getAutoResourcesObjs(cfg)
 					mapfile = targetName.pathmap("%X.map");
 					pdbfile = targetName.pathmap("%X.pdb");
 					cfg.project.addCleanFiles(mapfile,pdbfile);
@@ -739,7 +730,7 @@ LoadableModule.onLoaded(Module.new do
 					#LIBS_DEP_WINDOWS := $(subst $(THIRD_PARTY_PATH),$(THIRD_PARTY_PATH),$(THIRD_PARTY_LIB_FILES) $(SPECIFIC_LIBS))
 					#$(TARGET_FILE): $(OBJS) $(STATIC_LIB_FILES) $(AUTORESOURCES_OBJ) $(LIBS_DEP_WINDOWS)
 
-					resobjs = [] # getAutoResourcesObjs(cfig)
+					resobjs = getAutoResourcesObjs(cfg)
 						
 					mapfile = targetName.pathmap("%X.map");
 					pdbfile = targetName.pathmap("%X.pdb");

@@ -352,14 +352,26 @@ class CppProject < Rakish::Project
 		## link tasks
 		tsk = tools.createLinkTask(objs,cfg);
 		if(tsk)
-			ensureDirectoryTask(LIBDIR());
-			task :build => [ :compile, cfg.LIBDIR(), tsk ].flatten
+			ensureDirectoryTask(cfg.LIBDIR);
+			ensureDirectoryTask(cfg.BINDIR);
+			task :build => [ :compile, cfg.LIBDIR, cfg.BINDIR, tsk ].flatten
 		end
 
 	end
 
+	@@vcprojAction_ = lambda do |t|
+        require "#{Rakish::MAKEDIR}/VcprojBuilder.rb"
+        VcprojBuilder.onVcprojTask(t.config);
+	end
+
+	@@vcprojCleanAction_ = lambda do |t|
+        require "#{Rakish::MAKEDIR}/VcprojBuilder.rb"
+        VcprojBuilder.onVcprojCleanTask(t.config);
+	end
+
 	# called after initializers on all projects and before rake
 	# starts executing tasks
+
 	def preBuild()
         super;
 		cd @projectDir, :verbose=>verbose? do		
@@ -369,18 +381,12 @@ class CppProject < Rakish::Project
 				resolveConfiguredTasks();
 				if(@projectId)
                     ensureDirectoryTask(vcprojDir);
-					tsk = task :vcproj=>[vcprojDir] do |t|
-                        require "#{Rakish::MAKEDIR}/VcprojBuilder.rb"
-                        VcprojBuilder.onVcprojTask(self);
-                    end
-					
-					tsk.config = self;
-                    tsk = task :vcprojclean do |t|
-                        require "#{Rakish::MAKEDIR}/VcprojBuilder.rb"
-                        VcprojBuilder.onVcprojCleanTask(self);
-                    end
+					tsk = task :vcproj=>[vcprojDir], &@@vcprojAction_;
 					tsk.config = self;
 					export(:vcproj);
+
+                    tsk = task :vcprojclean, &@@vcprojCleanAction_;
+					tsk.config = self;
 					export(:vcprojclean);
                 end
             end # ns
