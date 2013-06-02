@@ -62,7 +62,6 @@ module CTools
 	# real bodge for now need to clean this up somehow.
 	def loadLinkref(libdir,cfg,baseName)
 		cd libdir, :verbose=>false do
-			log.debug("#{baseName}"); # -#{cfg}.linkref");
 			libdef = File.expand_path("#{baseName}-#{cfg}.linkref");
 			begin
 				libpaths=nil
@@ -80,7 +79,7 @@ module CTools
 				end
 				return({libpaths: libpaths, libs: libs});
 			rescue => e
-				log.debug(e);
+				log.debug("failed to load #{libdef} #{e}");
 			end
 			{}
 		end
@@ -229,6 +228,8 @@ module CppProjectConfig
     attr_reader :ctools
 	attr_reader :cppDefines
 	attr_reader :targetType
+	attr_reader :thirdPartyLibs
+
 #	attr_reader	:cflags  had this in old one for added VC flags.
 
  	def initializer(pnt)
@@ -313,6 +314,12 @@ module CppProjectConfig
 		end
 		@incPaths_
 	end
+
+	def addThirdPartyLibs(*args)		
+        @thirdPartyLibs||=[]
+		@thirdPartyLibs << args
+	end
+
 end
 
 class CppProject < Rakish::Project
@@ -518,6 +525,13 @@ class CppProject < Rakish::Project
 				ldef = ctools.loadLinkref(dep.LIBDIR,configName,dep.moduleName);
 				deflibs = ldef[:libs];
 				libs += deflibs if deflibs;
+			end
+			if(thirdPartyLibs)
+				thirdPartyLibs.flatten.each do |tpl|
+					ldef = ctools.loadLinkref("#{thirdPartyPath}/lib",configName,tpl);
+					deflibs = ldef[:libs];
+					libs += deflibs if deflibs;
+				end
 			end
 			libs
 		end
