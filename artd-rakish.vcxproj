@@ -22,13 +22,11 @@
     <None Include="BuildConfig.rb" />
     <None Include="CppProjects.rb" />
     <None Include="JavaProjects.rb" />
-    <None Include="OldBuildConfig.rb" />
     <None Include="raketest.rb" />
     <None Include="Rakish.rb" />
     <None Include="RakishProject.rb" />
     <None Include="VcprojBuilder.rb" />
     <None Include="WindowsCppTools.rb" />
-    <None Include="WindowsPlatformTools.rb" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{01A8400E-ABCD-4967-88AB-8899ABC12897}</ProjectGuid>
