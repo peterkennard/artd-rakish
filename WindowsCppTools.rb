@@ -456,6 +456,8 @@ LoadableModule.onLoaded(Module.new do
 			cmdline += getFormattedMSCFlags(cfig)
 			cmdline += ' /showIncludes'
 
+			puts("\n#{t.source}->#{t.name}");
+
 			puts("\n#{cmdline}\n") if(cfig.verbose?) 
 
 			included = Rakish::FileSet.new

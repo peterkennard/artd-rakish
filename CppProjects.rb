@@ -325,11 +325,12 @@ end
 class CppProject < Rakish::Project
     include CppProjectConfig
 
-	task :autogen 		=> [ :includes, :vcproj ];
+	task :autogen 		=> [ :cleandepends, :includes, :vcproj ];
 	task :cleanautogen 	=> [ :cleanincludes, :cleandepends, :vcprojclean ];
 	task :compile 		=> [ :includes ];
 	task :depends		=> [ :includes ];
 	task :build 		=> [ :compile ];
+	task :rebuild 		=> [ :depends, :compile ];  # for visual C++ invocation
 
 
 	# Create a new project
