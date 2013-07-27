@@ -330,7 +330,6 @@ class CppProject < Rakish::Project
 	task :compile 		=> [ :includes ];
 	task :depends		=> [ :includes ];
 	task :build 		=> [ :compile ];
-	task :rebuild 		=> [ :depends, :compile ];  # for visual C++ invocation
 
 
 	# Create a new project

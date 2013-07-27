@@ -3,8 +3,6 @@ require "#{myDir}/Rakish.rb"
 
 module Rakish
 
-
-
 module BuildConfigMod
 	include PropertyBagMod
 	include Rake::DSL
