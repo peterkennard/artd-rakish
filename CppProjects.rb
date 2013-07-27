@@ -202,8 +202,24 @@ module CTools
 			load("#{cfg.OBJPATH()}/depends.rb")
 		end		
 		task :cleandepends do
-			deleteFiles("#{cfg.OBJPATH()}/*.raked",
-						"#{cfg.OBJPATH()}/depends.rb");
+			depname = "#{cfg.OBJPATH()}/depends.rb";
+			deleteFiles("#{cfg.OBJPATH()}/*.raked");
+
+			# if there is no task defined for the 'raked' file the create a dummy
+			# that dos nothing so at least it knows how to build it :)
+						
+			tsk.prerequisites.each do |dep|
+				next unless (dep.pathmap('%x') == '.raked')
+				next if(Rake::Task::task_defined?(dep))
+				file dep # a do nothing task
+			end
+			
+			# same here create a dummy file with nothing in it
+			if File.exist? depname
+				File.open(depname,'w') do |out|
+					out.puts("");
+				end
+			end
 		end
 		tsk
 	end

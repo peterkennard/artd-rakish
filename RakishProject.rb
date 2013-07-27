@@ -158,7 +158,7 @@ class Project < BuildConfig
 	end
 
 	task :default		=> [ :build ];
-	task :rebuild 		=> [ :clean, :build ];
+	task :rebuild 		=> [ :cleandepends, :depends, :clean, :build ];
 
 	# returns the Rake task namespace for this project
 	attr_reader :myNamespace
