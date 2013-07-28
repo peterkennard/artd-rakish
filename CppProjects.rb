@@ -205,8 +205,9 @@ module CTools
 			depname = "#{cfg.OBJPATH()}/depends.rb";
 			deleteFiles("#{cfg.OBJPATH()}/*.raked");
 
-			# if there is no task defined for the 'raked' file the create a dummy
-			# that dos nothing so at least it knows how to build it :)
+			# if there is no task defined for the 'raked' file then create a dummy
+			# that dos nothing so the prerequisites resolve - this is the case where the
+			# actual dependencies are built by compiling.
 						
 			tsk.prerequisites.each do |dep|
 				next unless (dep.pathmap('%x') == '.raked')
