@@ -252,10 +252,11 @@ module Rakish
 		end
 	end
 
-
+	public
+	
 	# a bunch of utility functions used by Projects and configurations
 	module Util
-		include Rake::DSL
+		include ::Rake::DSL
 		include Rakish::Logger
 				
 		# like each but checks for null and if object doesn't respond to each
@@ -269,7 +270,7 @@ module Rakish
 
 	protected
         # Task action to simply copy source to destination
-		SimpleCopyAction_ = ->(t) { cp(t.source, t.name) }
+		SimpleCopyAction_ = ->(t) { FileUtils.cp(t.source, t.name) }
 
         # Task action to do nothing.
         DoNothingAction_ = ->(t) {}
@@ -693,8 +694,8 @@ module Rakish
 				f = f.to_s			
 				f = File.expand_path(f)
 				dir = destdir			
+				next if(File.directory?(f)) 
 				if(regx)
-					next if(File.directory?(f)) 
 					if(f =~ regx)
 						dir = File.dirname($');				
 						if(dir.length == 0 || dir == '.')
