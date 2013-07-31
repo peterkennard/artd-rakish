@@ -667,8 +667,11 @@ module Rakish
 		def createCopyTasks(destdir,*files,&block)
 
 			block = SimpleCopyAction_ unless block_given?
-			
+					
 			opts = (Hash === files.last) ? files.pop : {}
+	
+			files = FileSet.new(files); # recursively expand wildcards.
+	
 			destdir = File.expand_path(destdir);
 			if(destdir =~ /\/\z/)
 				# too bad rake doesn't check both, it is string based
@@ -686,7 +689,7 @@ module Rakish
 			end
 			
 			flist=[]
-			files.flatten.each do |f|
+			files.each do |f|  # as not a set, flatten if an array
 				f = f.to_s			
 				f = File.expand_path(f)
 				dir = destdir			

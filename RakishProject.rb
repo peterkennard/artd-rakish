@@ -305,7 +305,10 @@ class Project < BuildConfig
 				tsk.instance_eval do
 					alias :_o_iwcc_ :invoke_with_call_chain
 					def invoke_with_call_chain(task_args, invocation_chain)
-						puts("---- #{name()}") unless @already_invoked
+						unless @already_invoked
+							puts("---- #{name()}") 
+							STDOUT.flush # for the visual C command window TODO: don't do for batch jobs?
+						end
 						_o_iwcc_(task_args, invocation_chain);
 					end
 				end
