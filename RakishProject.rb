@@ -149,6 +149,12 @@ class Project < BuildConfig
 
 	# this may need to be changed as rake evolves
 	def export(name)
+
+	    if(name.is_a? Rake::Task)
+	        # note: doesn't check if task is actually in this namespace
+            name = name.to_s().sub("#{myNamespace}:",'').to_sym;
+	    end
+
 	    @exported_ ||= Set.new;
         if(@exported_.add?(name))
 			namespace(':') do

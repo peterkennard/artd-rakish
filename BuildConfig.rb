@@ -134,6 +134,10 @@ class GlobalConfig < BuildConfig
 		end
 	end
 
+   	def BUILDDIR=(val)
+   	    @BUILDDIR=val;
+   	end
+
 	def initialize(*args, &b)
 
 		if @@gcfg
