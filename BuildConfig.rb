@@ -76,6 +76,10 @@ module BuildConfigMod
 		@OBJDIR||=(@parent_ ? @parent_.OBJDIR : nil)
 	end
 
+	def BINDIR
+        @BINDIR||=@parent_?@parent_.BINDIR():"#{BUILDDIR()}/bin";
+	end
+
 	attr_accessor 	:verbose
 
 	def verbose?
@@ -178,9 +182,9 @@ class GlobalConfig < BuildConfig
 
 
 			# set defaults if not set above
-			@LIBDIR = "#{@BUILDDIR}/lib"
-			@BINDIR = "#{@BUILDDIR}/bin"
-			@INCDIR = "#{@BUILDDIR}/include"
+			@LIBDIR ||= "#{@BUILDDIR}/lib"
+			@BINDIR ||= "#{@BUILDDIR}/bin"
+			@INCDIR ||= "#{@BUILDDIR}/include"
 
 			# get config from command line
 			cfg.CPP_CONFIG ||= ENV['CPP_CONFIG'];
