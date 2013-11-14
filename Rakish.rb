@@ -401,23 +401,30 @@ module Rakish
 			end
 		end
 		
-		# "preprocess" input lines using the ruby escape sequence 
-		# '#{}' for substitutions 
+		# "pre-process" input lines using the ruby escape sequence
+		# '#{}' for substitutions
+		#  in the binding
+		#     linePrefix is an optional prefix to prepend to each line.
+		#
+		#     setIndent means set a variable "indent" in the environment
+		#     to be the indent level of the current raw line
 		#
 		#   ffrom = input lines (has to implement each_line)
 		#   fout  = output file (has to implement puts)
 		#   bnd   = "binding" to context to evaluate substitutions in
-		def rubyLinePP(lines,fout,bnd)
+		def rubyLinePP(lines,fout,bnd,opts={})
 
 			setIndent = eval('defined? indent',bnd)
+			linePrefix = opts[:linePrefix];
 
-			rawline = nil;
+			rawLine = nil;
 			lineNum = 0;
 			begin
 				lines.each_line do |line|
 					++lineNum;
-					rawline = line;
-					fout.puts line.gsub(/\#\{[^\#]+\}/) { |m|					
+					rawLine = line;
+					fout.print(linePrefix) if linePrefix;
+					fout.puts line.gsub(/\#\{[^\#]+\}/) { |m|
 						eval("indent=#{$`.length}",bnd) if setIndent;
 						eval('"'+m+'"',bnd)
 					}
@@ -429,7 +436,7 @@ module Rakish
 						bt << Logger.formatBacktraceLine(bline);
 						break if bline =~ /(.*)rubyLinePP/;
 					end
-					"error processing line #{lineNum}: #{e}\n\"#{rawline.chomp}\"\n#{bt.join("\n")}" 
+					"error processing line #{lineNum}: #{e}\n\"#{rawLine.chomp}\"\n#{bt.join("\n")}"
 				end
 			end
 		end
