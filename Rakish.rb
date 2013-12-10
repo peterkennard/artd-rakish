@@ -1060,7 +1060,7 @@ public
 		        yield k,v
 		    end
 		end
-		# returns array of all values in thie hash
+		# returns array of all values in the hash
 		def values
 			@h.values
 		end
