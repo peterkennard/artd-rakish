@@ -667,7 +667,8 @@ module Rakish
 		#               path of file[n] to get the relative path of the output 
 		#               file from destdir.
 		#               ie:  if basedir == "xx/yy"  and file[n] == /aa/bb/xx/yy/file.x 
-		#                    then the output file will be 'outdir'+/xx/yy/file.x 
+		#                    then the output file will be 'outdir'+/xx/yy/file.x
+		#   :preserve   if true will not overwrite existing task
 		#
 		# returns an array of all tasks created
 		#
@@ -675,8 +676,8 @@ module Rakish
 		def createCopyTasks(destdir,*files,&block)
 
 			block = SimpleCopyAction_ unless block_given?
-					
 			opts = (Hash === files.last) ? files.pop : {}
+			preserve = opts[:preserve];
 	
 			files = FileSet.new(files); # recursively expand wildcards.
 	
@@ -713,16 +714,19 @@ module Rakish
 						end
 					end
 				end
-		
-				tsk = file "#{dir}/#{File.basename(f)}" => [ f, dir ], &block
-				tsk.sources = tsk.prerequisites
-				tsk.config = config if config
-				flist << tsk
+
+                tsk = "#{dir}/#{File.basename(f)}";  # name of task
+		        if((!preserve) || ((tsk = Rake.application.lookup(tsk)) == nil))
+                    tsk = file tsk => [ f, dir ], &block
+                    tsk.sources = tsk.prerequisites
+                    tsk.config = config if config
+		        end
+                flist << tsk # will always be task and not name here
 			end
 			flist
 		end				
 	end
-	
+
 	# yes including your own internal module
 	include Rakish::Util
 	
