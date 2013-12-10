@@ -678,7 +678,7 @@ module Rakish
 			block = SimpleCopyAction_ unless block_given?
 			opts = (Hash === files.last) ? files.pop : {}
 			preserve = opts[:preserve];
-	
+
 			files = FileSet.new(files); # recursively expand wildcards.
 	
 			destdir = File.expand_path(destdir);
@@ -697,6 +697,7 @@ module Rakish
 				regx = Regexp.new('^' + Regexp.escape(basedir+'/'),Regexp::IGNORECASE);
 			end
 			
+			tsk = nil; # declaration only, used below in loop
 			flist=[]
 			files.each do |f|  # as not a set, flatten if an array
 				f = f.to_s			
@@ -715,9 +716,9 @@ module Rakish
 					end
 				end
 
-                tsk = "#{dir}/#{File.basename(f)}";  # name of task
-		        if((!preserve) || ((tsk = Rake.application.lookup(tsk)) == nil))
-                    tsk = file tsk => [ f, dir ], &block
+                destFile = "#{dir}/#{File.basename(f)}";  # name of task
+		        if((!preserve) || ((tsk = Rake.application.lookup(destFile)) == nil))
+                    tsk = file destFile => [ f, dir ], &block
                     tsk.sources = tsk.prerequisites
                     tsk.config = config if config
 		        end
