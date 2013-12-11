@@ -369,6 +369,7 @@ module Rakish
 			else
 				directory(dir) unless Rake.application.directory_task_defined?(dir)
 			end
+			dir
 		end
 	
 		def copyRule(destdir, srcdir, suffix) # :nodoc:
