@@ -143,8 +143,21 @@ class Project < BuildConfig
 		task gt;
 	end
 
+    class RPTask < Rake::Task
+        def setDir(d)
+            @_dir_=d;
+        end
+	    def execute(args=nil)
+	       FileUtils.cd @_dir_ do
+	          super(args);
+	       end
+	    end
+    end
+
 	def task(*args,&block)
-		Rake::Task.define_task(*args, &block)
+		t = RPTask.define_task(*args, &block)
+		t.setDir(projectDir);
+		t
 	end
 
 	# this may need to be changed as rake evolves
