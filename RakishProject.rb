@@ -176,6 +176,11 @@ class Project < BuildConfig
 		end
 	end
 
+    # get name of local task for this project
+    def myTask(localName)
+        "#{myNamespace}:#{localName}"
+    end
+
 	task :default		=> [ :build ];
 	task :rebuild 		=> [ :cleandepends, :depends, :clean, :build ];
 
