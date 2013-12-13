@@ -10,7 +10,7 @@ require 'logger'
 task "" do
 end
 
-# define the Logger first so we can uset it to abort
+# define the Logger first so we can use it to abort
 module Rakish
 
 	# To use this Looger initialization include it in a class or module

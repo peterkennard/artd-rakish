@@ -349,7 +349,7 @@ class Project < BuildConfig
 						_o_iwcc_(task_args, invocation_chain);
 					end
 				end
-				Rake::Task.define_task gt => [ tname ];
+				task gt => [ tname ];
 			end
 		end
 	end
