@@ -117,11 +117,18 @@ module Rake
 		# optional "config" field on Rake Task objects
 		attr_accessor :config
 	  end
-	  rake_extension('data') do
+      rake_extension('data') do
 		# optional "per instance" field on Rake Task objects
 		attr_accessor :data
 	  end
-	  class << self
+	  # see Rake.Task as this overrides it's method
+      def enhance(args,&b)
+        # instead of |=
+        @prerequisites = [@prerequisites,args].flatten if args
+        @actions << b if block_given?
+        self
+      end
+      class << self
         # define a task with a unique anonymous name
 	    def define_unique_task(*args,&b)
             args.unshift(Rake.get_unique_name)
