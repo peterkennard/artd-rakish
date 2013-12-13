@@ -88,6 +88,20 @@ module Rake
 	    end
 	end
 
+    module TaskManager
+       # the only difference here is flattening the dependencies
+       def resolve_args(args)
+         if args.last.is_a?(Hash)
+           deps = args.pop
+           ret = resolve_args_with_dependencies(args, deps)
+           ret[2].flatten!
+           ret
+         else
+           resolve_args_without_dependencies(args)
+         end
+       end
+    end
+
 	class Application
 
 		# Display the error message that caused the exception.

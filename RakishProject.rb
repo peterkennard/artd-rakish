@@ -143,22 +143,35 @@ class Project < BuildConfig
 		task gt;
 	end
 
-    class RPTask < Rake::Task
-        def setDir(d)
-            @_dir_=d;
+    class ScopeTask < Rake::Task
+        def setProject(d)
+            @_p_||=d;
+            self
         end
 	    def execute(args=nil)
-	       FileUtils.cd @_dir_ do
-	          super(args);
-	       end
+	      @_p_.inMyNamespace do
+               FileUtils.cd @_p_.projectDir do
+                  super(args);
+               end
+	      end
 	    end
     end
 
-	def task(*args,&block)
-		t = RPTask.define_task(*args, &block)
-		t.setDir(projectDir);
-		t
+    # this task will execute in directory and namespace of the project
+	def taskInScope(*args,&block)
+	    ScopeTask.define_task(*args, &block).setProject(self);
 	end
+
+	def task(*args,&block)
+		Rake::Task.define_task(*args, &block)
+	end
+
+
+#    def fileInDir(*args, &block)
+#            Rake::FileTask.define_task(*args, &block)
+# ScopeFile.define_task(*args, &block)
+#    end
+
 
 	# this may need to be changed as rake evolves
 	def export(name)
@@ -176,10 +189,10 @@ class Project < BuildConfig
 		end
 	end
 
-    # get name of local task for this project
-    def myTask(localName)
-        "#{myNamespace}:#{localName}"
-    end
+# get name of local task for this project
+#    def myTask(localName)
+#        "#{myNamespace}:#{localName}"
+#    end
 
 	task :default		=> [ :build ];
 	task :rebuild 		=> [ :cleandepends, :depends, :clean, :build ];
@@ -336,7 +349,7 @@ class Project < BuildConfig
 						_o_iwcc_(task_args, invocation_chain);
 					end
 				end
-				task gt => [ tname ];
+				Rake::Task.define_task gt => [ tname ];
 			end
 		end
 	end
