@@ -533,7 +533,7 @@ module Rakish
 		HostIsCygwin_ = RUBY_PLATFORM =~ /(cygwin)/i
 		HostIsWindows_ = (Rake::application.windows? || HostIsCygwin_ )
 		
-		# retutn true if host environment is windoes or cygwin
+		# return true if host environment is windows or cygwin
 		def hostIsWindows?
 			HostIsWindows_
 		end
