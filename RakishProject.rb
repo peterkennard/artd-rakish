@@ -143,34 +143,19 @@ class Project < BuildConfig
 		task gt;
 	end
 
-    class ScopeTask < Rake::Task
-        def setProject(d)
-            @_p_||=d;
-            self
-        end
-	    def execute(args=nil)
-	      @_p_.inMyNamespace do
-               FileUtils.cd @_p_.projectDir do
-                  super(args);
-               end
-	      end
-	    end
-    end
 
     # this task will execute in directory and namespace of the project
 	def taskInScope(*args,&block)
-	    ScopeTask.define_task(*args, &block).setProject(self);
+	    Rake::Task.define_task(*args, &block).setProjectScope(self);
 	end
 
 	def task(*args,&block)
 		Rake::Task.define_task(*args, &block)
 	end
 
-
-#    def fileInDir(*args, &block)
-#            Rake::FileTask.define_task(*args, &block)
-# ScopeFile.define_task(*args, &block)
-#    end
+    def fileInDir(*args, &block)
+        Rake::FileTask.define_task(*args, &block).setProjectScope(self);
+    end
 
 
 	# this may need to be changed as rake evolves

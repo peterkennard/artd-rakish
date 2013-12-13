@@ -131,10 +131,12 @@ module Rake
 		# optional "config" field on Rake Task objects
 		attr_accessor :config
 	  end
+
       rake_extension('data') do
 		# optional "per instance" field on Rake Task objects
 		attr_accessor :data
 	  end
+
 	  # see Rake.Task as this overrides it's method
       def enhance(args,&b)
         # instead of |=
@@ -142,6 +144,27 @@ module Rake
         @actions << b if block_given?
         self
       end
+
+      alias :superExec :execute
+      def scopeExec(args=nil)
+          @application.in_namespace_scope(@scope) do
+              FileUtils.cd @_p_.projectDir do
+                  superExec(args);
+              end
+          end
+      end
+
+      rake_extension('setProjectScope') do
+        def setProjectScope(d)
+            return self if(@_p_)
+            instance_eval do
+                alias :execute :scopeExec
+            end
+            @_p_=d;
+            self
+        end
+      end
+
       class << self
         # define a task with a unique anonymous name
 	    def define_unique_task(*args,&b)
@@ -176,40 +199,55 @@ module Rake
 		end
 
         # this allows for explicitly setting an "absolute" namespace
-		rake_extension('in_namespace_path') do
-		
-			def in_namespace_path(name)			
+		rake_extension('in_namespace_scope') do
+            def in_namespace_scope(scope)
 				prior = @scope;
-				if(name) 
-					if(name.instance_of?(String)) 
-						spl = name.split(':');
-						s = spl.size();
-						if(s == 0 || spl[0].length == 0) # absolute
-							spl.shift();
-							@scope = spl;
-						else # relative
-							@scope = Array.new(prior).concat(spl);	
-						end
-					else
-						@scope.push(name);
-					end
-				else
-					@scope = Array.new();
-				end
+                @scope = scope;
 				if options.trace
 					_trc
-				end	
-				ns = NameSpace.new(self,@scope);
+				end
+				ns = NameSpace.new(self,scope);
 				yield(ns)
 				ns
 			ensure
 				@scope = prior;
 				if options.trace
 					_trc
-				end	
+				end
+			end
+        end
+
+        # this allows for explicitly setting an "absolute" namespace from string
+		rake_extension('in_namespace_path') do
+			def in_namespace_path(name,&b)
+				prior=@scope
+                if(name.instance_of?(String))
+                    spl = name.split(':');
+                    if(spl.size() == 0 || spl[0].length == 0) # absolute
+                        spl.shift();
+                        @scope = spl;
+                    else # relative
+                        @scope = Array.new(prior).concat(spl);
+                    end
+                elsif(name)
+                    @scope=Array.new(prior).push(name);
+                else
+                    @scope=Array.new
+                end
+				if options.trace
+					_trc
+				end
+				ns = NameSpace.new(self,@scope);
+				yield(ns)
+				ns
+			ensure
+				@scope=prior;
+				if options.trace
+					_trc
+				end
 			end
 		end
-	end	
+	end
 end
 
 module Rakish
