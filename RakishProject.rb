@@ -14,7 +14,7 @@ class Build
 
 		@projects=[]
 		@projectsByModule={}
-		@projectsByFile={}
+		@projectsByFile={}  # each entry is an array of one or more projects
 		
 		task :resolve do |t|
 		    if(defined? Rakish::GlobalConfig.instance.CPP_CONFIG)
@@ -56,13 +56,15 @@ class Build
 		end
 		@projects << p;
 		@projectsByModule[pname]=p;
-		@projectsByFile[p.projectFile]=p;
+		(@projectsByFile[p.projectFile]||=[]).push(p);
 	end
 
 
-	def loadProjects(*args)
 	# load other project rakefiles from a project into the interpreter unless they have already been loaded
 	# selects namespace appropriately
+	# returns array of all projects referenced directly by this load
+
+	def loadProjects(*args)
 
 		rakefiles = FileSet.new(args);
 		projs=[];
@@ -86,7 +88,7 @@ class Build
 						#	puts "project #{path} loaded" if verbose?
 						end
 					end
-					projs << @projectsByFile[path];	
+					projs |= @projectsByFile[path];
 				end
 			rescue => e
 				cd dir
@@ -144,21 +146,26 @@ class Project < BuildConfig
 	end
 
 
-    # this task will execute in directory and namespace of the project
+    # this task will execute all actions in the directory and namespace of this project
+    # it will only set the project scope ONCE upon the first call
 	def taskInScope(*args,&block)
 	    Rake::Task.define_task(*args, &block).setProjectScope(self);
 	end
 
+    # convenience method like Rake::task
 	def task(*args,&block)
 		Rake::Task.define_task(*args, &block)
 	end
 
+    # this task will execute all actions in the directory of this project
+    # it will only set the project scope ONCE upon the first call
     def fileInDir(*args, &block)
         Rake::FileTask.define_task(*args, &block).setProjectScope(self);
     end
 
-
-	# this may need to be changed as rake evolves
+	# when called from within a project, exports a namespace internal task to
+	# a global task by the same name as the task within the projects namespace scope.
+	# not safe if called on a task outside the project's namespace
 	def export(name)
 
 	    if(name.is_a? Rake::Task)
@@ -173,11 +180,6 @@ class Project < BuildConfig
 			end
 		end
 	end
-
-# get name of local task for this project
-#    def myTask(localName)
-#        "#{myNamespace}:#{localName}"
-#    end
 
 	task :default		=> [ :build ];
 	task :rebuild 		=> [ :cleandepends, :depends, :clean, :build ];
