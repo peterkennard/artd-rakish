@@ -146,6 +146,8 @@ module Rake
       end
 
       alias :superExec :execute
+	  private :superExec
+
       def scopeExec(args=nil)
           @application.in_namespace_scope(@scope) do
               FileUtils.cd @_p_.projectDir do
@@ -153,6 +155,7 @@ module Rake
               end
           end
       end
+	  private :scopeExec
 
       rake_extension('setProjectScope') do
         def setProjectScope(d)
