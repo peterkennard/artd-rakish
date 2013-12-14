@@ -13,9 +13,9 @@ end
 # define the Logger first so we can use it to abort
 module Rakish
 
-	# To use this Looger initialization include it in a class or module
+	# To use this Logger initialization include it in a class or module
 	# then you can do log.debug { "message" } etc 
-	# from methods or initilaizations in that class 
+	# from methods or initializations in that class
 
 	module Logger
 
