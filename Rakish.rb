@@ -145,13 +145,10 @@ module Rake
         self
       end
 
-      alias :superExec :execute
-	  private :superExec
-
       def scopeExec(args=nil)
           @application.in_namespace_scope(@scope) do
               FileUtils.cd @_p_.projectDir do
-                  superExec(args);
+                  _baseExec_(args);
               end
           end
       end
@@ -161,6 +158,7 @@ module Rake
         def setProjectScope(d)
             return self if(@_p_)
             instance_eval do
+                alias :_baseExec_ :execute
                 alias :execute :scopeExec
             end
             @_p_=d;
@@ -170,6 +168,7 @@ module Rake
 
       class << self
         # define a task with a unique anonymous name
+	    # TODO: doesn't handle :name=>[] hash dependencies
 	    def define_unique_task(*args,&b)
             args.unshift(Rake.get_unique_name)
             Rake.application.define_task(self,*args,&b);
@@ -177,7 +176,7 @@ module Rake
 	  end
 	end
 	
-	# force all file tasks to have full path for file name
+	# force all file tasks to reference full path for file name
 	class FileTask
 		class << self
 		  # Apply the scope to the task name according to the rules for this kind

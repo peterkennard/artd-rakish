@@ -244,7 +244,7 @@ class Project < BuildConfig
 	#                    '2CD0548E-6945-4b77-83B9-D0993009CD75'
 	#
 	# &block is always yielded to in the directory of the projects file, and the
-	# Rake namespace of the new project, and called in this instance's context
+	# Rake namespace of the new project (project scope), and called in this instance's context
 
 	def initialize(args={},&block)
 
