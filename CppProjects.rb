@@ -253,6 +253,7 @@ module CppProjectConfig
 		@addedIncludePaths_=[]
 		@cppDefines={}
 		@incPaths_=nil;
+
 		if(pnt != nil)
 			@targetType = pnt.targetType;
 			@cppDefines.merge!(pnt.cppDefines);
