@@ -231,6 +231,15 @@ class Project < BuildConfig
 		end
 	end
 
+	# add a directory to be removed upon ":clean"
+	def addCleanDir(name)
+        name = File.expand_path(name);
+        task :clean do |t|
+			rm_rf(name);
+        end
+	end
+
+
 	# Create a new project
 	#
 	# <b>named args:</b>
