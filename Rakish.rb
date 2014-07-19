@@ -338,6 +338,12 @@ module Rakish
                         end
                     end
                 end
+
+                def addRemote(dir, name, uri)
+                    cd dir do
+                        system("git remote add \"#{name}\" \"#{uri}\"");
+                    end
+                end
             end
         end
 
