@@ -314,12 +314,34 @@ module Rakish
 	end
 
 	public
-	
+
+
 	# a bunch of utility functions used by Projects and configurations
 	module Util
 		include ::Rake::DSL
 		include Rakish::Logger
 				
+        module Git
+
+            class << self
+                def clone(src,dest,opts={})
+                    if(!File.directory?(dest))
+
+                        origin = opts[:remote] || "origin";
+
+                        puts("Git.clone -o \"#{origin}\" -n \"#{src}\" \"#{dest}\"");
+
+                        system("git clone -o \"#{origin}\" -n \"#{src}\" \"#{dest}\"");
+                        cd dest do
+                            system("git config -f ./.git/config --replace-all core.autocrlf true");
+                            system("git reset -q --hard");
+                        end
+                    end
+                end
+            end
+        end
+
+
 		# like each but checks for null and if object doesn't respond to each
 		# use like 
 		# eachof [1,2,3] do |v|
