@@ -539,8 +539,8 @@ LoadableModule.onLoaded(Module.new do
 			deleteFile(t.name);
 			writeLinkref(cfg,cfg.targetBaseName,t.sources[:implib]);
 
-			lnkfile = t.name.pathmap("#{cfg.OBJPATH}/%f.response");
-					
+			lnkfile = t.name.pathmap("#{cfg.OBJPATH()}/%f.response");
+
 			# build linker source file
 			begin
 
@@ -559,10 +559,10 @@ LoadableModule.onLoaded(Module.new do
 						f.puts("-libpath:\"#{lpath}\"");
 					end
 							
-					# libraries							
+					# libraries
 					libs=[]
 						
-					libs << @SDK_LIBS;
+				    libs << @SDK_LIBS;
 				    libs << cfg.dependencyLibs
 					libs << cfg.libs
 					libs.flatten.each do |obj|

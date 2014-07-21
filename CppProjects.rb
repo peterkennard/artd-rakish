@@ -275,7 +275,8 @@ module CppProjectConfig
 		@vcprojDir||=@parent_?@parent_.vcprojDir():"#{BUILDDIR()}/vcproj";
 	end
 
-	def addIncludePaths(*defs)	
+    # add include paths in order to the current list of include paths.
+	def addIncludePaths(*defs)
 		defs.flatten!()
 		defs.each do |ip|
 			@addedIncludePaths_ << File.expand_path(ip);
@@ -547,9 +548,12 @@ class CppProject < Rakish::Project
 		def dependencyLibs
 			libs=[]
 			project.dependencies.each do |dep|
-				ldef = ctools.loadLinkref(dep.LIBDIR,configName,dep.moduleName);
-				deflibs = ldef[:libs];
-				libs += deflibs if deflibs;
+                # TODO: should this check for the type of project?
+                if(dep.LIBDIR != nil)
+                    ldef = ctools.loadLinkref(dep.LIBDIR,configName,dep.moduleName);
+                    deflibs = ldef[:libs];
+                    libs += deflibs if deflibs;
+				end
 			end
 			if(thirdPartyLibs)
 				thirdPartyLibs.flatten.each do |tpl|
