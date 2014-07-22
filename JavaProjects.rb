@@ -11,7 +11,7 @@ module JavaProjectConfig
     def self.included(base)
         base.addModInit(base,self.instance_method(:initializer));
     end
- 	def initializer(pnt)
+ 	def initializer(pnt,opts)
  	end
     def classPaths
         @classPaths_||=@parent_.classPaths

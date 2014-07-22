@@ -299,8 +299,8 @@ class Project < BuildConfig
 		@myName 	= name;
 		@myPackage 	= package;
 
-        # initialize config properties from the parent and initialize included configuration modules.
-		super(parent) {}
+        # initialize properties from the parent and initialize included modules.
+		super(parent,args) {}
 
 		cd @projectDir, :verbose=>verbose? do
 

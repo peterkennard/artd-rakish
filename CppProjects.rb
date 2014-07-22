@@ -249,7 +249,7 @@ module CppProjectConfig
 
 #	attr_reader	:cflags  had this in old one for added VC flags.
 
- 	def initializer(pnt)
+ 	def initializer(pnt,opts)
 		@addedIncludePaths_=[]
 		@cppDefines={}
 		@incPaths_=nil;

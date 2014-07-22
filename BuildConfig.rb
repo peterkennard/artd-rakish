@@ -11,7 +11,8 @@ module BuildConfigMod
         base.addModInit(base,self.instance_method(:initializer));
     end
 
- 	def initializer(pnt)
+ 	def initializer(pnt,opts)
+
  		init_PropertyBag(pnt);
  		enableNewFields do |cfg|
 			if(pnt)
@@ -94,9 +95,9 @@ class BuildConfig
 
     @@_inits = {};
 
-    def initialize(pnt=nil)
+    def initialize(pnt=nil,opts=nil)
 
-        # puts("initalizing #{self}");
+        # log.debug("initalizing #{self} #{opts}");
 
         # initalize the included "config" modules from parent config
         self.class.ancestors.reverse_each do |ancestor|
@@ -104,7 +105,7 @@ class BuildConfig
             if(inits)
                 inits.each do |init|
                     # puts("   --> init for #{self} for #{init}");
-                    init.bind(self).call(pnt);
+                    init.bind(self).call(pnt,opts);
                 end
             end
         end
@@ -159,7 +160,7 @@ class GlobalConfig < BuildConfig
 			end
 		end
 
-		super(nil) {}
+		super(nil,{}) {}
 
 		enableNewFields() do |cfg|
 
