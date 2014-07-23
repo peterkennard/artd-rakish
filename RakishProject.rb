@@ -339,8 +339,7 @@ class Project < BuildConfig
 					alias :_o_iwcc_ :invoke_with_call_chain
 					def invoke_with_call_chain(task_args, invocation_chain)
 						unless @already_invoked
-							puts("---- #{name()}") 
-							STDOUT.flush # for the visual C command window TODO: don't do for batch jobs?
+							log.info("---- #{name()}")
 						end
 						_o_iwcc_(task_args, invocation_chain);
 					end
@@ -379,7 +378,7 @@ class Project < BuildConfig
 	end
 
 	def showScope(here='') # :nodoc:
-		puts("#{here}  #{@myNamespace} ns = :#{Rake.application.current_scope.join(':')}");
+		log.info("#{here}  #{@myNamespace} ns = :#{Rake.application.current_scope.join(':')}");
 	end
 
 end

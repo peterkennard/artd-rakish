@@ -24,19 +24,24 @@ module Rakish
 			@@_logger_
 		end
 		@@_logger_.formatter = proc do |severity, datetime, progname, msg|
+
 			fileLine = "";
-			caller.each do |clr|
-				unless(/\/logger.rb:/ =~ clr)
-					fileLine = clr;
-					break;
-				end
-			end
-			fileLine = fileLine.split(':in `',2)[0];
-			fileLine.sub!(/:(\d)/, '(\1');
+			unless('INFO' === severity)
+                caller.each do |clr|
+                    unless(/\/logger.rb:/ =~ clr)
+                        fileLine = clr;
+                        break;
+                    end
+                end
+                fileLine = fileLine.split(':in `',2)[0];
+                fileLine.sub!(/:(\d)/, '(\1');
+                fileLine += ') : ';
+            end
+
 			if(msg.is_a? Exception)
-				"#{fileLine}) : #{msg}\n    #{formatBacktraceLine(msg.backtrace[0])}\n"
+				"#{fileLine}#{msg}\n    #{formatBacktraceLine(msg.backtrace[0])}\n"
 			else
-				"#{fileLine}) : #{msg}\n"
+				"#{fileLine}#{msg}\n"
 			end
 		end
 		

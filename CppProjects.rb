@@ -255,9 +255,6 @@ module CppProjectConfig
 		@incPaths_=nil;
 
 		if(pnt != nil)
-
-		log.debug("#{pnt}");
-		
 			@targetType = pnt.targetType;
 			@cppDefines.merge!(pnt.cppDefines);
 			@ctools = pnt.ctools;
@@ -554,15 +551,19 @@ class CppProject < Rakish::Project
                 # TODO: should this check for the type of project?
                 if(dep.LIBDIR != nil)
                     ldef = ctools.loadLinkref(dep.LIBDIR,configName,dep.moduleName);
-                    deflibs = ldef[:libs];
-                    libs += deflibs if deflibs;
+                    if(ldef != nil)
+                        deflibs = ldef[:libs];
+                        libs += deflibs if deflibs;
+                    end
 				end
 			end
 			if(thirdPartyLibs)
 				thirdPartyLibs.flatten.each do |tpl|
 					ldef = ctools.loadLinkref("#{thirdPartyPath}/lib",configName,tpl);
-					deflibs = ldef[:libs];
-					libs += deflibs if deflibs;
+                    if(ldef != nil)
+                        deflibs = ldef[:libs];
+                        libs += deflibs if deflibs;
+					end
 				end
 			end
 			libs
