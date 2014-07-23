@@ -456,7 +456,7 @@ LoadableModule.onLoaded(Module.new do
 			cmdline += getFormattedMSCFlags(cfig)
 			cmdline += ' /showIncludes'
 
-			puts("\n#{cmdline}\n") if(cfig.verbose?) 
+			log.info("\n#{cmdline}\n") if(cfig.verbose?)
 
 			included = Rakish::FileSet.new
 					
@@ -468,7 +468,7 @@ LoadableModule.onLoaded(Module.new do
 						included << line
 						next
 					end
-					puts line
+					log.info line
 				end
 			end
 
@@ -502,7 +502,7 @@ LoadableModule.onLoaded(Module.new do
 			#$(TARGET_FILE): $(OBJS) $(STATIC_LIB_FILES)
 				
 			# assemble a static library 
-			puts("asembling #{File.basename(t.name)}")
+			log.info("asembling #{File.basename(t.name)}")
 			deleteFile(t.name)
 			writeLinkref(cfg,cfg.targetBaseName,t.name);
 			lnkfile = t.name.pathmap("#{cfg.OBJPATH}/%f.response");
@@ -535,7 +535,7 @@ LoadableModule.onLoaded(Module.new do
 			# link a dynamic library
 			cfg = t.config;
 				
-			puts("linking #{File.basename(t.name)}")					
+			log.info("linking #{File.basename(t.name)}")
 			deleteFile(t.name);
 			writeLinkref(cfg,cfg.targetBaseName,t.sources[:implib]);
 
@@ -587,7 +587,7 @@ LoadableModule.onLoaded(Module.new do
 			end
 					
 			cmdline = "\"#{@LINK_EXE}\" -nologo @\"#{lnkfile}\"";					
-			puts(cmdline) if(cfg.verbose?)
+			log.info(cmdline) if(cfg.verbose?)
 			system( cmdline );
 					
 			#ifeq ($(RUN_SIGNTOOL),1)
@@ -605,7 +605,7 @@ LoadableModule.onLoaded(Module.new do
 
 			cfg = t.config;
 			# link an application
-			puts("linking #{File.basename(t.name)}")
+			log.info("linking #{File.basename(t.name)}")
 					
 			deleteFile(t.name);
 			lnkfile = t.name.pathmap("#{cfg.OBJPATH}/%f.response");
@@ -647,7 +647,7 @@ LoadableModule.onLoaded(Module.new do
 			end
 					
 			cmdline = "\"#{@LINK_EXE}\" -nologo @\"#{lnkfile}\"";					
-			puts(cmdline) if(cfg.verbose?)
+			log.info(cmdline) if(cfg.verbose?)
 			system( cmdline );
 		end
 
@@ -655,7 +655,7 @@ LoadableModule.onLoaded(Module.new do
 			t.config.tools.doMakeManifest(t)
 		end
 		def doMakeManifest(t)
-			puts("Generating #{File.basename(t.name)}");
+			log.info("Generating #{File.basename(t.name)}");
 			data = t.data;
 			cp(@ManifestSource, data[:txt],:verbose => false) 
 			File.open(t.name,'w') do |f|
@@ -715,7 +715,7 @@ LoadableModule.onLoaded(Module.new do
 				cfg.project.addCleanFiles(autores_rc,autores_res,autores_obj);
 						
 				restask = Rake::FileTask.define_task autores_obj => [ cfg.OBJPATH, cfg.projectFile, rcobjs].flatten do |t|
-					puts("Generating #{t.name}")
+					log.info("Generating #{t.name}")
 					File.open(autores_rc,'w') do |f|
 						t.sources.each do |src|
 							f.puts("#include \"#{File.basename(src.to_s)}\"")
