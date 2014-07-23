@@ -213,8 +213,8 @@ end
 end # module Rakish
 
 # Convenience method for Rakish::GlobalConfig.initInstance(&block)
-def InitBuildConfig(&block)
-	Rakish::GlobalConfig.new(&block)
+def InitBuildConfig(opts={},&block)
+	Rakish::GlobalConfig.new(opts,&block)
 end
 
 

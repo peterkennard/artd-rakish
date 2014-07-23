@@ -255,6 +255,9 @@ module CppProjectConfig
 		@incPaths_=nil;
 
 		if(pnt != nil)
+
+		log.debug("#{pnt}");
+		
 			@targetType = pnt.targetType;
 			@cppDefines.merge!(pnt.cppDefines);
 			@ctools = pnt.ctools;
