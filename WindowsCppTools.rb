@@ -404,7 +404,7 @@ LoadableModule.onLoaded(Module.new do
 		end
 
 		# will format and cache into the config the /I and /D and other constant
-		# compiler flags for the spcific configuration and cache it in the configuration
+		# compiler flags for the specific configuration and cache it in the configuration
 		def getFormattedMSCFlags(cfig)
 											
 			unless(cfl = cfig.getMy(:msvcFlags_))			

@@ -288,6 +288,7 @@ module CppProjectConfig
 		@addedIncludePaths_
 	end
 
+    # define or re-define a preprocessor value
 	def cppDefine(*args)
 		args.flatten!()
 		args.each do |c|
@@ -297,10 +298,12 @@ module CppProjectConfig
 		end
 	end
 
+    # test if name is defined or not.
 	def cppDefined(name)
 	    @cppDefines.has_key?(name);
 	end
 
+    # only define the value if it is not already defined
 	def cppDefineIfNot(*args)
 		args.flatten!()
 		args.each do |c|
@@ -310,6 +313,7 @@ module CppProjectConfig
 		end
 	end
 
+    # undefine the values in the arguments
 	def cppUndefine(*args)
 		args.flatten!()
 		args.each do |c|
