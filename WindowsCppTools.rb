@@ -378,8 +378,7 @@ LoadableModule.onLoaded(Module.new do
 				'_LIB', 
 				'_WINDOWS',
 				'_USRDLL',
-				'_FILE_OFFSET_BITS=64', 
-				'_CRT_SECURE_NO_DEPRECATE', 
+				'_CRT_SECURE_NO_DEPRECATE',
 				'_CRT_NONSTDC_NO_DEPRECATE',
 				'_MBCS',
 				'_UNICODE', 
@@ -395,8 +394,9 @@ LoadableModule.onLoaded(Module.new do
 			);
 
             cfg.cppDefineIfNot(
-                'WINVER=0x0501',
-		        '_WIN32_WINNT=0x0501',
+	            'WINVER=0x0501',
+                '_FILE_OFFSET_BITS=64',
+    	        '_WIN32_WINNT=0x0501',
 				'_WIN32_WINDOWS=0x0410',
 				'_WIN32_IE=0x0600'
 			);
