@@ -309,7 +309,7 @@ module CppProjectConfig
 		args.each do |c|
 			spl = c.split('=',2);
 			# no value is nil, XXX= will have a value of empty string ""
-	        @cppDefines[spl[0]] = spl[1] unless @cppDefines.has_key?(name);
+	        @cppDefines[spl[0]] = spl[1] unless @cppDefines.has_key?(spl[0]);
 		end
 	end
 
