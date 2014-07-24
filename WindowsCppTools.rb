@@ -376,10 +376,6 @@ LoadableModule.onLoaded(Module.new do
 				'ARTD_WINDOWS=',						
 				'WIN32', 
 				'_LIB', 
-				'WINVER=0x0501', 
-				'_WIN32_WINNT=0x0501', 
-				'_WIN32_WINDOWS=0x0410', 
-				'_WIN32_IE=0x0600',
 				'_WINDOWS',
 				'_USRDLL',
 				'_FILE_OFFSET_BITS=64', 
@@ -397,7 +393,14 @@ LoadableModule.onLoaded(Module.new do
 				"ARTD_LINKAGETYPE=#{@linkType}",
 				"ARTD_DEBUGTYPE=#{@debugType}"
 			);
-			
+
+            cfg.cppDefineIfNot(
+                'WINVER=0x0501',
+		        '_WIN32_WINNT=0x0501',
+				'_WIN32_WINDOWS=0x0410',
+				'_WIN32_IE=0x0600'
+			);
+
 		end
 
 		# will format and cache into the config the /I and /D and other constant

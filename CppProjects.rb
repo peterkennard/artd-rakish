@@ -297,6 +297,19 @@ module CppProjectConfig
 		end
 	end
 
+	def cppDefined(name)
+	    @cppDefines.has_key?(name);
+	end
+
+	def cppDefineIfNot(*args)
+		args.flatten!()
+		args.each do |c|
+			spl = c.split('=',2);
+			# no value is nil, XXX= will have a value of empty string ""
+	        @cppDefines[spl[0]] = spl[1] unless @cppDefines.has_key?(name);
+		end
+	end
+
 	def cppUndefine(*args)
 		args.flatten!()
 		args.each do |c|
