@@ -492,7 +492,7 @@ class CppProject < Rakish::Project
 		unless(destdir = opts[:destdir])
 			destdir = myPackage;
 		end
-		destdir = File.join(INCDIR(),destdir);
+		destdir = File.join(INCDIR(),destdir || '');
 		ensureDirectoryTask(destdir);
 		flist = createCopyTasks(destdir,files,:config => self,&@@linkIncludeAction_)
 		task :includes => flist
