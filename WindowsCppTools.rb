@@ -685,7 +685,7 @@ LoadableModule.onLoaded(Module.new do
 		end
 
 		def compileRcFile(cfg,rc,res)
-			log.info(rc);
+			log.info(rc.pathmap('%f'));
 			cmdline = "\"#{@RC_EXE}\" -nologo -I\"#{cfg.thirdPartyPath}/tools/winsdk/include\""
 			cmdline += " -I\"#{cfg.thirdPartyPath}/tools/msvc9/include\""
 			cmdline += " -I\"#{cfg.thirdPartyPath}/tools/msvc9/atlmfc/include\""
@@ -722,11 +722,11 @@ LoadableModule.onLoaded(Module.new do
 				rcobjs <<= tsk
 			end	
 
-			autores_obj = "#{basePath}.resources.obj"
+			autores_obj = "#{basePath}.auto_resources.obj"
 			tsk = lookupTask(autores_obj)
 			unless(tsk)
-				autores_rc = "#{basePath}.resources.rc"
-				autores_res = "#{basePath}.resources.res"
+				autores_rc = "#{basePath}.auto_resources.rc"
+				autores_res = "#{basePath}.auto_resources.res"
 
 				cfg.project.addCleanFiles(autores_rc,autores_res,autores_obj);
 						
