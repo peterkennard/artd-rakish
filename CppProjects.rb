@@ -501,15 +501,25 @@ class CppProject < Rakish::Project
 		end
 	end
 
+
+    # asd a project local include directory so files will be listed
+    def addLocalIncludeDir(idir)
+        @localIncludeDirs_ ||= [];
+        @localIncludeDirs_ << idir;
+    end
+
 	# get all include files for generated projects		
 	def getIncludeFiles()
 		unless @allIncludeFiles_;
 			files = FileSet.new();
-			files.include( "#{projectDir}/*.h");
-			files.include( "#{projectDir}/*.hpp");
-			files.include( "#{projectDir}/*.inl");
-			files.include( "#{projectDir}/*.i");
+            (@localIncludeDirs_||=['.']).each do |dir|
+                dir = "#{projectDir}/#{dir}";
+                files.include( "#{dir}/*.h");
+                files.include( "#{dir}/*.hpp");
+                files.include( "#{dir}/*.inl");
+                files.include( "#{dir}/*.i");
 			@allIncludeFiles_ = files;
+			end
 		end
 		@allIncludeFiles_
 	end
