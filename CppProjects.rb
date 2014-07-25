@@ -145,10 +145,9 @@ module CTools
 	def createCompileTask(source,obj,cfg)
 
 		action = getCompileActionForSuffix(File.extname(source).downcase);
-
 		unless action
-			log.debug("unrecognized source file type \"#{File.name(source)}\"");
-			return(nil);				
+			log.debug("unrecognized source file type \"#{source.pathmap('%f')}\"");
+			return(nil);
 		end
 
 		if(Rake::Task.task_defined? obj)

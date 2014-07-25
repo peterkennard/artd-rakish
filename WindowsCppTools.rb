@@ -437,13 +437,20 @@ LoadableModule.onLoaded(Module.new do
 		end
 		@@compileCAction = @@compileCPPAction;
 
+		@@compileRCAction = lambda do |t|
+			t.config.ctools.doCompileRc(t)
+		end
+
 		@@CompileForSuffix = {};
+
 		def self.addCompileAction(suff,action)
 			@@CompileForSuffix[suff] = action;
 		end
 
+
 		addCompileAction('.cpp', @@compileCPPAction);
 		addCompileAction('.c', @@compileCAction);
+		addCompileAction('.rc', @@compileRCAction);
 
 		def getCompileActionForSuffix(suff)
 			@@CompileForSuffix[suff]
@@ -471,7 +478,7 @@ LoadableModule.onLoaded(Module.new do
 						included << line
 						next
 					end
-					log.info line
+					log.info line.strip!
 				end
 			end
 
@@ -671,8 +678,14 @@ LoadableModule.onLoaded(Module.new do
 				f.puts "#{id} RT_MANIFEST \"#{File.basename(data[:txt])}\""
 			end
 		end
-				
+
+		def doCompileRc(t)
+			compileRcFile(t.config,t.sources[0],t.name.pathmap('%X.res'));
+			compileResFile(t.config,t.name.pathmap('%X.res'),t.name);
+		end
+
 		def compileRcFile(cfg,rc,res)
+			log.info(rc);
 			cmdline = "\"#{@RC_EXE}\" -nologo -I\"#{cfg.thirdPartyPath}/tools/winsdk/include\""
 			cmdline += " -I\"#{cfg.thirdPartyPath}/tools/msvc9/include\""
 			cmdline += " -I\"#{cfg.thirdPartyPath}/tools/msvc9/atlmfc/include\""
