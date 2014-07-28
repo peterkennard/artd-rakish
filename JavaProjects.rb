@@ -6,28 +6,34 @@ module Rakish
 
 module JavaProjectConfig
 
-    attr_reader :outputClasspath
+    attr_reader :javaOutputClasspath
+    attr_reader :java_home
+
+#    def self.included(base)
+#        base.addModInit(base,self.instance_method(:initializer));
+#    end
+
+ 	def initializer(pnt,opts)
+ 	end
+
+    def javaClassPaths
+        @javaClassPaths_||=(@parent_.get(:javaClassPaths)||FileSet.new);
+    end
+    def addJavaClassPaths(*paths)
+		@javaClassPaths_||= FileSet.new;
+        @javaClassPaths_.include(paths);
+    end
+end
+
+module JavaCompileModule
+    include JavaProjectConfig
 
     def self.included(base)
         base.addModInit(base,self.instance_method(:initializer));
     end
+
  	def initializer(pnt,opts)
  	end
-    def classPaths
-        @classPaths_||=@parent_.classPaths
-    end
-    def addClassPaths(*paths)
-		@classPaths_||= FileSet.new;
-        @classPaths_.include(paths);
-    end
-end
-
-class JavaProject < Project
-    include JavaProjectConfig
-
-    def initialize(args={},&block)
-        super(args,&block);
-    end
 
 protected
 
@@ -39,12 +45,12 @@ public
     def doCompileJava(t)
 
         config = t.config;
-        outClasspath = getRelativePath(config.outputClasspath);
+        outClasspath = getRelativePath(config.javaOutputClasspath);
 
-        cmdline = "\"#{config.jdk_}/bin/javac.exe\"";
+        cmdline = "\"#{config.java_home}/bin/javac.exe\"";
         cmdline << " -g -d \"#{outClasspath}\""
 
-        paths = config.classPaths
+        paths = config.javaClassPaths
         unless(paths.empty?)
             cmdline << " -classpath \"#{outClasspath}";
             paths.each do |path|
@@ -53,7 +59,7 @@ public
             cmdline << "\"";
         end
 
-        paths = config.sourceRoots
+        paths = config.javaSourceRoots
         unless(paths.empty?)
             prepend = " -sourcepath \"";
             paths.each do |path|
@@ -68,8 +74,10 @@ public
             cmdline << " \"#{getRelativePath(src)}\"";
         end
 
-        puts("#{cmdline}") # if verbose?
+        log.info("#{cmdline}") # if verbose?
         system( cmdline );
+
+        puts nil.blah
 
     end
 
@@ -86,13 +94,13 @@ public
 
 
 public
-    def javacTask
+    def javacTask(deps=[])
 
         srcFiles = FileCopySet.new;
-        sourceRoots.each do |root|
+        javaSourceRoots.each do |root|
             files = FileList.new
             files.include("#{root}/**/*");
-            srcFiles.addFileTree(outputClasspath, root, files );
+            srcFiles.addFileTree(javaOutputClasspath, root, files );
         end
 
         tsk = JavaCTask.define_unique_task &CompileJavaAction
@@ -107,29 +115,40 @@ public
 #            puts("project is altered");
 #        end
 
+        tsk.enhance(deps);
         tsk.enhance(tasks);
         tsk.config = self;
 
-		task :clean do
-			addCleanFiles(tasks);
-		end
+        task :clean do
+            addCleanFiles(tasks);
+        end
 
         tsk;
     end
 
-    def addSourceRoot(*roots)
-        (@sourceDirs_||=FileSet.new).include(roots);
+    def addJavaSourceRoot(*roots)
+        (@javaSourceDirs_||=FileSet.new).include(roots);
     end
-    def sourceRoots
-        @sourceDirs_||=[File.join(projectDir,'src')];
+    def javaSourceRoots
+        @javaSourceDirs_||=[File.join(projectDir,'src')];
     end
+
     # output directory common to all configurations
-    def outputClasspath
-        @outputClasspath||="#{BUILDDIR()}/production/#{moduleName()}";
+    def javaOutputClasspath
+        @javaOutputClasspath||="#{BUILDDIR()}/production/#{moduleName()}";
     end
 
 end
 
+
+class JavaProject < Project
+    include JavaCompileModule
+
+    def initialize(args={},&block)
+        super(args,&block);
+    end
+
+end
 
 end # Rakish
 
