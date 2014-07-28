@@ -76,9 +76,6 @@ public
 
         log.info("#{cmdline}") # if verbose?
         system( cmdline );
-
-        puts nil.blah
-
     end
 
     class JavaCTask < Rake::Task
