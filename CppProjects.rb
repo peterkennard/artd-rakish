@@ -365,6 +365,7 @@ class CppProject < Rakish::Project
 	task :compile 		=> [ :includes ];
 	task :depends		=> [ :includes ];
 	task :build 		=> [ :compile ];
+	task :rebuild 		=> [ :build, :autogen, :compile ];
 
 
 	# Create a new project
