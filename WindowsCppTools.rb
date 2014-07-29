@@ -753,7 +753,7 @@ LoadableModule.onLoaded(Module.new do
 		
 			case(cfg.targetType)
 				
-				when CppProjectConfig::APP
+				when 'APP'
 
 					targetName = "#{cfg.BINDIR()}/#{cfg.targetName}.exe";
 					
@@ -770,13 +770,13 @@ LoadableModule.onLoaded(Module.new do
 						:pdbfile=>pdbfile,
 					}
 	
-				when CppProjectConfig::LIB
+				when 'LIB'
 					
 					targetName = "#{cfg.LIBDIR()}/#{cfg.targetName}.lib";
 					doLink = Rake::FileTask.define_task targetName, 
 							&@@buildLibAction;
 				
-				when CppProjectConfig::DLL
+				when 'DLL'
 					
 					targetName = "#{cfg.BINDIR()}/#{cfg.targetName}.dll";
 
@@ -801,6 +801,7 @@ LoadableModule.onLoaded(Module.new do
 					}
 
 				else
+					log.info("unsupported target type #{cfg.targetType}");
 					return(false);
 			end
 

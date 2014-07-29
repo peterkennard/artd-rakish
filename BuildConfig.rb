@@ -67,6 +67,7 @@ module BuildConfigMod
 	attr_accessor 	:LIBDIR
 	attr_accessor 	:BINDIR
  	attr_property	:thirdPartyPath
+	attr_property   :CPP_CONFIG
 
 
 	def BUILDDIR
@@ -91,7 +92,6 @@ end
 
 class BuildConfig
 	include Util
-
 
     @@_inits = {};
 
@@ -130,8 +130,6 @@ class GlobalConfig < BuildConfig
 	def globalPaths(&b)
 		@initGlobalPaths = b;
 	end
-
-	attr_property :CPP_CONFIG
 
 	def self.includeConfigType(mod)
 		unless GlobalConfig.include? mod	

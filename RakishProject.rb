@@ -208,7 +208,7 @@ class Project < BuildConfig
 
 	# configuration specific intermediate output directory
 	def OBJPATH
-		@OBJPATH||="#{OBJDIR()}/#{CPP_CONFIG()}";
+		@OBJPATH||="#{OBJDIR()}/CPP_CONFIG}";
 	end
 
 	def OUTPUT_SUFFIX
@@ -428,6 +428,10 @@ end
 Rakish.build
 
 end # Rakish
+
+module RakishProjects
+    Project=Rakish::Project;
+end
 
 # global  alias for Rakish::Project.new()
 def RakishProject(args={},&block)

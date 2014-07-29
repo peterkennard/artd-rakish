@@ -237,10 +237,6 @@ module CppProjectConfig
 	    base.addModInit(base,self.instance_method(:initializer));
     end
 
-	APP = :APP;
-	DLL = :DLL;
-	LIB = :LIB;
-
     attr_reader :ctools
 	attr_reader :cppDefines
 	attr_reader :targetType
@@ -625,10 +621,15 @@ end # CppProject
 end # Rakish
 
 # global  alias for Rakish::Project.new()
+if(false)
 def CppProject(args={},&block)
 	Rakish::CppProject.new(args,&block)
 end
+end
 
+module RakishProjects
+    CppProject = Rakish::CppProject;
+end
 
 #################################################
 

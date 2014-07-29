@@ -139,7 +139,7 @@ end
 
 
 class JavaProject < Project
-    include JavaCompileModule
+   include JavaCompileModule
 
     def initialize(args={},&block)
         super(args,&block);
@@ -148,6 +148,11 @@ class JavaProject < Project
 end
 
 end # Rakish
+
+module RakishProjects
+   JavaCompileModule=Rakish::JavaCompileModule;
+end
+
 
 # global  alias for Rakish::JavaProject.new()
 def JavaProject(args={},&block)

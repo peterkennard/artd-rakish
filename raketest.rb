@@ -70,9 +70,18 @@ end
 
 module Rakish
 
-class TestConfig < BuildConfig
+class TestProject < Project
     include BuildConfigMod
+
+    def TEST_CONST
+        :BLAH
+    end
+
 end
+
+end
+
+module RakishProjects
 
 module BaDaBoom
 
@@ -90,9 +99,15 @@ module BaDaBing
 
 end
 
-config = RakishProject(:name=>'project1', :includes=>[BaDaBing,BaDaBoom,BaDaBing]) do |c|
+Rakish::TestProject.new( :name=>'project0'
+) do |c|
+	log.debug("test const is #{c.TEST_CONST}");
+end
+
+config = RakishProject(:name=>'project1', :extends=>Rakish::TestProject, :includes=>[BaDaBing,BaDaBoom,BaDaBing]) do |c|
 	c.printStuff();
 	c.printStuff2();
+	log.debug("test const is #{c.TEST_CONST}");
 	c.set(:mysym, 121)
 end
 
@@ -100,6 +115,7 @@ config2 = RakishProject(:name=>'project2', :config=>config, :includes=>[BaDaBoom
 	c.printStuff();
 	c.printStuff2();
 	log.debug "### new symbol is #{c.get(:mysym)}"
+	log.debug("test const is #{c.TEST_CONST}");
 end
 
 
@@ -107,5 +123,6 @@ task :artdRakishTest => [] do |t|
     log.debug("test complete");
 end
 
-end # module Rakish
+end
+
 
