@@ -387,14 +387,18 @@ end
 
 # create a new Rakish::Project of the base type in
 # in :extends including the modules in :includes
+
 def self.NewProject(opts={}, &b)
 
     # get list of modules to include
     # and the base project type to extend the class from
     # eliminate duplicate modules, and sort the list.
 
-    included = opts[:includes]||[];
     extends = opts[:extends]||Project;
+    # if no inclusions just make a new one
+    unless(included=opts[:includes])
+        return(extends.new(opts,&b))
+    end
 
     if included.length > 1
         included = Set.new(included).to_a();
