@@ -74,11 +74,64 @@ class TestConfig < BuildConfig
     include BuildConfigMod
 end
 
-config = TestConfig.new do |c|
+module BaDaBoom
+
+    def printStuff
+        log.debug("ba da boom!");
+    end
+
+end
+
+module BaDaBing
+
+    def printStuff2
+        log.debug("ba da bing!");
+    end
+
+end
+
+
+@@projectClassHash = {};
+
+def self.newProject(cfg=nil, opts=nil, &b)
+
+    # get list of modules to include, eliminate duplicates, and sort it.
+    included = (opts||{})[:includes]||[];
+    if included.length > 1
+        included = Set.new(included).to_a();
+        included.sort! do |a,b|
+            a.to_s <=> b.to_s
+        end
+    end
+
+    # if we already have created a class for the specific included set use it
+    unless projClass = @@projectClassHash[included]
+        # otherwise create a new class and include the requested modules
+        log.debug("Creating new project class including [#{included.join(',')}]");
+        projClass = Class.new(TestConfig) do
+            included.each do |i|
+                include i;
+            end
+        end
+        @@projectClassHash[included] = projClass;
+    end
+    # create new instance and pass initializer block to it.
+    ret = duhClass.new(cfg,opts,&b);
+    ret;
+end
+
+
+
+
+config = newProject(nil,:includes=>[BaDaBing,BaDaBoom,BaDaBing]) do |c|
+	c.printStuff();
+	c.printStuff2();
 	c.set(:mysym, 121)
 end
 
-config2 = TestConfig.new(config) do |c|
+config2 = newProject(config, :includes=>[BaDaBoom,BaDaBing,BaDaBing]) do |c|
+	c.printStuff();
+	c.printStuff2();
 	log.debug "### new symbol is #{c.get(:mysym)}"
 end
 
