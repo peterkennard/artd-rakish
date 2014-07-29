@@ -383,6 +383,43 @@ class Project < BuildConfig
 
 end
 
+@@projectClassesByIncluded_ = {};
+
+# create a new Rakish::Project of the base type in
+# in :extends including the modules in :includes
+def self.NewProject(opts={}, &b)
+
+    # get list of modules to include
+    # and the base project type to extend the class from
+    # eliminate duplicate modules, and sort the list.
+
+    included = opts[:includes]||[];
+    extends = opts[:extends]||Project;
+
+    if included.length > 1
+        included = Set.new(included).to_a();
+        included.sort! do |a,b|
+            a.to_s <=> b.to_s
+        end
+    end
+    key=[extends,included]
+
+    # if we already have created a class for the specific included set use it
+    unless projClass = @@projectClassesByIncluded_[key]
+        # otherwise create a new class and include the requested modules
+        log.debug("new class including [#{included.join(',')}]");
+        projClass = Class.new(extends) do
+            included.each do |i|
+                include i;
+            end
+        end
+        @@projectClassesByIncluded_[key] = projClass;
+    end
+    # create new instance and pass initializer block to it.
+    ret = projClass.new(opts,&b);
+    ret;
+end
+
 # initialize the build application instance
 Rakish.build
 
@@ -390,6 +427,6 @@ end # Rakish
 
 # global  alias for Rakish::Project.new()
 def RakishProject(args={},&block)
-	Rakish::Project.new(args,&block)
+	Rakish::NewProject(args,&block)
 end
 
