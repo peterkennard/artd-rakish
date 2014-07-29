@@ -411,7 +411,7 @@ def self.NewProject(opts={}, &b)
     # if we already have created a class for the specific included set use it
     unless projClass = @@projectClassesByIncluded_[key]
         # otherwise create a new class and include the requested modules
-        log.debug("new class including [#{included.join(',')}]");
+        # log.debug("new class including [#{included.join(',')}]");
         projClass = Class.new(extends) do
             included.each do |i|
                 include i;
