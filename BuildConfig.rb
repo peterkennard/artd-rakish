@@ -16,7 +16,7 @@ module BuildConfigMod
  		init_PropertyBag(pnt);
  		enableNewFields do |cfg|
 			if(pnt)
- 				cfg.CPP_CONFIG = pnt.CPP_CONFIG
+ 				cfg.CPP_CONFIG = pnt.get(:CPP_CONFIG);
  			end
  		end
  	end
@@ -109,7 +109,7 @@ class BuildConfig
                 end
             end
         end
-		yield if block_given?
+		yield self if block_given?
     end
 
     protected

@@ -1,13 +1,21 @@
+myDir = File.dirname(__FILE__);
+unless defined? MAKEDIR
+    MAKEDIR=File.expand_path("#{myDir}");
+end
+require "#{MAKEDIR}/CppProjects.rb";
+require "#{MAKEDIR}/JavaProjects.rb";
+
+include Rakish::Util
 
 module Rakish
 
 	module Util
 		def testMethod()
-			puts("###### testing")
+			log.debug("###### testing")
 		end
 		
 		def Util.staticMethod()
-			puts("###### static testing")		
+			puts.debug("###### static testing")
 		end
 	end
 
@@ -17,21 +25,6 @@ module Rakish
 		CONST1 = "a const"
 	end
 
-
-end
-
-
-RakishProject(
-	:name => 'raketest'
-) do
-
-	testMethod()
-	Rakish::Util.staticMethod()
-	
-	task :doit do |t|
-		testMethod();
-	end
-	
 end
 
 module Constants
@@ -58,7 +51,7 @@ end
 	end
 	
 	def putit
-		puts("CONST == \"#{CONSTA}\"")
+		log.info("CONST == \"#{CONSTA}\"")
 	end
 end
 
@@ -67,7 +60,7 @@ def FooObj(&block)
 end 
 
 class MyObj
-	puts("CONST == \"#{CONSTA}\"")
+	log.info("CONST == \"#{CONSTA}\"")
 end
 
 FooObj do 
@@ -77,13 +70,22 @@ end
 
 module Rakish
 
-config = ProjectConfig.new do |c|
+class TestConfig < BuildConfig
+    include BuildConfigMod
+end
+
+config = TestConfig.new do |c|
 	c.set(:mysym, 121)
 end
 
-config2 = ProjectConfig.new(config) do |c|
-	puts "### new symbol is #{c.get(:mysym)}"
+config2 = TestConfig.new(config) do |c|
+	log.debug "### new symbol is #{c.get(:mysym)}"
 end
 
+
+task :artdRakishTest => [] do |t|
+    log.debug("test complete");
 end
+
+end # module Rakish
 
