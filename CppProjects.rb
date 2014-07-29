@@ -234,7 +234,7 @@ end
 module CppProjectConfig
 
     def self.included(base)
-	    base.addModInit(base,self.instance_method(:initializer));
+	    base.addModInit(self.instance_method(:initializer));
     end
 
     attr_reader :ctools
@@ -620,15 +620,9 @@ end # CppProject
 
 end # Rakish
 
-# global  alias for Rakish::Project.new()
-if(false)
-def CppProject(args={},&block)
-	Rakish::CppProject.new(args,&block)
-end
-end
-
 module RakishProjects
-    CppProject = Rakish::CppProject;
+    # alias for Rakish::Project
+    CppProject=Rakish::CppProject;
 end
 
 #################################################

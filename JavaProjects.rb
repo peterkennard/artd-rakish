@@ -10,7 +10,7 @@ module JavaProjectConfig
     attr_reader :java_home
 
 #    def self.included(base)
-#        base.addModInit(base,self.instance_method(:initializer));
+#        base.addModInit(self.instance_method(:initializer));
 #    end
 
  	def initializer(pnt,opts)
@@ -29,7 +29,7 @@ module JavaCompileModule
     include JavaProjectConfig
 
     def self.included(base)
-        base.addModInit(base,self.instance_method(:initializer));
+        base.addModInit(instance_method(:initializer));
     end
 
  	def initializer(pnt,opts)
@@ -150,11 +150,7 @@ end
 end # Rakish
 
 module RakishProjects
-   JavaCompileModule=Rakish::JavaCompileModule;
+    JavaCompileModule=Rakish::JavaCompileModule;
+    JavaProject=Rakish::JavaProject;
 end
 
-
-# global  alias for Rakish::JavaProject.new()
-def JavaProject(args={},&block)
-	Rakish::JavaProject.new(args,&block)
-end

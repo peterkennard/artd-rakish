@@ -83,10 +83,30 @@ end
 
 module RakishProjects
 
+module BooBoo
+
+    def self.included(base)
+	    if(defined? base.addInitBlock)
+	          base.addInitBlock do
+                  log.debug("initializing a BooBoo block");
+	          end
+	    end
+    end
+end
+
 module BaDaBoom
+    include BooBoo;
+
+    def self.included(base)
+	    BooBoo.included(base);
+	    base.addInitBlock do
+            log.debug("initializing BaDaBoom on #{self}");
+            @myString = "ba do boom";
+	    end
+    end
 
     def printStuff
-        log.debug("ba da boom!");
+        log.debug(@myString);
     end
 
 end
@@ -104,7 +124,10 @@ Rakish::TestProject.new( :name=>'project0'
 	log.debug("test const is #{c.TEST_CONST}");
 end
 
-config = RakishProject(:name=>'project1', :extends=>Rakish::TestProject, :includes=>[BaDaBing,BaDaBoom,BaDaBing]) do |c|
+config = RakishProject(:name=>'project1', :extends=>Rakish::TestProject, :includes=>[BaDaBing,BaDaBoom,BaDaBing,BooBoo]) do |c|
+
+
+
 	c.printStuff();
 	c.printStuff2();
 	log.debug("test const is #{c.TEST_CONST}");
