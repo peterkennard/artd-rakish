@@ -283,9 +283,9 @@ module Rakish
 
         @@_inits_ = {};
 
-        def setInitBlock(&b)
+        def addInitBlock(&b)
             puts("adding init for #{self}");
-            @@_inits_[self.hash]=b if block_given?
+            (@@_inits_[self.hash]||=[]) << b if block_given?
         end
 	end
 
@@ -299,9 +299,13 @@ module Rakish
 
         def initializeIncluded(obj,*args)
              # call the included modules init blocks with arguments
-             self.ancestors.reverse_each do |a|
-                 b = @@_inits_[a.hash];
-                 obj.instance_exec(args,&b) if b;
+             self.ancestors.reverse_each do |mod|
+                 inits = @@_inits_[mod.hash];
+                 if inits
+                    inits.each do |b|
+                        obj.instance_exec(args,&b);
+                    end
+                 end
              end
         end
    end

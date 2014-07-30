@@ -240,7 +240,7 @@ module CppProjectConfig
 
 #	attr_reader	:cflags  had this in old one for added VC flags.
 
- 	setInitBlock do |pnt,opts|
+ 	addInitBlock do |pnt,opts|
 		@addedIncludePaths_=[]
 		@cppDefines={}
 		@incPaths_=nil;

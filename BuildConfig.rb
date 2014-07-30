@@ -7,7 +7,7 @@ module BuildConfigMod
 	include PropertyBagMod
 	include Rake::DSL
 
- 	setInitBlock do |pnt,opts|
+ 	addInitBlock do |pnt,opts|
 
  		init_PropertyBag(pnt);
  		enableNewFields do |cfg|

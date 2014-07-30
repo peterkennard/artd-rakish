@@ -10,13 +10,13 @@ include Rakish::Util
 module Rakish
 
     module Mod1
-        setInitBlock do
+        addInitBlock do
             puts("initializing Mod1");
         end
     end
 
     module Mod2
-        setInitBlock do
+        addInitBlock do
             puts("initializing Mod2");
         end
     end
@@ -25,7 +25,7 @@ module Rakish
         include Mod1
         include Mod2
 
-        setInitBlock do |arg|
+        addInitBlock do |arg|
             puts("initializing Mod3 on #{self} XX #{arg[0]}");
             @foo = "string set by Mod3";
         end
@@ -123,7 +123,7 @@ module RakishProjects
 
 module BooBoo
 
-	setInitBlock do
+	addInitBlock do
         log.debug("initializing a BooBoo block");
     end
 
@@ -132,7 +132,7 @@ end
 module BaDaBoom
     include BooBoo;
 
-    setInitBlock do
+    addInitBlock do
         log.debug("initializing BaDaBoom on #{self}");
         @myString = "ba do boom";
     end
