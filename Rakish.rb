@@ -281,16 +281,19 @@ module Rakish
 			end
 		end
 
-        @@_inits_ = {};
-
         def addInitBlock(&b)
-            (@@_inits_[self.hash]||=[]) << b if block_given?
+            (@_i_||=[])<<b if block_given?
         end
+
+        def _initBlocks_
+            @_i_;
+        end
+
 	end
 
    class ::Class
 
-        # mighty hack to initalize all modules included in this class in the included order
+        # mighty hack to cll the initBlocks of all modules included in this class in the included order
         # nicely provided by the ancestors list
         # use this in an instance initializer:
         #
@@ -299,7 +302,7 @@ module Rakish
         def initializeIncluded(obj,*args)
              # call the included modules init blocks with arguments
              self.ancestors.reverse_each do |mod|
-                 inits = @@_inits_[mod.hash];
+                 inits = mod._initBlocks_;
                  if inits
                     inits.each do |b|
                         obj.instance_exec(args,&b);
