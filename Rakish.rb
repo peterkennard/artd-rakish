@@ -284,7 +284,6 @@ module Rakish
         @@_inits_ = {};
 
         def addInitBlock(&b)
-            puts("adding init for #{self}");
             (@@_inits_[self.hash]||=[]) << b if block_given?
         end
 	end

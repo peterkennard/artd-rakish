@@ -21,6 +21,12 @@ module Rakish
         end
     end
 
+    module Mod1
+        addInitBlock do |arg|
+            puts("initializing Mod1-extension");
+        end
+    end
+
     module Mod3
         include Mod1
         include Mod2
