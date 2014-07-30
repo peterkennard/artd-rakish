@@ -7,11 +7,7 @@ module BuildConfigMod
 	include PropertyBagMod
 	include Rake::DSL
 
-    def self.included(base)
-        base.addModInit(self.instance_method(:initializer));
-    end
-
- 	def initializer(pnt,opts)
+ 	setInitBlock do |pnt,opts|
 
  		init_PropertyBag(pnt);
  		enableNewFields do |cfg|
@@ -93,54 +89,10 @@ end
 class BuildConfig
 	include Util
 
-    @@_inits = {};
-
     def initialize(pnt=nil,opts=nil)
-
-        # log.debug("************** initalizing #{self} #{opts}");
-
-    if false
-        included = self.class.included_modules;
-        log.debug("***********");
-        modSet = Set.new();
-        included.reverse.each do |mod|
-            if(mod.class_variable_defined?(:@@InitBlock_))
-                next if modSet.include(mod);
-                modSet.add(mod);
-                next
-                log.debug("***************** defined in #{mod}");
-            end
-        end
-        log.debug("***********");
-    end
-
-        # initalize the included modules from parent config and arguments
-        self.class.ancestors.reverse_each do |ancestor|
-            inits = @@_inits[ancestor.hash];
-            if(inits)
-                inits.each do |init|
-
-                    if(init.instance_of? Proc)
-                        instance_exec([pnt,opts], &init);
-                    else
-                        log.debug("   --> init for #{self} for #{init}");
-                        init.bind(self).call(pnt,opts);
-                    end
-                end
-            end
-        end
+        self.class.initializeIncluded(self,pnt,opts);
 		yield self if block_given?
     end
-
-    protected
-    def self.addInitBlock(&b)
-        (@@_inits[hash]||=[]) << b;
-    end
-
-    def self.addModInit(init)
-        (@@_inits[hash] ||= []) << init;
-    end
-
     include BuildConfigMod
 
 end

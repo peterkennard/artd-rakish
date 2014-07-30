@@ -280,8 +280,32 @@ module Rakish
 				raise("can only add properties to PropertyBag object")
 			end
 		end
+
+        @@_inits_ = {};
+
+        def setInitBlock(&b)
+            puts("adding init for #{self}");
+            @@_inits_[self.hash]=b if block_given?
+        end
 	end
-	
+
+   class ::Class
+
+        # mighty hack to initalize all modules included in this class in the included order
+        # nicely provided by the ancestors list
+        # use this in an instance initializer:
+        #
+        #    obj.class.initializeIncluded(obj,*args);
+
+        def initializeIncluded(obj,*args)
+             # call the included modules init blocks with arguments
+             self.ancestors.reverse_each do |a|
+                 b = @@_inits_[a.hash];
+                 obj.instance_exec(args,&b) if b;
+             end
+        end
+   end
+
 	class MultiProcessTask < Rake::Task
 	private
 		def invoke_prerequisites(args, invocation_chain)

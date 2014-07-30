@@ -9,6 +9,44 @@ include Rakish::Util
 
 module Rakish
 
+    module Mod1
+        setInitBlock do
+            puts("initializing Mod1");
+        end
+    end
+
+    module Mod2
+        setInitBlock do
+            puts("initializing Mod2");
+        end
+    end
+
+    module Mod3
+        include Mod1
+        include Mod2
+
+        setInitBlock do |arg|
+            puts("initializing Mod3 on #{self} XX #{arg[0]}");
+            @foo = "string set by Mod3";
+        end
+    end
+
+    class InitClass
+        include Mod2
+        include Mod1
+        include Mod3
+
+        def initialize(*args)
+            self.class.initializeIncluded(self,args[0]);
+            puts "initialized #{@foo}";
+        end
+    end
+
+    InitClass.new("arg1","arg2");
+
+
+
+
 	module Util
 		def testMethod()
 			log.debug("###### testing")
@@ -85,12 +123,8 @@ module RakishProjects
 
 module BooBoo
 
-    def self.included(base)
-	    if(defined? base.addInitBlock)
-	    	base.addInitBlock do
-                log.debug("initializing a BooBoo block");
-	        end
-	    end
+	setInitBlock do
+        log.debug("initializing a BooBoo block");
     end
 
 end
@@ -98,12 +132,9 @@ end
 module BaDaBoom
     include BooBoo;
 
-    def self.included(base)
-	    BooBoo.included(base);
-	    base.addInitBlock do
-            log.debug("initializing BaDaBoom on #{self}");
-            @myString = "ba do boom";
-	    end
+    setInitBlock do
+        log.debug("initializing BaDaBoom on #{self}");
+        @myString = "ba do boom";
     end
 
     def printStuff

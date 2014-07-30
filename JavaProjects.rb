@@ -9,13 +9,6 @@ module JavaProjectConfig
     attr_reader :javaOutputClasspath
     attr_reader :java_home
 
-#    def self.included(base)
-#        base.addModInit(self.instance_method(:initializer));
-#    end
-
- 	def initializer(pnt,opts)
- 	end
-
     def javaClassPaths
         @javaClassPaths_||=(@parent_.get(:javaClassPaths)||FileSet.new);
     end
@@ -27,13 +20,6 @@ end
 
 module JavaCompileModule
     include JavaProjectConfig
-
-    def self.included(base)
-        base.addModInit(instance_method(:initializer));
-    end
-
- 	def initializer(pnt,opts)
- 	end
 
 protected
 

@@ -233,10 +233,6 @@ end
 
 module CppProjectConfig
 
-    def self.included(base)
-	    base.addModInit(self.instance_method(:initializer));
-    end
-
     attr_reader :ctools
 	attr_reader :cppDefines
 	attr_reader :targetType
@@ -244,7 +240,7 @@ module CppProjectConfig
 
 #	attr_reader	:cflags  had this in old one for added VC flags.
 
- 	def initializer(pnt,opts)
+ 	setInitBlock do |pnt,opts|
 		@addedIncludePaths_=[]
 		@cppDefines={}
 		@incPaths_=nil;
