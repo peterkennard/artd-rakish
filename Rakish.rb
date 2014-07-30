@@ -282,18 +282,18 @@ module Rakish
 		end
 
         def addInitBlock(&b)
-            (@_i_||=[])<<b if block_given?
+            (@_init_||=[])<<b if block_given?
         end
 
         def _initBlocks_
-            @_i_;
+            @_init_;
         end
 
 	end
 
    class ::Class
 
-        # mighty hack to cll the initBlocks of all modules included in this class in the included order
+        # monkey hack to call the initBlocks of all modules included in this class in the included order
         # nicely provided by the ancestors list
         # use this in an instance initializer:
         #
