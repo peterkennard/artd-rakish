@@ -87,11 +87,12 @@ module BooBoo
 
     def self.included(base)
 	    if(defined? base.addInitBlock)
-	          base.addInitBlock do
-                  log.debug("initializing a BooBoo block");
-	          end
+	    	base.addInitBlock do
+                log.debug("initializing a BooBoo block");
+	        end
 	    end
     end
+
 end
 
 module BaDaBoom

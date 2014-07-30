@@ -94,11 +94,25 @@ class BuildConfig
 	include Util
 
     @@_inits = {};
-    @@_initBlocks = {};
 
     def initialize(pnt=nil,opts=nil)
 
-        log.debug("************** initalizing #{self} #{opts}");
+        # log.debug("************** initalizing #{self} #{opts}");
+
+    if false
+        included = self.class.included_modules;
+        log.debug("***********");
+        modSet = Set.new();
+        included.reverse.each do |mod|
+            if(mod.class_variable_defined?(:@@InitBlock_))
+                next if modSet.include(mod);
+                modSet.add(mod);
+                next
+                log.debug("***************** defined in #{mod}");
+            end
+        end
+        log.debug("***********");
+    end
 
         # initalize the included modules from parent config and arguments
         self.class.ancestors.reverse_each do |ancestor|
@@ -109,7 +123,7 @@ class BuildConfig
                     if(init.instance_of? Proc)
                         instance_exec([pnt,opts], &init);
                     else
-                        # puts("   --> init for #{self} for #{init}");
+                        log.debug("   --> init for #{self} for #{init}");
                         init.bind(self).call(pnt,opts);
                     end
                 end
