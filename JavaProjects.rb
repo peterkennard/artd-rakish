@@ -125,7 +125,7 @@ end
 
 
 class JavaProject < Project
-   include JavaCompileModule
+   include JavaProjectModule
 
     def initialize(args={},&block)
         super(args,&block);
@@ -136,7 +136,7 @@ end
 end # Rakish
 
 module RakishProjects
-    JavaCompileModule=Rakish::JavaProjectModule;
+    JavaCompileModule=Rakish::JavaProjectModule; # deprecated
     JavaProjectModule=Rakish::JavaProjectModule;
     JavaProject=Rakish::JavaProject;
 end
