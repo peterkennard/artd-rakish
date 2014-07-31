@@ -349,8 +349,18 @@ module CppProjectConfig
 
 end
 
-class CppProject < Rakish::Project
+module CppProjectModule
     include CppProjectConfig
+
+    addInitBlock do
+
+    end
+
+end
+
+
+class CppProject < Rakish::Project
+    include CppProjectModule
 
 	task :autogen 		=> [ :cleandepends, :includes, :vcproj ];
 	task :cleanautogen 	=> [ :cleanincludes, :cleandepends, :vcprojclean ];
@@ -378,7 +388,7 @@ class CppProject < Rakish::Project
 
 	def initialize(args={},&block)
 		super(args,&block);
-		addIncludePaths( [ OBJPATH(),INCDIR() ] );
+		addIncludePaths( [ OBJPATH(),INCDIR() ] ); # todo where and how to initialize?
 	end
 
 
