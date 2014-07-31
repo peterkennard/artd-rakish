@@ -310,7 +310,7 @@ module Rakish
                  end
              end
         end
-   end
+    end
 
 	class MultiProcessTask < Rake::Task
 	private

@@ -9,6 +9,8 @@ include Rakish::Util
 
 module Rakish
 
+    puts "FOO is #{ENV['FOO']}"
+
     module Mod1
         addInitBlock do
             puts("initializing Mod1");

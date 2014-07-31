@@ -23,6 +23,13 @@ module JavaProjectModule
 
 protected
 
+    addInitBlock do |pnt,opts|
+        if(pnt != nil)
+            @java_home = pnt.get(:java_home);
+        end
+        @java_home ||= File.expand_path(ENV['JAVA_HOME']);
+    end
+
     CompileJavaAction = ->(t) do
         t.config.doCompileJava(t);
     end

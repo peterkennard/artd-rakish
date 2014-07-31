@@ -352,14 +352,6 @@ end
 module CppProjectModule
     include CppProjectConfig
 
-    # ensure global project task dependencies
-	task :autogen 		=> [ :cleandepends, :includes, :vcproj ];
-	task :cleanautogen 	=> [ :cleanincludes, :cleandepends, :vcprojclean ];
-	task :compile 		=> [ :includes ];
-	task :depends		=> [ :includes ];
-	task :build 		=> [ :compile ];
-	task :rebuild 		=> [ :build, :autogen, :compile ];
-
     addInitBlock do
         t = task :preBuild do
             doCppPreBuild
@@ -368,7 +360,7 @@ module CppProjectModule
 
 	# configuration specific intermediate output directory
 	def OBJPATH
-		@OBJPATH||="#{OBJDIR()}/CPP_CONFIG()}";
+		@OBJPATH||="#{OBJDIR()}/#{CPP_CONFIG()}";
 	end
 
 	VCProjBuildAction_ = lambda do |t|
@@ -598,8 +590,16 @@ module CppProjectModule
 end
 
 
-class CppProject < Rakish::Project
+class CppProject < ::Rakish::Project
     include CppProjectModule
+
+   # ensure added global project task dependencies
+    task :autogen 		=> [ :cleandepends, :includes, :vcproj ];
+    task :cleanautogen 	=> [ :cleanincludes, :cleandepends, :vcprojclean ];
+    task :compile 		=> [ :includes ];
+    task :depends		=> [ :includes ];
+    task :build 		=> [ :compile ];
+    task :rebuild 		=> [ :build, :autogen, :compile ];
 
 	# Create a new project
 	#

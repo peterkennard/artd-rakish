@@ -359,10 +359,9 @@ class Project < BuildConfig
 			tname = "#{@myNamespace}:preBuild"
 			ns = Rake.application.in_namespace(@myNamespace) do
 				log.info("pre building #{@myNamespace}");
-                # optional pre build task
+                # optional project pre build task
                 doPreBuild = Rake.application.lookup(tname);
                 doPreBuild.invoke if doPreBuild;
-	            log.info("pre build done");
             end
 		end
 	end
