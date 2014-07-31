@@ -18,7 +18,7 @@ module JavaProjectConfig
     end
 end
 
-module JavaCompileModule
+module JavaProjectModule
     include JavaProjectConfig
 
 protected
@@ -136,7 +136,8 @@ end
 end # Rakish
 
 module RakishProjects
-    JavaCompileModule=Rakish::JavaCompileModule;
+    JavaCompileModule=Rakish::JavaProjectModule;
+    JavaProjectModule=Rakish::JavaProjectModule;
     JavaProject=Rakish::JavaProject;
 end
 
