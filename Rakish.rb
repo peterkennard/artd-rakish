@@ -404,7 +404,9 @@ module Rakish
 
         # Generate an anonymous name.
 
-
+        def currentNamespace
+            ":#{Rake.application.current_scope.join(':')}";
+        end
 
 		# Used like Rake's 'namespace' to execute the block 
 		# in the specified namespace, except it enables

@@ -352,16 +352,7 @@ end
 module CppProjectModule
     include CppProjectConfig
 
-    addInitBlock do
-
-    end
-
-end
-
-
-class CppProject < Rakish::Project
-    include CppProjectModule
-
+    # ensure global project task dependencies
 	task :autogen 		=> [ :cleandepends, :includes, :vcproj ];
 	task :cleanautogen 	=> [ :cleanincludes, :cleandepends, :vcprojclean ];
 	task :compile 		=> [ :includes ];
@@ -369,28 +360,60 @@ class CppProject < Rakish::Project
 	task :build 		=> [ :compile ];
 	task :rebuild 		=> [ :build, :autogen, :compile ];
 
+    addInitBlock do
+        t = task :preBuild do
+            doCppPreBuild
+        end
+    end
 
-	# Create a new project
-	#
-	# <b>named args:</b>
-	#
-	#   :name        => name of this project, defaults to parent directory name
-	#   :package     => package name for this project defaults to nothing
-	#   :config      => explicit parent configuration, defaults to the GlobalConfig
-	#   :dependsUpon => array of project directories or specific rakefile paths this project
-	#                   depends upon
-	#   :id          => uuid to assign to project in "uuid string format"
-	#                    '2CD0548E-6945-4b77-83B9-D0993009CD75'
-	#
-	# &block is always yielded to in the directory of the projects file, and the
-	# Rake namespace of the new project, and called in this instance's context
-
-
-	def initialize(args={},&block)
-		super(args,&block);
-		addIncludePaths( [ OBJPATH(),INCDIR() ] ); # todo where and how to initialize?
+	# configuration specific intermediate output directory
+	def OBJPATH
+		@OBJPATH||="#{OBJDIR()}/CPP_CONFIG()}";
 	end
 
+	VCProjBuildAction_ = lambda do |t|
+        require "#{Rakish::MAKEDIR}/VcprojBuilder.rb"
+        VcprojBuilder.onVcprojTask(t.config);
+	end
+
+	VCProjCleanAction_ = lambda do |t|
+        require "#{Rakish::MAKEDIR}/VcprojBuilder.rb"
+        VcprojBuilder.onVcprojCleanTask(t.config);
+	end
+
+	LinkIncludeAction_ = lambda do |t|
+		config = t.config;
+		# if(config.verbose?)
+			puts "generating #{t.name} from #{t.source}"
+		# end
+
+		destfile = t.name;
+		srcpath = config.getRelativePath(t.source,File.dirname(t.name));
+		fname = File.basename(t.name);
+		File.open(destfile,'w') do |file|
+			file.puts("/* #{fname} - generated file - do not alter */");
+			file.puts("#include \"#{srcpath}\"");
+		end
+	end
+
+	# called after initializers on all projects and before rake
+	# starts executing tasks
+
+	def doCppPreBuild()
+        addIncludePaths( [ OBJPATH(),INCDIR() ] );
+        @buildConfig = resolveConfiguration(CPP_CONFIG());
+        resolveConfiguredTasks();
+        if(@projectId)
+            ensureDirectoryTask(vcprojDir);
+            tsk = task :vcproj=>[vcprojDir], &VCProjBuildAction_;
+            tsk.config = self;
+            export(:vcproj);
+
+            tsk = task :vcprojclean, &VCProjCleanAction_;
+            tsk.config = self;
+            export(:vcprojclean);
+        end
+	end
 
 	def resolveConfiguredTasks()
 
@@ -428,56 +451,6 @@ class CppProject < Rakish::Project
 
 	end
 
-	@@vcprojAction_ = lambda do |t|
-        require "#{Rakish::MAKEDIR}/VcprojBuilder.rb"
-        VcprojBuilder.onVcprojTask(t.config);
-	end
-
-	@@vcprojCleanAction_ = lambda do |t|
-        require "#{Rakish::MAKEDIR}/VcprojBuilder.rb"
-        VcprojBuilder.onVcprojCleanTask(t.config);
-	end
-
-	# called after initializers on all projects and before rake
-	# starts executing tasks
-
-	def preBuild()
-        super;
-		cd @projectDir, :verbose=>verbose? do		
-            ns = Rake.application.in_namespace(@myNamespace) do
-				puts("pre building #{@myNamespace}");
-				@buildConfig = resolveConfiguration(CPP_CONFIG());
-				resolveConfiguredTasks();
-				if(@projectId)
-                    ensureDirectoryTask(vcprojDir);
-					tsk = task :vcproj=>[vcprojDir], &@@vcprojAction_;
-					tsk.config = self;
-					export(:vcproj);
-
-                    tsk = task :vcprojclean, &@@vcprojCleanAction_;
-					tsk.config = self;
-					export(:vcprojclean);
-                end
-            end # ns
-        end # cd
-	end
-
-	@@linkIncludeAction_ = lambda do |t|
-		config = t.config;
-		# if(config.verbose?)
-			puts "generating #{t.name} from #{t.source}"
-		# end
-
-		destfile = t.name;
-		srcpath = config.getRelativePath(t.source,File.dirname(t.name));
-		fname = File.basename(t.name);
-		File.open(destfile,'w') do |file|
-			file.puts("/* #{fname} - generated file - do not alter */");
-			file.puts("#include \"#{srcpath}\"");
-		end
-	end
-
-
 	# add tasks to ':includes' to place links to or copy source files to
 	# the specified 'stub' directory.
 	#
@@ -497,7 +470,7 @@ class CppProject < Rakish::Project
 		end
 		destdir = File.join(INCDIR(),destdir || '');
 		ensureDirectoryTask(destdir);
-		flist = createCopyTasks(destdir,files,:config => self,&@@linkIncludeAction_)
+		flist = createCopyTasks(destdir,files,:config => self,&LinkIncludeAction_)
 		task :includes => flist
 		task :cleanincludes do |t|
 			deleteFiles(flist)
@@ -511,7 +484,7 @@ class CppProject < Rakish::Project
         @localIncludeDirs_ << idir;
     end
 
-	# get all include files for generated projects		
+	# get all include files for generated projects
 	def getIncludeFiles()
 		unless @allIncludeFiles_;
 			files = FileSet.new();
@@ -537,7 +510,7 @@ class CppProject < Rakish::Project
 
 	def setupCppConfig(args={}, &b)
 		@targetType = args[:targetType];
-		@cppConfigurator_ = b;	
+		@cppConfigurator_ = b;
 	end
 
 	class TargetConfig < BuildConfig
@@ -565,7 +538,7 @@ class CppProject < Rakish::Project
 
 		def addLibs(*l)
 			l.flatten.each do |lib|
-				lib = File.expand_path(lib) if(lib =~ /\.\//); 
+				lib = File.expand_path(lib) if(lib =~ /\.\//);
 				@libs << lib
 			end
 		end
@@ -605,10 +578,10 @@ class CppProject < Rakish::Project
 
 	# for a specifc named configuraton, resolves the configration and loads it with the
 	# the project's specified values.
-	 
+
 	def resolveConfiguration(config)
-		
-		if(ret = (@resolvedConfigs||={})[config]) 
+
+		if(ret = (@resolvedConfigs||={})[config])
 			return ret;
 		end
 
@@ -618,8 +591,33 @@ class CppProject < Rakish::Project
 		if(defined? @cppConfigurator_)
 			@cppConfigurator_.call(ret);
 		end
-		
+
 		ret
+	end
+
+end
+
+
+class CppProject < Rakish::Project
+    include CppProjectModule
+
+	# Create a new project
+	#
+	# <b>named args:</b>
+	#
+	#   :name        => name of this project, defaults to parent directory name
+	#   :package     => package name for this project defaults to nothing
+	#   :config      => explicit parent configuration, defaults to the GlobalConfig
+	#   :dependsUpon => array of project directories or specific rakefile paths this project
+	#                   depends upon
+	#   :id          => uuid to assign to project in "uuid string format"
+	#                    '2CD0548E-6945-4b77-83B9-D0993009CD75'
+	#
+	# &block is always yielded to in the directory of the projects file, and the
+	# Rake namespace of the new project, and called in this instance's context
+
+	def initialize(args={},&block)
+		super(args,&block);
 	end
 
 end # CppProject
@@ -629,6 +627,7 @@ end # Rakish
 module RakishProjects
     # alias for Rakish::Project
     CppProject=Rakish::CppProject;
+    CppProjectModule=Rakish::CppProjectModule;
 end
 
 #################################################

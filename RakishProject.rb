@@ -206,11 +206,6 @@ class Project < BuildConfig
 		@OBJDIR||="#{BUILDDIR()}/obj/#{moduleName()}";
 	end
 
-	# configuration specific intermediate output directory
-	def OBJPATH
-		@OBJPATH||="#{OBJDIR()}/CPP_CONFIG}";
-	end
-
 	def OUTPUT_SUFFIX
 		@OUTPUT_SUFFIX||=CPP_CONFIG();
 	end
@@ -299,20 +294,22 @@ class Project < BuildConfig
 		@myName 	= name;
 		@myPackage 	= package;
 
-        # initialize properties from the parent and initialize included modules.
-		super(parent,args) {}
-
 		cd @projectDir, :verbose=>verbose? do
 
 			# load all subprojects this is dependent on relative to this project's directory
 			@dependencies = (fileDependencies ? @build.loadProjects(fileDependencies) : []);
 
-			# register after the others are loaded for proper dependency initialization order
-			@build.registerProject(self);
+            # register after the others are loaded for proper dependency initialization order
+            @build.registerProject(self);
 
 			# call instance initializer block inside local namespace and project's directory.
 			# and in the directory the defining file is contained in.
 			ns = Rake.application.in_namespace(@myNamespace) do
+
+                # initialize properties from the parent and initialize included modules.
+                super(parent,args) {}
+
+
 				@myNamespace = "#{Rake.application.current_scope.join(':')}"
 		        initProject(args);
 				instance_eval(&block) if block;
@@ -358,27 +355,20 @@ class Project < BuildConfig
 	# called after initializers on all projects and before rake
 	# starts executing tasks
 	def preBuild
-
 		cd @projectDir, :verbose=>verbose? do
-
 			tname = "#{@myNamespace}:preBuild"
-
 			ns = Rake.application.in_namespace(@myNamespace) do
-
-				# optional pre build task
-				doPreBuild = Rake.application.lookup(tname);
-				if(doPreBuild)
-
-					# @myNamespace = "#{Rake.application.current_scope.join(':')}"
-					# instance_eval(&block)
-
-				end
-			end
+				log.info("pre building #{@myNamespace}");
+                # optional pre build task
+                doPreBuild = Rake.application.lookup(tname);
+                doPreBuild.invoke if doPreBuild;
+	            log.info("pre build done");
+            end
 		end
 	end
 
 	def showScope(here='') # :nodoc:
-		log.info("#{here}  #{@myNamespace} ns = :#{Rake.application.current_scope.join(':')}");
+		log.info("#{here}  #{@myNamespace} ns = :#{currentNamespace}");
 	end
 
 end
