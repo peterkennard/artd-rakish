@@ -138,7 +138,6 @@ class GlobalConfig < BuildConfig
 
 		enableNewFields() do |cfg|
 
-log.debug("CPP_CONFIG = #{CPP_CONFIG()}");
 			enableNewFields(&b);
 
 			enableNewFields(&@initGlobalPaths) if @initGlobalPaths;
