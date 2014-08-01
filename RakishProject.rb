@@ -201,7 +201,7 @@ class Project < BuildConfig
 	# list of projects specified that this is dependent on ( not recursive )
 	attr_reader :dependencies
 
-	# output directory common to all configurations
+	# output directory for this module common to all configurations
 	def OBJDIR
 		@OBJDIR||="#{BUILDDIR()}/obj/#{moduleName()}";
 	end
@@ -213,6 +213,15 @@ class Project < BuildConfig
 	def project
 		self
 	end
+
+    def addProjectDependencies(*args)
+        projs = @build.loadProjects(*args);
+        if(@dependencies)
+            @dependencies = @dependencies + (projs - @dependencies);
+        else
+            @dependencies = projs;
+        end
+    end
 
 	# add file or files to be deleted in the :clean task
 	def addCleanFiles(*args)
@@ -273,7 +282,7 @@ class Project < BuildConfig
 		#		break
 		# end
 
-		fileDependencies = args[:dependsUpon]
+		fileDependencies = args[:dependsUpon];
 
 		parent = args[:config]
 		parent ||= GlobalConfig.instance
@@ -296,24 +305,23 @@ class Project < BuildConfig
 
 		cd @projectDir, :verbose=>verbose? do
 
-			# load all subprojects this is dependent on relative to this project's directory
+			# load all projects this is dependent on relative to this project's directory
 			@dependencies = (fileDependencies ? @build.loadProjects(fileDependencies) : []);
-
-            # register after the others are loaded for proper dependency initialization order
-            @build.registerProject(self);
 
 			# call instance initializer block inside local namespace and project's directory.
 			# and in the directory the defining file is contained in.
 			ns = Rake.application.in_namespace(@myNamespace) do
 
-                # initialize properties from the parent and initialize included modules.
+                # initialize properties from the parent configuration and initialize included modules.
                 super(parent,args) {}
-
 
 				@myNamespace = "#{Rake.application.current_scope.join(':')}"
 		        initProject(args);
 				instance_eval(&block) if block;
 			end
+
+            # register after the initialization has loaded all the other dependencies for proper dependency initialization order
+            @build.registerProject(self);
 		end
 	end
 
