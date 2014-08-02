@@ -3,6 +3,12 @@ require "#{myDir}/Rakish.rb"
 
 module Rakish
 
+class InvalidConfigError < Exception
+	def initialize(cfg, msg)
+		super("Invalid Configuration \"#{cfg}\": #{msg}.");
+	end
+end
+
 module BuildConfigMod
 	include PropertyBagMod
 	include Rake::DSL
@@ -88,6 +94,11 @@ end
 
 class BuildConfig
 	include Util
+
+    # this may need to be changed as rake evolves
+    def self.task(*args,&block)
+        Rake::Task.define_task(*args, &block)
+    end
 
     def initialize(pnt=nil,opts=nil)
         self.class.initializeIncluded(self,pnt,opts);

@@ -6,7 +6,7 @@ require "#{myPath}/BuildConfig.rb"
 
 module Rakish
 
-class Build 
+class Build
 	include Rakish::Util
 	
 	def initialize
@@ -117,11 +117,6 @@ end
 
 class Project < BuildConfig
 	include Rakish::Util
-
-	# this may need to be changed as rake evolves
-	def self.task(*args,&block)
-		Rake::Task.define_task(*args, &block)
-	end
 
 	# initialize "static" class variables
 

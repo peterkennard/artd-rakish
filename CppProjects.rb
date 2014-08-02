@@ -4,13 +4,6 @@ require "#{myPath}/RakishProject.rb"
 module Rakish
 
 
-class InvalidConfigError < Exception
-	def initialize(cfg, msg)
-		super("Invalid Configuration \"#{cfg}\": #{msg}.");
-	end
-end
-
-
 module CTools
 	include Rakish::Logger
 	include Rakish::Util
@@ -589,7 +582,7 @@ module CppProjectModule
 
 end
 
-class GlobalConfig
+class BuildConfig
    # ensure added global project task dependencies
     task :autogen 		=> [ :cleandepends, :includes, :vcproj ];
     task :cleanautogen 	=> [ :cleanincludes, :cleandepends, :vcprojclean ];
