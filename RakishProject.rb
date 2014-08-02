@@ -426,11 +426,8 @@ Rakish.build
 
 end # Rakish
 
-module RakishProjects
-    Project=Rakish::Project;
-end
 
-# global  alias for Rakish::Project.new()
+# global alias for Rakish::NewProject
 def RakishProject(args={},&block)
 	Rakish::NewProject(args,&block)
 end

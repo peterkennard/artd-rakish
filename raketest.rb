@@ -127,7 +127,7 @@ end
 
 end
 
-module RakishProjects
+module Rakish
 
 module BooBoo
 
@@ -164,7 +164,7 @@ Rakish::TestProject.new( :name=>'project0'
 	log.debug("test const is #{c.TEST_CONST}");
 end
 
-config = RakishProject(:name=>'project1', :extends=>Rakish::TestProject, :includes=>[BaDaBing,BaDaBoom,BaDaBing,BooBoo]) do |c|
+config = RakishProject(:name=>'project1', :extends=>TestProject, :includes=>[BaDaBing,BaDaBoom,BaDaBing,BooBoo]) do |c|
 
 
 

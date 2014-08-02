@@ -141,10 +141,3 @@ class JavaProject < Project
 end
 
 end # Rakish
-
-module RakishProjects
-    JavaCompileModule=Rakish::JavaProjectModule; # deprecated
-    JavaProjectModule=Rakish::JavaProjectModule;
-    JavaProject=Rakish::JavaProject;
-end
-
