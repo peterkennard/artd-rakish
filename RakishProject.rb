@@ -384,18 +384,21 @@ end
 
 # create a new Rakish::Project of the base type in
 # in :extends including the modules in :includes
+# find an exiting one if there is one.
+# maybe its senseless optimization but we want a freer dynamic project
+# declaration system without having to explicitly create new classes with
+# explicit names everywhere. I did learn something about Ruby however :)
 
-def self.NewProject(opts={}, &b)
+def self.GetProjectClass(opts={})
 
-    # get list of modules to include
-    # and the base project type to extend the class from
+    # get the base project type to extend the class from
+    # and get list of explicit modules to include
     # eliminate duplicate modules, and sort the list.
 
     extends = opts[:extends]||Project;
-    # if no inclusions just make a new one
-    unless(included=opts[:includes])
-        return(extends.new(opts,&b))
-    end
+
+    # if no explicit inclusions just return the class
+    return(extends) unless(included=opts[:includes]);
 
     if included.length > 1
         included = Set.new(included).to_a();
@@ -403,7 +406,7 @@ def self.NewProject(opts={}, &b)
             a.to_s <=> b.to_s
         end
     end
-    key=[extends,included]
+    key=[extends,included] # key is explicit definition of class
 
     # if we already have created a class for the specific included set use it
     unless projClass = @@projectClassesByIncluded_[key]
@@ -416,9 +419,11 @@ def self.NewProject(opts={}, &b)
         end
         @@projectClassesByIncluded_[key] = projClass;
     end
-    # create new instance and pass initializer block to it.
-    ret = projClass.new(opts,&b);
-    ret;
+    projClass;
+end
+
+def self.CreateNewProject(args={},&b)
+    GetProjectClass(args).new(args,&b);
 end
 
 # initialize the build application instance
@@ -427,8 +432,8 @@ Rakish.build
 end # Rakish
 
 
-# global alias for Rakish::NewProject
+# global project declaration alias for Rakish::CreateNewProject
 def RakishProject(args={},&block)
-	Rakish::NewProject(args,&block)
+	Rakish::CreateNewProject(args,&block)
 end
 

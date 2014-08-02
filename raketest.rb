@@ -181,10 +181,16 @@ config2 = RakishProject(:name=>'project2', :config=>config, :includes=>[BaDaBoom
 	log.debug("test const is #{c.TEST_CONST}");
 end
 
+NewClass = Class.new
+
+log.debug("new name is #{NewClass.new().class.name()}");
 
 task :artdRakishTest => [] do |t|
     log.debug("test complete");
 end
+
+
+
 
 end
 

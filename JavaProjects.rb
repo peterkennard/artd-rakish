@@ -131,13 +131,6 @@ public
 end
 
 
-class JavaProject < Project
-   include JavaProjectModule
-
-    def initialize(args={},&block)
-        super(args,&block);
-    end
-
-end
+JavaProject = GetProjectClass( :includes=>[JavaProjectModule] );
 
 end # Rakish

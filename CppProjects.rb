@@ -589,10 +589,7 @@ module CppProjectModule
 
 end
 
-
-class CppProject < ::Rakish::Project
-    include CppProjectModule
-
+class GlobalConfig
    # ensure added global project task dependencies
     task :autogen 		=> [ :cleandepends, :includes, :vcproj ];
     task :cleanautogen 	=> [ :cleanincludes, :cleandepends, :vcprojclean ];
@@ -600,35 +597,27 @@ class CppProject < ::Rakish::Project
     task :depends		=> [ :includes ];
     task :build 		=> [ :compile ];
     task :rebuild 		=> [ :build, :autogen, :compile ];
+end
 
-	# Create a new project
-	#
-	# <b>named args:</b>
-	#
-	#   :name        => name of this project, defaults to parent directory name
-	#   :package     => package name for this project defaults to nothing
-	#   :config      => explicit parent configuration, defaults to the GlobalConfig
-	#   :dependsUpon => array of project directories or specific rakefile paths this project
-	#                   depends upon
-	#   :id          => uuid to assign to project in "uuid string format"
-	#                    '2CD0548E-6945-4b77-83B9-D0993009CD75'
-	#
-	# &block is always yielded to in the directory of the projects file, and the
-	# Rake namespace of the new project, and called in this instance's context
+# Create a new project
+#
+# <b>named args:</b>
+#
+#   :name        => name of this project, defaults to parent directory name
+#   :package     => package name for this project defaults to nothing
+#   :config      => explicit parent configuration, defaults to the GlobalConfig
+#   :dependsUpon => array of project directories or specific rakefile paths this project
+#                   depends upon
+#   :id          => uuid to assign to project in "uuid string format"
+#                    '2CD0548E-6945-4b77-83B9-D0993009CD75'
+#
+# &block is always yielded to in the directory of the projects file, and the
+# Rake namespace of the new project, and called in this instance's context
 
-	def initialize(args={},&block)
-		super(args,&block);
-	end
-
-end # CppProject
+CppProject = GetProjectClass( :includes=>[CppProjectModule] )
 
 end # Rakish
 
-module RakishProjects
-    # alias for Rakish::Project
-    CppProject=Rakish::CppProject;
-    CppProjectModule=Rakish::CppProjectModule;
-end
 
 #################################################
 
