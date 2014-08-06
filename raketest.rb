@@ -13,10 +13,15 @@ include Rakish::Util
 module Rakish
 
     puts "JAVA_HOME is #{ENV['JAVA_HOME']}"
-    ideaProject = ENV['IDEA_PROJECT'];
 
-    if(ideaProject)
+    if(ENV['IDEA_PROJECT'])
+
+    module IdeaConfigModule
+
+        ideaProject = ENV['IDEA_PROJECT'];
         ideaProject = File.expand_path(ideaProject);
+        projectRoot = File.dirname(ideaProject);
+
         puts "IDEA_PROJECT is #{ideaProject}"
         xmlPath = File.expand_path("#{ideaProject}/misc.xml");
 
@@ -25,8 +30,9 @@ module Rakish
 
       @@outPath = [ 'project', 'component', 'output' ];
 
-      def initialize()
+      def initialize(rootDir)
         @tagPath=[];
+        @rootDir=rootDir;
         @skipping=nil;
       end
 
@@ -34,7 +40,9 @@ module Rakish
       def tag_start(name, attributes)
         @tagPath.push(name);
         if(@tagPath === @@outPath)
-            log.debug("tag path is #{@tagPath.join('\\')}");
+            url = attributes['url'];
+            url.sub!('file://$PROJECT_DIR$',@rootDir);
+            log.debug("tag path is #{@tagPath.join('/')} #{url}");
         end
       end
       def tag_end(name)
@@ -42,11 +50,13 @@ module Rakish
       end
     end
 
-    listener = XMLListener.new
+    listener = XMLListener.new(projectRoot);
+
     parser = REXML::Parsers::StreamParser.new(File.new(xmlPath), listener)
     parser.parse
 
     end
+    end  # IdeaConfigModule
 
     module Mod1
         addInitBlock do
