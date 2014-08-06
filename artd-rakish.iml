@@ -5,8 +5,6 @@
     <content url="file://$MODULE_DIR$" />
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="junit" level="project" />
-    <orderEntry type="library" name="gluegen-rt" level="project" />
   </component>
 </module>
 

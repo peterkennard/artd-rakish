@@ -9,7 +9,8 @@ include Rakish::Util
 
 module Rakish
 
-    puts "FOO is #{ENV['FOO']}"
+    puts "JAVA_HOME is #{ENV['JAVA_HOME']}"
+    puts "IDEA_PROJECT is #{ENV['IDEA_PROJECT']}"
 
     module Mod1
         addInitBlock do
