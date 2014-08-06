@@ -4,13 +4,49 @@ unless defined? MAKEDIR
 end
 require "#{MAKEDIR}/CppProjects.rb";
 require "#{MAKEDIR}/JavaProjects.rb";
+require 'rexml/document';
+require 'rexml/streamlistener'
+
 
 include Rakish::Util
 
 module Rakish
 
     puts "JAVA_HOME is #{ENV['JAVA_HOME']}"
-    puts "IDEA_PROJECT is #{ENV['IDEA_PROJECT']}"
+    ideaProject = ENV['IDEA_PROJECT'];
+
+    if(ideaProject)
+        ideaProject = File.expand_path(ideaProject);
+        puts "IDEA_PROJECT is #{ideaProject}"
+        xmlPath = File.expand_path("#{ideaProject}/misc.xml");
+
+    class XMLListener
+      include REXML::StreamListener
+
+      @@outPath = [ 'project', 'component', 'output' ];
+
+      def initialize()
+        @tagPath=[];
+        @skipping=nil;
+      end
+
+
+      def tag_start(name, attributes)
+        @tagPath.push(name);
+        if(@tagPath === @@outPath)
+            log.debug("tag path is #{@tagPath.join('\\')}");
+        end
+      end
+      def tag_end(name)
+        @tagPath.pop;
+      end
+    end
+
+    listener = XMLListener.new
+    parser = REXML::Parsers::StreamParser.new(File.new(xmlPath), listener)
+    parser.parse
+
+    end
 
     module Mod1
         addInitBlock do
