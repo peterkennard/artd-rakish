@@ -491,7 +491,7 @@ module Rakish
 		def ensureDirectoryTask(dir)
 			unless(dir) 
 				loc = getCallingLocation();
-				puts("warning: #{loc} ensuring NIL directory");
+				log.debug("warning: #{loc} ensuring NIL directory");
 			else
 				directory(dir) unless Rake.application.directory_task_defined?(dir)
 			end
@@ -583,7 +583,7 @@ module Rakish
 					end
 				end
 			rescue => e
-				puts("error precessing: #{ffrom} #{e}")			
+				log.error("error precessing: #{ffrom} #{e}")
 				raise e
 			end
 		end
