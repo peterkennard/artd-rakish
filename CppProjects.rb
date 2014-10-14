@@ -349,6 +349,7 @@ module CppProjectModule
         t = task :preBuild do
             doCppPreBuild
         end
+        @cppCompileTaskInitialized = false;
     end
 
 	# configuration specific intermediate output directory
@@ -407,8 +408,9 @@ module CppProjectModule
 
         objs = tools.createCompileTasks(getSourceFiles(),cfg);
 
-		unless tsk = Rake.application.lookup("#{@myNamespace}:compile")
-			tsk = tools.initCompileTask(self)
+		unless tsk = Rake.application.lookup("#{@myNamespace}:compile") && @cppCompileTaskInitialized
+			cppCompileTaskInitialized = true;
+			tsk = tools.initCompileTask(self);
 		end
 		tsk.enhance(objs)
 
@@ -431,7 +433,9 @@ module CppProjectModule
 		if(tsk)
 			ensureDirectoryTask(cfg.LIBDIR);
 			ensureDirectoryTask(cfg.BINDIR);
+
 			task :build => [ :compile, cfg.LIBDIR, cfg.BINDIR, tsk ].flatten
+
 		end
 
 	end
@@ -576,7 +580,6 @@ module CppProjectModule
 		if(defined? @cppConfigurator_)
 			@cppConfigurator_.call(ret);
 		end
-
 		ret
 	end
 
