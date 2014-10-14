@@ -307,8 +307,8 @@ module CppProjectConfig
 
 	def addSourceFiles(*args)
 		opts = (Hash === args.last) ? args.pop : {}
-		@sourceFiles ||= FileSet.new;
-		@sourceFiles.include(args);
+		@cppSourceFiles ||= FileSet.new;
+		@cppSourceFiles.include(args);
 	end
 
 	#returns include path "set" with parent's entries after this ones entries
@@ -387,7 +387,7 @@ module CppProjectModule
 
 	def doCppPreBuild()
         addIncludePaths( [ OBJPATH(),INCDIR() ] );
-        @buildConfig = resolveConfiguration(CPP_CONFIG());
+        @cppBuildConfig = resolveConfiguration(CPP_CONFIG());
         resolveConfiguredTasks();
         if(@projectId)
             ensureDirectoryTask(vcprojDir);
@@ -403,7 +403,7 @@ module CppProjectModule
 
 	def resolveConfiguredTasks()
 
-		cfg = @buildConfig
+		cfg = @cppBuildConfig
 		tools = cfg.ctools;
 
         objs = tools.createCompileTasks(getSourceFiles(),cfg);
@@ -469,28 +469,28 @@ module CppProjectModule
 
     # asd a project local include directory so files will be listed
     def addLocalIncludeDir(idir)
-        @localIncludeDirs_ ||= [];
-        @localIncludeDirs_ << idir;
+        @cppLocalIncludeDirs_ ||= [];
+        @cppLocalIncludeDirs_ << idir;
     end
 
 	# get all include files for generated projects
 	def getIncludeFiles()
 		unless @allIncludeFiles_;
 			files = FileSet.new();
-            (@localIncludeDirs_||=['.']).each do |dir|
+            (@cppLocalIncludeDirs_||=['.']).each do |dir|
                 dir = "#{projectDir}/#{dir}";
                 files.include( "#{dir}/*.h");
                 files.include( "#{dir}/*.hpp");
                 files.include( "#{dir}/*.inl");
                 files.include( "#{dir}/*.i");
-			@allIncludeFiles_ = files;
+			@cppAllIncludeFiles_ = files;
 			end
 		end
-		@allIncludeFiles_
+		@cppAllIncludeFiles_
 	end
 
 	def getSourceFiles()
-		@sourceFiles||=FileSet.new
+		@cppSourceFiles||=FileSet.new
 	end
 
 
