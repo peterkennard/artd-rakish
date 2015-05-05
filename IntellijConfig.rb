@@ -2,6 +2,7 @@ myDir = File.dirname(__FILE__);
 unless defined? MAKEDIR
     MAKEDIR=File.expand_path("#{myDir}");
 end
+
 require "#{MAKEDIR}/BuildConfig.rb";
 require 'rexml/document';
 require 'rexml/streamlistener'
@@ -56,7 +57,6 @@ module Rakish
                 ideaProject = File.expand_path(ideaProject);
                 projectRoot = File.dirname(ideaProject);
 
-                puts "IDEA_PROJECT is #{ideaProject}"
                 xmlPath = File.expand_path("#{ideaProject}/misc.xml");
 
                 @@intellij_.enableNewFields do |cfg|
