@@ -30,7 +30,7 @@ module Rakish
                 if(@tagPath === @@outPath)
                     path = attributes['url'];
                     path = File.expand_path(path.sub('file://$PROJECT_DIR$',config.projectRoot));
-                    log.debug("outputPath is #{path}");
+                    # log.debug("outputPath is #{path}");
                     config.outputPath = path;
                 end
             end
@@ -73,7 +73,7 @@ module Rakish
         end
 
         addInitBlock do |pnt,opts|
-            log.debug("initializing intellij config");
+          #  log.debug("initializing intellij config");
             unless(defined? @@intellij_)
                 IntellijConfig.initGlobals();
             end
