@@ -1,5 +1,6 @@
 myPath = File.dirname(File.expand_path(__FILE__));
 require "#{myPath}/RakishProject.rb"
+require 'tmpdir'
 
 module Rakish
 
@@ -135,6 +136,61 @@ public
     # output directory common to all configurations
     def javaOutputClasspath
         @javaOutputClasspath||="#{BUILDDIR()}/production/#{moduleName()}";
+    end
+
+    class JarFileTask < Rake::FileTask
+
+        def jarContents
+            @contents_||=[]
+        end
+
+        def addDirectoryContents(dir)
+            jarContents << dir;
+        end
+
+        def addJarContents(jar)
+            jarContents << jar;
+        end
+    end
+
+
+    def createJarFileTask(opts={})
+        jarPath = opts[:name]||"#{BINDIR()}/#{moduleName}.jar";
+        jarPath = jarPath.pathmap("%X.jar");
+
+        tsk = JarFileTask.define_task jarPath do |t|
+            config = t.config;
+
+            cmdline = "\"#{config.java_home}/bin/jar.exe\" cMf \"#{getRelativePath(t.name)}\"";
+            hasJars = FALSE;
+
+            Dir.mktmpdir() do |dir|
+
+                t.jarContents.each do |path|
+                    if(path.end_with?('.jar'))
+                        hasJars = TRUE;
+                        FileUtils.cd dir do
+                            jarcmd = "\"#{config.java_home}/bin/jar.exe\" xf \"#{getRelativePath(path)}\"";
+                            system(jarcmd);
+                            rm_rf 'META-INF';
+                        end
+                    else
+                        cmdline += " -C \"#{getRelativePath(path)}\" .";
+                    end
+                end
+
+                if(hasJars)
+                    cmdline += " -C \"#{dir}\" .";
+                end
+
+                # cmdline << " -g -d \"#{outClasspath}\""
+
+                log.info("#{cmdline}") # if verbose?
+                system( cmdline );
+            end
+        end
+        tsk.config = self;
+        tsk
     end
 
 end
