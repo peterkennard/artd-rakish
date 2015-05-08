@@ -37,6 +37,8 @@ protected
 public
     def doCompileJava(t)
 
+        puts("***** current directory is #{File.expand_path('.')}");
+
         config = t.config;
         outClasspath = getRelativePath(config.javaOutputClasspath);
 
@@ -87,10 +89,16 @@ public
     def javacTask(deps=[])
 
         srcFiles = FileCopySet.new;
+        copyFiles = FileCopySet.new;
+
         javaSourceRoots.each do |root|
             files = FileList.new
-            files.include("#{root}/**/*");
+            files.include("#{root}/**/*.java");
             srcFiles.addFileTree(javaOutputClasspath, root, files );
+            files = FileList.new
+            files.include("#{root}/**/*");
+            files.exclude("#{root}/**/*.java");
+            copyFiles.addFileTree(javaOutputClasspath, root, files);
         end
 
         tsk = JavaCTask.define_unique_task &CompileJavaAction
@@ -108,6 +116,9 @@ public
         tsk.enhance(deps);
         tsk.enhance(tasks);
         tsk.config = self;
+
+        tasks = copyFiles.generateFileTasks();
+        tsk.enhance(tasks);
 
         task :clean do
             addCleanFiles(tasks);
