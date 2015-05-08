@@ -59,6 +59,9 @@ class Build
 		(@projectsByFile[p.projectFile]||=[]).push(p);
 	end
 
+	def projectByName(name)
+		@projectsByModule[name];
+	end
 
 	# load other project rakefiles from a project into the interpreter unless they have already been loaded
 	# selects namespace appropriately
@@ -111,6 +114,10 @@ class << self
 	# Current Build
 	def build
 	  @application ||= Rakish::Build.new
+	end
+
+	def projectByName(name)
+		@application.projectByName(name)
 	end
 end
 

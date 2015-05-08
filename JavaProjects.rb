@@ -36,6 +36,13 @@ protected
     end
 
 public
+
+    def addJavaClassPaths(*paths)
+		@javaClassPaths_||= FileSet.new;
+        @javaClassPaths_.include(paths);
+    end
+
+
     def doCompileJava(t)
 
         config = t.config;
@@ -84,7 +91,14 @@ public
     end
 
 
-public
+    def addProjectOutputClasspaths(*moduleNames)
+        names = moduleNames.flatten;
+        names.each do |name|
+            proj = Rakish.projectByName(name);
+            addJavaClassPaths(proj.javaOutputClasspath);
+        end
+    end
+
     def javacTask(deps=[])
 
         srcFiles = FileCopySet.new;
@@ -138,6 +152,8 @@ public
         @javaOutputClasspath||="#{BUILDDIR()}/production/#{moduleName()}";
     end
 
+protected
+
     class JarFileTask < Rake::FileTask
 
         def jarContents
@@ -153,6 +169,7 @@ public
         end
     end
 
+public
 
     def createJarFileTask(opts={})
         jarPath = opts[:name]||"#{BINDIR()}/#{moduleName}.jar";
