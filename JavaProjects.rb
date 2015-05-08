@@ -94,8 +94,14 @@ public
     def addProjectOutputClasspaths(*moduleNames)
         names = moduleNames.flatten;
         names.each do |name|
-            proj = Rakish.projectByName(name);
-            addJavaClassPaths(proj.javaOutputClasspath);
+            begin
+                proj = Rakish.projectByName(name);
+                addJavaClassPaths(proj.javaOutputClasspath);
+            rescue => e
+                log.error { "failure loading classpath for #{name}" }
+                log.error { e };
+                mod = nil;
+            end
         end
     end
 
