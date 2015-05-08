@@ -176,7 +176,10 @@ public
         jarPath = jarPath.pathmap("%X.jar");
 
         tsk = JarFileTask.define_task jarPath do |t|
+
             config = t.config;
+
+            FileUtils.mkdir_p(getRelativePath(t.name).pathmap('%d'));
 
             cmdline = "\"#{config.java_home}/bin/jar.exe\" cMf \"#{getRelativePath(t.name)}\"";
             hasJars = FALSE;
@@ -189,7 +192,7 @@ public
                         FileUtils.cd dir do
                             jarcmd = "\"#{config.java_home}/bin/jar.exe\" xf \"#{getRelativePath(path)}\"";
                             system(jarcmd);
-                            rm_rf 'META-INF';
+                            FileUtils.rm_rf 'META-INF';
                         end
                     else
                         cmdline += " -C \"#{getRelativePath(path)}\" .";
