@@ -37,8 +37,6 @@ protected
 public
     def doCompileJava(t)
 
-        puts("***** current directory is #{File.expand_path('.')}");
-
         config = t.config;
         outClasspath = getRelativePath(config.javaOutputClasspath);
 
