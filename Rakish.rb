@@ -20,6 +20,7 @@ module Rakish
 	module Logger
 
 		@@_logger_ = ::Logger.new(STDOUT);
+
 		def self.log
 			@@_logger_
 		end

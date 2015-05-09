@@ -23,11 +23,10 @@ module JarBuilderModule
 
     class JarBuilder < BuildConfig
 
-    protected
-        attr_reader :jarContents_
     public
+        attr_reader :jarContents_
+
         addInitBlock do |pnt,opts|
-            log.debug("initializing jar builder");
             @jarContents_ = [];
         end
 
@@ -67,64 +66,68 @@ module JarBuilderModule
             addFileTree('.',dir,*filters);
         end
 
+   	    @@jarTaskAction_ = lambda do |t|
+            cfg = t.config;
+
+            # delete old jar file and liberate space ? jar.exe when creating clears old file
+            # FileUtils.rm_f t.name;
+
+            # build a copy set for the jar file's contents from specified contents list
+            contents = FileCopySet.new;
+
+            cfg.jarContents_.each do |entry|
+                # for each entry add files to the copy set
+                contents.addFileTree(entry[:destDir],entry[:baseDir],entry[:files]);
+            end
+
+            # use persistent file for debugging
+            # dir = "d:/jartemp";
+            # rm_rf dir;
+            # mkdir_p dir;
+            # cd dir
+
+            Dir.mktmpdir do |dir|
+
+                FileUtils.cd dir do
+
+                    # log.debug("jar temp dir is #{dir}=>#{File.expand_path('.')}");
+                    contents.filesByDir do |destDir,files|
+                        FileUtils.mkdir_p destDir;
+                        files.each do |file|
+                            FileUtils.cp(file,destDir)
+                        end
+                    end
+
+                    # ensure we have a plce to put it.
+                    FileUtils.mkdir_p(t.name.pathmap('%d'));
+
+                    # note need to have this resolved somewhere for both windows and linux.
+
+                    # cvfM if verbose - also need to handle manifest creation etc.
+                    cmdline = "\"#{cfg.java_home}/bin/jar.exe\" cvfM \"#{t.name}\" .";
+                    log.debug cmdline
+                    # would be nice if the logger had a "flush" method
+                    STDOUT.flush
+                    STDERR.flush
+                    system cmdline;
+                end
+             # ruby seems to do this ok on windows and screws
+             # up if I do due to thread latency in spawning the command or something.
+             #       FileUtils.rm_rf dir;
+            end
+        end
+
         # create task for building jar file to specifications stored in builder.
         def jarTask(*args)
-            tsk = Rake::FileTask.define_task(*args) do |t|
-
-                log.debug("jar task #{t.name} invoked");
-
-                cfg = t.config;
-
-                # delete old jar file and liberate space
-          #      FileUtils.rm_f t.name;
-
-                # build a copy set for the jar file's contents
-                contents = FileCopySet.new;
-
-                cfg.jarContents_.each do |entry|
-                    # for each entry add files to the copy set
-                    contents.addFileTree(entry[:destDir],entry[:baseDir],entry[:files]);
-                end
-
-                # dir = "d:/jartemp";
-                # rm_rf dir;
-                # mkdir_p dir;
-
-                Dir.mktmpdir do |dir|
-                    cd dir do
-                        # log.debug("jar temp dir is #{dir}=>#{File.expand_path('.')}");
-
-                        contents.filesByDir do |destDir,files|
-                            mkdir_p destDir;
-                            files.each do |file|
-                                FileUtils.cp(file,destDir)
-                            end
-                        end
-
-                        # ensure we have a plce to put it.
-                        FileUtils.mkdir_p(t.name.pathmap('%d'));
-
-                        # note need to have this resolved somewhere for both windows and linux.
-                        cmdline = "\"#{cfg.java_home}/bin/jar.exe\" cvfM \"#{t.name}\" .";
-                        log.debug cmdline
-                        system cmdline;
-                    end
-                 # ruby seems to do this ok on windows and screws
-                 # up if I do due to thread latency in spawning the command or something.
-                 #       FileUtils.rm_rf dir;
-                end
-            end
+            tsk = Rake::FileTask.define_task(*args).enhance(nil,&@@jarTaskAction_);
             tsk.config = self;
-
-            log.debug("jar task defined #{tsk.name}");
             tsk
         end
 
     end
 
     def createJarBuilder
-        builder = JarBuilder.new(self); # for now we make the parent project the parent config
-        builder
+        JarBuilder.new(self); # for now we make the parent project the parent config
     end
 
 end
