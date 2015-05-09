@@ -19,23 +19,7 @@ module JavaProjectConfig
     end
 end
 
-module JavaProjectModule
-    include JavaProjectConfig
-
-protected
-
-    addInitBlock do |pnt,opts|
-        if(pnt != nil)
-            @java_home = pnt.get(:java_home);
-        end
-        @java_home ||= File.expand_path(ENV['JAVA_HOME']);
-    end
-
-    CompileJavaAction = ->(t) do
-        t.config.doCompileJava(t);
-    end
-
-public
+module JarBuilderModule
 
     class JarBuilder < BuildConfig
 
@@ -138,19 +122,37 @@ public
 
     end
 
-    def createJarFileBuilder
+    def createJarBuilder
         builder = JarBuilder.new(self); # for now we make the parent project the parent config
         builder
     end
 
+end
 
 
+module JavaProjectModule
+    include JavaProjectConfig
+    include JarBuilderModule
+
+protected
+
+    addInitBlock do |pnt,opts|
+        if(pnt != nil)
+            @java_home = pnt.get(:java_home);
+        end
+        @java_home ||= File.expand_path(ENV['JAVA_HOME']);
+    end
+
+    CompileJavaAction = ->(t) do
+        t.config.doCompileJava(t);
+    end
+
+public
 
     def addJavaClassPaths(*paths)
 		@javaClassPaths_||= FileSet.new;
         @javaClassPaths_.include(paths);
     end
-
 
     def doCompileJava(t)
 
