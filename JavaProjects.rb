@@ -37,6 +37,94 @@ protected
 
 public
 
+    class JarBuilder < BuildConfig
+
+    protected
+        attr_reader :jarContents_
+    public
+        addInitBlock do |pnt,opts|
+            log.debug("initializing jar builder");
+            @jarContents_ = [];
+        end
+
+        # jar contents has these "fields"
+        # :files   - list of file paths (can use wild cards)
+        # :baseDir - base directory of file list as "source root dir" to be truncated from resolved paths
+        # :destDir - destination folder in jar file to have truncated files paths added to in jar file.
+
+        # note not resolved until configured task is invoked
+        def addFileTree(destdir, basedir, *files)
+            entry = {};
+            entry[:destDir]=(destdir);
+            entry[:baseDir]=(File.expand_path(basedir));
+
+            filePaths = [];
+
+            files.each do |file|
+                filePaths << File.expand_path(file);
+            end
+
+            entry[:files]=filePaths;
+            @jarContents_ << entry;
+        end
+
+        # adds all directory contents to root of jar file recursively
+        # contents resolved when jar file task is invoked
+        # filters - 0 or more selects files within the directory to put in the jar
+        # with the wildcard path relative to the source directory
+        # the default filer is all files in the dir.
+        def addDirectoryContents(dir,*filters)
+            if(filters.length < 1)
+               filters=['**/*.class'];
+            end
+            filters.map! do |filter|
+                File.join(dir,filter);
+            end
+            addFileTree('.',dir,*filters);
+        end
+
+        # create task for building jar file to specifications stored in builder.
+        def jarTask(*args)
+            tsk = Rake::FileTask.define_task(*args) do |t|
+
+                log.debug("jar task #{t.name} invoked");
+
+                cfg = t.config;
+
+                FileUtils.mkdir_p(getRelativePath(t.name).pathmap('%d'));
+                jarPath = getRelativePath(t.name);
+
+                # note need to have this resolved somewhere for both windows and linux.
+                cmdline = "\"#{cfg.java_home}/bin/jar.exe\" cMf \"#{jarPath}\"";
+
+                # delete old jar file
+                FileUtils.rm_f jarPath;
+
+                # build a copy set for the jar file's contents
+                contents = FileCopySet.new;
+
+                cfg.jarContents_.each do |entry|
+                    # for each entry add files to the copy set
+                    contents.addFileTree(entry[:destDir],entry[:baseDir],entry[:files]);
+                end
+
+            end
+            tsk.config = self;
+
+            log.debug("jar task defined #{tsk.name}");
+            tsk
+        end
+
+    end
+
+    def createJarFileBuilder
+        builder = JarBuilder.new(self); # for now we make the parent project the parent config
+        builder
+    end
+
+
+
+
     def addJavaClassPaths(*paths)
 		@javaClassPaths_||= FileSet.new;
         @javaClassPaths_.include(paths);
