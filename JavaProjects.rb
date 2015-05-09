@@ -73,7 +73,7 @@ public
         # filters - 0 or more selects files within the directory to put in the jar
         # with the wildcard path relative to the source directory
         # the default filer is all files in the dir.
-        def addDirectoryContents(dir,*filters)
+        def addDirectory(dir,*filters)
             if(filters.length < 1)
                filters=['**/*.class'];
             end
@@ -91,14 +91,8 @@ public
 
                 cfg = t.config;
 
-                FileUtils.mkdir_p(getRelativePath(t.name).pathmap('%d'));
-                jarPath = getRelativePath(t.name);
-
-                # note need to have this resolved somewhere for both windows and linux.
-                cmdline = "\"#{cfg.java_home}/bin/jar.exe\" cMf \"#{jarPath}\"";
-
-                # delete old jar file
-                FileUtils.rm_f jarPath;
+                # delete old jar file and liberate space
+          #      FileUtils.rm_f t.name;
 
                 # build a copy set for the jar file's contents
                 contents = FileCopySet.new;
@@ -108,6 +102,33 @@ public
                     contents.addFileTree(entry[:destDir],entry[:baseDir],entry[:files]);
                 end
 
+                # dir = "d:/jartemp";
+                # rm_rf dir;
+                # mkdir_p dir;
+
+                Dir.mktmpdir do |dir|
+                    cd dir do
+                        # log.debug("jar temp dir is #{dir}=>#{File.expand_path('.')}");
+
+                        contents.filesByDir do |destDir,files|
+                            mkdir_p destDir;
+                            files.each do |file|
+                                FileUtils.cp(file,destDir)
+                            end
+                        end
+
+                        # ensure we have a plce to put it.
+                        FileUtils.mkdir_p(t.name.pathmap('%d'));
+
+                        # note need to have this resolved somewhere for both windows and linux.
+                        cmdline = "\"#{cfg.java_home}/bin/jar.exe\" cvfM \"#{t.name}\" .";
+                        log.debug cmdline
+                        system cmdline;
+                    end
+                 # ruby seems to do this ok on windows and screws
+                 # up if I do due to thread latency in spawning the command or something.
+                 #       FileUtils.rm_rf dir;
+                end
             end
             tsk.config = self;
 
