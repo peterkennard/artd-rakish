@@ -104,7 +104,7 @@ module JarBuilderModule
                     # note need to have this resolved somewhere for both windows and linux.
 
                     # cvfM if verbose - also need to handle manifest creation etc.
-                    cmdline = "\"#{cfg.java_home}/bin/jar.exe\" cvfM \"#{t.name}\" .";
+                    cmdline = "\"#{cfg.java_home}/bin/jar.exe\" cfM \"#{t.name}\" .";
                     log.debug cmdline
                     # would be nice if the logger had a "flush" method
                     STDOUT.flush
