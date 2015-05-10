@@ -66,19 +66,31 @@ module JarBuilderModule
             addFileTree('.',dir,*filters);
         end
 
+
+        # extracts contents from the given jarPath file applies filters
+        # and adds the extracted files/folders to the root of the
+        # new jar file recursively, the extraction is done when the
+        # jarTask is invoked.
+        # filters - 0 or more selects files within the directory to put in the jar
+        # with the wildcard path relative to the root of the source jar file
+        # the default filter is all files in source jar.
+        def addJarContents(jarPath,*filters)
+
+            if(filters.length < 1)
+               filters=['*'];
+            end
+            entry = {};
+            entry[:destDir]=('.');
+            entry[:baseDir]=("#{File.expand_path(jarPath)}###");
+            entry[:files]=filters;
+            @jarContents_ << entry;
+        end
+
    	    @@jarTaskAction_ = lambda do |t|
             cfg = t.config;
 
             # delete old jar file and liberate space ? jar.exe when creating clears old file
             # FileUtils.rm_f t.name;
-
-            # build a copy set for the jar file's contents from specified contents list
-            contents = FileCopySet.new;
-
-            cfg.jarContents_.each do |entry|
-                # for each entry add files to the copy set
-                contents.addFileTree(entry[:destDir],entry[:baseDir],entry[:files]);
-            end
 
             # use persistent file for debugging
             # dir = "d:/jartemp";
@@ -90,18 +102,52 @@ module JarBuilderModule
 
                 FileUtils.cd dir do
 
-                    # log.debug("jar temp dir is #{dir}=>#{File.expand_path('.')}");
-                    contents.filesByDir do |destDir,files|
-                        FileUtils.mkdir_p destDir;
-                        files.each do |file|
-                            FileUtils.cp(file,destDir)
+                    # build a copy set for the jar file's contents from specified contents list
+                    contents = FileCopySet.new;
+
+                    cfg.jarContents_.each do |entry|
+
+                        # copy or extract all the files for the jar to a temporary folder
+                        # then create a jar containing the contents
+                        # and delete the directory
+
+                        baseDir = entry[:baseDir];
+
+                        spl = baseDir.split('###',2)
+                        if(spl.length > 1)
+
+                            # from unzip man page
+                            #         "*.c" matches "foo.c" but not "mydir/foo.c"
+                            #           "**.c" matches both "foo.c" and "mydir/foo.c"
+                            #           "*/*.c" matches "bar/foo.c" but not "baz/bar/foo.c"
+                            #           "??*/*" matches "ab/foo" and "abc/foo"
+                            #                   but not "a/foo" or "a/b/foo"
+
+                            cmd = "unzip \"#{spl[0]}\" \"#{entry[:files].join("\" \"")}\" -x \"META-INF/*\" -d \"#{dir}\"";
+
+                            # would be nice if the logger had a "flush" method
+                            STDOUT.flush
+                            STDERR.flush
+                            system cmd
+
+                        else
+                            # for each entry add files to a copy set and copy them
+                            contents.addFileTree(entry[:destDir],baseDir,entry[:files]);
+                            # log.debug("jar temp dir is #{dir}=>#{File.expand_path('.')}");
+                            contents.filesByDir do |destDir,files|
+                                FileUtils.mkdir_p destDir;
+                                files.each do |file|
+                                    FileUtils.cp(file,destDir)
+                                end
+                            end
+                            contents = FileCopySet.new; # a new set for each entry at present.
                         end
                     end
 
-                    # ensure we have a plce to put it.
+                    # ensure we have a place to put the new jar file it.
                     FileUtils.mkdir_p(t.name.pathmap('%d'));
 
-                    # note need to have this resolved somewhere for both windows and linux.
+                    # note need to have the executable resolved somewhere for both windows and linux.
 
                     # cvfM if verbose - also need to handle manifest creation etc.
                     cmdline = "\"#{cfg.java_home}/bin/jar.exe\" cfM \"#{t.name}\" .";
