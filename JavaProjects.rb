@@ -86,7 +86,7 @@ module JarBuilderModule
             @jarContents_ << entry;
         end
 
-   	    @@jarTaskAction_ = lambda do |t|
+   	    def doJarTaskAction(t)
             cfg = t.config;
 
             # delete old jar file and liberate space ? jar when creating clears old file
@@ -123,7 +123,7 @@ module JarBuilderModule
                             #           "??*/*" matches "ab/foo" and "abc/foo"
                             #                   but not "a/foo" or "a/b/foo"
 
-                            cmd = "unzip \"#{spl[0]}\" \"#{entry[:files].join("\" \"")}\" -x \"META-INF/*\" -d \"#{dir}\"";
+                            cmd = "unzip -q \"#{spl[0]}\" \"#{entry[:files].join("\" \"")}\" -x \"META-INF/*\" -d \"#{dir}\"";
 
                             # would be nice if the logger had a "flush" method
                             STDOUT.flush
@@ -149,7 +149,7 @@ module JarBuilderModule
 
                     # cvfM if verbose - also need to handle manifest creation etc.
                     cmdline = "\"#{cfg.java_home}/bin/jar\" cfM \"#{t.name}\" .";
-                    log.debug cmdline
+                    # log.debug cmdline
                     # would be nice if the logger had a "flush" method
                     STDOUT.flush
                     STDERR.flush
@@ -159,6 +159,10 @@ module JarBuilderModule
              # up if I do due to thread latency in spawning the command or something.
              #       FileUtils.rm_rf dir;
             end
+        end
+
+        @@jarTaskAction_ = ->(t) do
+            t.config.doJarTaskAction(t);
         end
 
         # create task for building jar file to specifications stored in builder.
