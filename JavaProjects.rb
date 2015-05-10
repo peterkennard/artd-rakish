@@ -89,7 +89,7 @@ module JarBuilderModule
    	    @@jarTaskAction_ = lambda do |t|
             cfg = t.config;
 
-            # delete old jar file and liberate space ? jar.exe when creating clears old file
+            # delete old jar file and liberate space ? jar when creating clears old file
             # FileUtils.rm_f t.name;
 
             # use persistent file for debugging
@@ -147,10 +147,8 @@ module JarBuilderModule
                     # ensure we have a place to put the new jar file it.
                     FileUtils.mkdir_p(t.name.pathmap('%d'));
 
-                    # note need to have the executable resolved somewhere for both windows and linux.
-
                     # cvfM if verbose - also need to handle manifest creation etc.
-                    cmdline = "\"#{cfg.java_home}/bin/jar.exe\" cfM \"#{t.name}\" .";
+                    cmdline = "\"#{cfg.java_home}/bin/jar\" cfM \"#{t.name}\" .";
                     log.debug cmdline
                     # would be nice if the logger had a "flush" method
                     STDOUT.flush
@@ -208,7 +206,7 @@ public
         config = t.config;
         outClasspath = getRelativePath(config.javaOutputClasspath);
 
-        cmdline = "\"#{config.java_home}/bin/javac.exe\"";
+        cmdline = "\"#{config.java_home}/bin/javac\"";
         cmdline << " -g -d \"#{outClasspath}\""
 
         paths = config.javaClassPaths
@@ -343,7 +341,7 @@ public
 
             FileUtils.mkdir_p(getRelativePath(t.name).pathmap('%d'));
 
-            cmdline = "\"#{config.java_home}/bin/jar.exe\" cMf \"#{getRelativePath(t.name)}\"";
+            cmdline = "\"#{config.java_home}/bin/jar\" cMf \"#{getRelativePath(t.name)}\"";
 
             t.jarContents.each do |path|
                 cmdline += " -C \"#{getRelativePath(path)}\" .";
