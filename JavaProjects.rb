@@ -329,11 +329,7 @@ protected
         def addDirectoryContents(dir)
             jarContents << dir;
         end
-
-        def addJarContents(jar)
-            jarContents << jar;
-        end
-    end
+   end
 
 public
 
@@ -348,32 +344,13 @@ public
             FileUtils.mkdir_p(getRelativePath(t.name).pathmap('%d'));
 
             cmdline = "\"#{config.java_home}/bin/jar.exe\" cMf \"#{getRelativePath(t.name)}\"";
-            hasJars = FALSE;
 
-            Dir.mktmpdir() do |dir|
-
-                t.jarContents.each do |path|
-                    if(path.end_with?('.jar'))
-                        hasJars = TRUE;
-                        FileUtils.cd dir do
-                            jarcmd = "\"#{config.java_home}/bin/jar.exe\" xf \"#{getRelativePath(path)}\"";
-                            system(jarcmd);
-                            FileUtils.rm_rf 'META-INF';
-                        end
-                    else
-                        cmdline += " -C \"#{getRelativePath(path)}\" .";
-                    end
-                end
-
-                if(hasJars)
-                    cmdline += " -C \"#{dir}\" .";
-                end
-
-                # cmdline << " -g -d \"#{outClasspath}\""
-
-                log.info("#{cmdline}") # if verbose?
-                system( cmdline );
+            t.jarContents.each do |path|
+                cmdline += " -C \"#{getRelativePath(path)}\" .";
             end
+
+            log.info("#{cmdline}") # if verbose?
+            system( cmdline );
         end
         tsk.config = self;
         tsk
