@@ -125,10 +125,7 @@ module JarBuilderModule
 
                             cmd = "unzip -q \"#{spl[0]}\" \"#{entry[:files].join("\" \"")}\" -x \"META-INF/*\" -d \"#{dir}\"";
 
-                            # would be nice if the logger had a "flush" method
-                            STDOUT.flush
-                            STDERR.flush
-                            system cmd
+                            execLogged(cmd, :verbose=>verbose?);
 
                         else
                             # for each entry add files to a copy set and copy them
@@ -147,13 +144,14 @@ module JarBuilderModule
                     # ensure we have a place to put the new jar file it.
                     FileUtils.mkdir_p(t.name.pathmap('%d'));
 
-                    # cvfM if verbose - also need to handle manifest creation etc.
-                    cmdline = "\"#{cfg.java_home}/bin/jar\" cfM \"#{t.name}\" .";
-                    # log.debug cmdline
-                    # would be nice if the logger had a "flush" method
-                    STDOUT.flush
-                    STDERR.flush
-                    system cmdline;
+                    # need to handle manifest creation etc.
+                    cmdOpts = 'cvfM';
+                    unless cfg.verbose?
+                        cmdOpts = cmdOpts.gsub('v','');
+                    end
+
+                    cmdline = "\"#{cfg.java_home}/bin/jar\" #{cmdOpts} \"#{getRelativePath(t.name)}\" .";
+                    execLogged(cmdline, :verbose=>cfg.verbose?);
                 end
              # ruby seems to do this ok on windows and screws
              # up if I do due to thread latency in spawning the command or something.
@@ -237,12 +235,7 @@ public
             cmdline << " \"#{getRelativePath(src)}\"";
         end
 
-        log.info("#{cmdline}") if verbose?
-        IO.popen(cmdline) do |output|
-            while line = output.gets do
-                log.info line.strip!
-            end
-        end
+        execLogged(cmdline, :verbose=>verbose?);
     end
 
     class JavaCTask < Rake::Task
@@ -260,13 +253,13 @@ public
     def addProjectOutputClasspaths(*moduleNames)
         names = moduleNames.flatten;
         names.each do |name|
+            proj = nil;
             begin
                 proj = Rakish.projectByName(name);
                 addJavaClassPaths(proj.javaOutputClasspath);
             rescue => e
                 log.error { "#{moduleName} - failure loading classpath for #{name}" }
-                log.error { e };
-                mod = nil;
+                log.error { e } if(proj);
             end
         end
     end
@@ -349,14 +342,18 @@ public
 
             FileUtils.mkdir_p(getRelativePath(t.name).pathmap('%d'));
 
-            cmdline = "\"#{config.java_home}/bin/jar\" cMf \"#{getRelativePath(t.name)}\"";
+            cmdOpts = 'cvMf';
+            unless config.verbose?
+                cmdOpts = cmdOpts.gsub('v','');
+            end
+
+            cmdline = "\"#{config.java_home}/bin/jar\" #{cmdOpts} \"#{getRelativePath(t.name)}\"";
 
             t.jarContents.each do |path|
                 cmdline += " -C \"#{getRelativePath(path)}\" .";
             end
 
-            log.info("#{cmdline}") # if verbose?
-            system( cmdline );
+            execLogged(cmdline, :verbose=>config.verbose?);
         end
         tsk.config = self;
         tsk

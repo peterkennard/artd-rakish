@@ -76,6 +76,23 @@ module Rakish
 		Rakish::Logger.log
 	end
 
+	# execute shell command and pipe output to Logger
+	def self.execLogged(cmdline, opts={})
+		begin
+			log.info("#{cmdline}") if opts[:verbose]
+			IO.popen(cmdline) do |output|
+				# be nice if there was a log.flush method.
+				STDOUT.flush;  # should not be done in "batch" non TTY processes.
+				while line = output.gets do
+					log.info line.strip!
+				end
+			end
+		rescue => e
+			log.error("failure executing: #{cmdline}") unless opts[:verbose];
+			log.error {e};
+		end
+	end
+
 end
 
 # rake extensions
@@ -292,7 +309,7 @@ module Rakish
 
 	end
 
-   class ::Class
+    class ::Class
 
         # monkey hack to call the initBlocks of all modules included in this class in the included order
         # nicely provided by the ancestors list
@@ -301,15 +318,15 @@ module Rakish
         #    obj.class.initializeIncluded(obj,*args);
 
         def initializeIncluded(obj,*args)
-             # call the included modules init blocks with arguments
-             self.ancestors.reverse_each do |mod|
-                 inits = mod._initBlocks_;
-                 if inits
-                    inits.each do |b|
-                        obj.instance_exec(args,&b);
-                    end
-                 end
-             end
+			# call the included modules init blocks with arguments
+			self.ancestors.reverse_each do |mod|
+				inits = mod._initBlocks_;
+				if inits
+					inits.each do |b|
+						obj.instance_exec(args,&b);
+					end
+				end
+			end
         end
     end
 
@@ -403,8 +420,12 @@ module Rakish
 
 	public
 
-        # Generate an anonymous name.
+		# execute shell command and pipe output to Logger
+     	def execLogged(cmd, opts={})
+     		Rakish.execLogged(cmd,opts)
+     	end
 
+        # Generate an anonymous name.
         def currentNamespace
             ":#{Rake.application.current_scope.join(':')}";
         end
