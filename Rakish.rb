@@ -494,7 +494,13 @@ module Rakish
 				loc = getCallingLocation();
 				log.debug("warning: #{loc} ensuring NIL directory");
 			else
-				directory(dir) unless Rake.application.directory_task_defined?(dir)
+				unless Rake.application.directory_task_defined?(dir)
+					Rake.each_dir_parent(dir) do |d|
+						file_create d do |t|
+							FileUtils.mkdir_p t.name if ! File.exist?(t.name)
+						end
+					end
+				end
 			end
 			dir
 		end

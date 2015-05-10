@@ -237,8 +237,12 @@ public
             cmdline << " \"#{getRelativePath(src)}\"";
         end
 
-        log.info("#{cmdline}") # if verbose?
-        system( cmdline );
+        log.info("#{cmdline}") if verbose?
+        IO.popen(cmdline) do |output|
+            while line = output.gets do
+                log.info line.strip!
+            end
+        end
     end
 
     class JavaCTask < Rake::Task
@@ -260,7 +264,7 @@ public
                 proj = Rakish.projectByName(name);
                 addJavaClassPaths(proj.javaOutputClasspath);
             rescue => e
-                log.error { "failure loading classpath for #{name}" }
+                log.error { "#{moduleName} - failure loading classpath for #{name}" }
                 log.error { e };
                 mod = nil;
             end
