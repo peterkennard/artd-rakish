@@ -7,6 +7,41 @@
 gemPath = File.expand_path("#{File.dirname(File.expand_path(__FILE__))}/..");
 $LOAD_PATH.unshift(gemPath) unless $LOAD_PATH.include?(gemPath)
 
+module Kernel
+
+
+if false
+  if defined?(rakish_original_require) then
+    # Ruby ships with a custom_require, override its require
+    remove_method :require
+  else
+    ##
+    # The Kernel#require from before RubyGems was loaded.
+
+    alias rakish_original_require require
+    private :rakish_original_require
+  end
+
+  @@_rakish_={}
+
+  def require path
+      # $: is search path list
+      # $" is array of loaded files?
+
+      if rakish_original_require path
+      	puts("************ requiring #{path}");
+      	puts("                loaded #{$".last}");
+      	true
+      else
+      	false
+      end
+  end
+  private :require
+
+end
+
+end # false
+
 require 'set'
 require 'logger'
 

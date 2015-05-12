@@ -51,11 +51,12 @@ module JarBuilderModule
             @jarContents_ << entry;
         end
 
-        # adds all directory contents to root of jar file recursively
+        # Adds all directory contents to root of jar file recursively
         # contents resolved when jar file task is invoked
         # filters - 0 or more selects files within the directory to put in the jar
         # with the wildcard path relative to the source directory
         # the default filer is all files in the dir.
+        # The list of files is resolved when the builder task is invoked.
         def addDirectory(dir,*filters)
             if(filters.length < 1)
                filters=['**/*.class'];
