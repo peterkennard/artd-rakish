@@ -1,6 +1,6 @@
 myDir = File.dirname(__FILE__);
 unless defined? MAKEDIR
-    MAKEDIR=File.expand_path("#{myDir}");
+    MAKEDIR=File.expand_path("#{myDir}/rakish");
 end
 require "#{MAKEDIR}/CppProjects.rb";
 require "#{MAKEDIR}/JavaProjects.rb";

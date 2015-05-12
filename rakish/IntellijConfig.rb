@@ -3,7 +3,7 @@ unless defined? MAKEDIR
     MAKEDIR=File.expand_path("#{myDir}");
 end
 
-require "#{MAKEDIR}/BuildConfig.rb";
+require "#{myDir}/BuildConfig.rb";
 require 'rexml/document';
 require 'rexml/streamlistener'
 
