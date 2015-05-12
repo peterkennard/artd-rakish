@@ -1,5 +1,5 @@
 myDir = File.dirname(__FILE__);
-unless defined? MAKEDIR
+unless defined? BUILD_OPTIONS_LOADED
     MAKEDIR=File.expand_path("#{myDir}/rakish");
 end
 require "#{MAKEDIR}/CppProjects.rb";

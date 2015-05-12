@@ -2,9 +2,14 @@
 #
 # $Id $
 
+# this is becoming a "gem" we wat to require files with "rakish/FileName"
+
+gemPath = File.expand_path("#{File.dirname(File.expand_path(__FILE__))}/..");
+$LOAD_PATH.unshift(gemPath) unless $LOAD_PATH.include?(gemPath)
 
 require 'set'
 require 'logger'
+
 
 # stupid thing needed because rake doesn't check for "" arguments so we make an explicit task
 task "" do
