@@ -57,7 +57,7 @@ module Rakish
 			config.set(':PLATFORM',platform);
 
 			# load tools module and initialize a tools object  
-			require File.join(MAKEDIR,pdef[:requires]);
+			require File.join(Rakish::MAKEDIR,pdef[:requires]);
 			factory = PlatformTools.const_get(pdef[:factory]);
 			tools = factory.loadTools(parsed,config);
 		

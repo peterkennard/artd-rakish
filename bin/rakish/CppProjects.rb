@@ -10,19 +10,19 @@ module CTools
 
 	VALID_PLATFORMS = { 
 		:Win32 => {
-			:module => "#{MAKEDIR}/WindowsCppTools.rb",
+			:module => "#{Rakish::MAKEDIR}/WindowsCppTools.rb",
 		},
 		:Win64 => {
-			:module => "#{MAKEDIR}/WindowsCppTools.rb",
+			:module => "#{Rakish::MAKEDIR}/WindowsCppTools.rb",
 		},
 		:iOS => {
-			:module => "#{MAKEDIR}/IOSCTools.rb",
+			:module => "#{Rakish::MAKEDIR}/IOSCTools.rb",
 		},
 		:Linux32 => {
-			:module => "#{MAKEDIR}/GCCCTools.rb",
+			:module => "#{Rakish::MAKEDIR}/GCCCTools.rb",
 		},
 		:Linux64 => {
-			:module => "#{MAKEDIR}/GCCCTools.rb",
+			:module => "#{Rakish::MAKEDIR}/GCCCTools.rb",
 		},
 	};
 
