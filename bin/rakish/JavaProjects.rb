@@ -89,33 +89,44 @@ module JarBuilderModule
 
         class JarTask < Rake::FileTask
 
+            # I wonder if there is a better way in rake to auto generate prerequisites when
+            # they are demanded
+            def resolvePrerequisites
+                unless defined? @filesResolved_
+                    @filesResolved_ = true;
+                    contents = config.jarContents_;
+
+                    contents.each do |entry|
+                        baseDir = entry[:baseDir];
+                        spl = baseDir.split('###',2)
+                        if(spl.length > 1)
+                            @prerequisites << spl[0]
+                        else
+                            copySet = FileCopySet.new;
+                            # for each entry add files to the copy set
+                            copySet.addFileTree(entry[:destDir],baseDir,entry[:files]);
+                            @prerequisites |= copySet.sources;
+                            # replace file list in entry with the resolved copy set
+                            entry[:files] = copySet;
+                        end
+                    end
+                end
+            end
+
+            # List of prerequisite tasks
+            def prerequisite_tasks
+                resolvePrerequisites unless defined? @filesResolved_
+                prerequisites.collect { |pre| lookup_prerequisite(pre) }
+            end
+
             # Is this file task needed?  Yes if it doesn't exist, or if its time stamp
             # is out of date.
             # extension - redo of needed? method which resolves all the specified file lists
             # and adds them all as prerequisites to the task which the purporse is to copy the sources into
             # a destination archive
             def needed?
-                if defined? @filesResolved_
-                    return !File.exist?(name) || out_of_date?(timestamp);
-                end
-                @filesResolved_ = true;
-                contents = config.jarContents_;
-
-                contents.each do |entry|
-                    baseDir = entry[:baseDir];
-                    spl = baseDir.split('###',2)
-                    if(spl.length > 1)
-                        @prerequisites << spl[0]
-                    else
-                        copySet = FileCopySet.new;
-                        # for each entry add files to the copy set
-                        copySet.addFileTree(entry[:destDir],baseDir,entry[:files]);
-                        @prerequisites.concat copySet.sources;
-                        # replace file list in entry with the resolved copy set
-                        entry[:files] = copySet;
-                    end
-                end
-                needed?
+                resolvePrerequisites unless defined? @filesResolved_
+                !File.exist?(name) || out_of_date?(timestamp);
             end
         end
 
