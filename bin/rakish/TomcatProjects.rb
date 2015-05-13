@@ -13,6 +13,22 @@ module WarBuilderModule
 
     class WarBuilder < JarBuilder
 
+        # create task for building jar file to specifications stored in builder.
+        def warFileTask(*args)
+            tsk = jarTask(*args);
+            tsk
+        end
+
+        alias original_addFileTree addFileTree
+        private :original_addFileTree
+
+        def addFileTree(destdir, basedir, *files)
+            original_addFileTree(destdir, basedir, *files);
+            @jarContents_.last[:files].each do |file|
+                puts("                 #{file}");
+            end
+        end
+
     end
 
     def createWarBuilder

@@ -43,7 +43,7 @@ module JarBuilderModule
 
             filePaths = [];
 
-            files.each do |file|
+            files.flatten.each do |file|
                 filePaths << File.expand_path(file);
             end
 
@@ -68,8 +68,8 @@ module JarBuilderModule
         end
 
 
-        # extracts contents from the given jarPath file applies filters
-        # and adds the extracted files/folders to the root of the
+        # set up task to extract contents from the given jar file, will apply filters
+        # and add the extracted files/folders to the root of the
         # new jar file recursively, the extraction is done when the
         # jarTask is invoked.
         # filters - 0 or more selects files within the directory to put in the jar
@@ -87,8 +87,42 @@ module JarBuilderModule
             @jarContents_ << entry;
         end
 
+        class JarTask < Rake::FileTask
+
+            # Is this file task needed?  Yes if it doesn't exist, or if its time stamp
+            # is out of date.
+            # extension - redo of needed? method which resolves all the specified file lists
+            # and adds them all as prerequisites to the task which the purporse is to copy the sources into
+            # a destination archive
+            def needed?
+                if defined? @filesResolved_
+                    return !File.exist?(name) || out_of_date?(timestamp);
+                end
+                @filesResolved_ = true;
+                contents = config.jarContents_;
+
+                contents.each do |entry|
+                    baseDir = entry[:baseDir];
+                    spl = baseDir.split('###',2)
+                    if(spl.length > 1)
+                        @prerequisites << spl[0]
+                    else
+                        copySet = FileCopySet.new;
+                        # for each entry add files to the copy set
+                        copySet.addFileTree(entry[:destDir],baseDir,entry[:files]);
+                        @prerequisites.concat copySet.sources;
+                        # replace file list in entry with the resolved copy set
+                        entry[:files] = copySet;
+                    end
+                end
+                needed?
+            end
+        end
+
    	    def doJarTaskAction(t)
             cfg = t.config;
+
+            puts("creating #{t.name}");
 
             # delete old jar file and liberate space ? jar when creating clears old file
             # FileUtils.rm_f t.name;
@@ -102,9 +136,6 @@ module JarBuilderModule
             Dir.mktmpdir do |dir|
 
                 FileUtils.cd dir do
-
-                    # build a copy set for the jar file's contents from specified contents list
-                    contents = FileCopySet.new;
 
                     cfg.jarContents_.each do |entry|
 
@@ -129,16 +160,19 @@ module JarBuilderModule
                             execLogged(cmd, :verbose=>verbose?);
 
                         else
-                            # for each entry add files to a copy set and copy them
-                            contents.addFileTree(entry[:destDir],baseDir,entry[:files]);
-                            # log.debug("jar temp dir is #{dir}=>#{File.expand_path('.')}");
+                            contents = entry[:files];
+                            unless(FileCopySet === contents)
+                                contents = FileCopySet.new; # a new set for each entry.
+                                # for each entry add files to a copy set
+                                contents.addFileTree(entry[:destDir],baseDir,entry[:files]);
+                            end
+                            # copy the file set to the temp folder
                             contents.filesByDir do |destDir,files|
                                 FileUtils.mkdir_p destDir;
                                 files.each do |file|
                                     FileUtils.cp(file,destDir)
                                 end
                             end
-                            contents = FileCopySet.new; # a new set for each entry at present.
                         end
                     end
 
@@ -166,7 +200,7 @@ module JarBuilderModule
 
         # create task for building jar file to specifications stored in builder.
         def jarTask(*args)
-            tsk = Rake::FileTask.define_task(*args).enhance(nil,&@@jarTaskAction_);
+            tsk = JarTask.define_task(*args).enhance(nil,&@@jarTaskAction_);
             tsk.config = self;
             tsk
         end
