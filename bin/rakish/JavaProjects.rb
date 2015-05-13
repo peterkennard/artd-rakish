@@ -34,6 +34,7 @@ module JarBuilderModule
         # :files   - list of file paths (can use wild cards)
         # :baseDir - base directory of file list as "source root dir" to be truncated from resolved paths
         # :destDir - destination folder in jar file to have truncated files paths added to in jar file.
+        # :cacheList - cache the file list and auto-add dependencies only defined if true
 
         # note not resolved until configured task is invoked
         def addFileTree(destdir, basedir, *files)
@@ -107,7 +108,7 @@ module JarBuilderModule
                             copySet.addFileTree(entry[:destDir],baseDir,entry[:files]);
                             @prerequisites |= copySet.sources;
                             # replace file list in entry with the resolved copy set
-                            entry[:files] = copySet;
+                            entry[:files] = copySet if entry[:cacheList]
                         end
                     end
                 end
