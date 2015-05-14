@@ -116,10 +116,22 @@ module Rakish
 		Rakish::Logger.log
 	end
 
-	# execute shell command and pipe output to Logger
+	# Execute shell command in sub process and pipe output to Logger
+	# cmdline - single string command line, or array of command and arguments
+	# opts:
+	#     :verbose - if set to true (testable value is true) will print command when executing
+	#     :env - environment hash for spawned process
+	#
 	def self.execLogged(cmdline, opts={})
 		begin
-			log.info("#{cmdline}") if opts[:verbose]
+			if(cmdline.respond_to?(:to_ary))
+				log.info("\"#{cmdline.join("\" \"")}\"") if opts[:verbose]
+				# it is the array form of command
+				cmdline.unshift(opts[:env]) if opts[:env];
+			else
+				log.info("#{cmdline}") if opts[:verbose]
+			end
+
 			IO.popen(cmdline) do |output|
 				# be nice if there was a log.flush method.
 				STDOUT.flush;  # should not be done in "batch" non TTY processes.
@@ -128,7 +140,13 @@ module Rakish
 				end
 			end
 		rescue => e
-			log.error("failure executing: #{cmdline}") unless opts[:verbose];
+			if(opts[:verbose])
+				if(cmdline.respond_to?(:to_ary))
+					cmdline.shift if opts[:env];
+					cmdline = "\"#{cmdline.join("\" \"")}\"";
+				end
+				log.error("failure executing: #{cmdline}");
+			end
 			log.error {e};
 		end
 	end
