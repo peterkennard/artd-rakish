@@ -264,8 +264,8 @@ module Rake
 	# force all file tasks to reference full path for file name
 	class FileTask
 		class << self
-		  # Apply the scope to the task name according to the rules for this kind
-		  # of task.  File based tasks ignore the scope when creating the name.
+		    # Apply the scope to the task name according to the rules for this kind
+		    # of task.  File based tasks ignore the scope when creating the name.
 			def scope_name(scope, task_name)
 				File.expand_path(task_name)
 			end
