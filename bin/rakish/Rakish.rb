@@ -12,29 +12,29 @@ module Kernel
 
 if false
   if defined?(rakish_original_require) then
-    # Ruby ships with a custom_require, override its require
-    remove_method :require
+	# Ruby ships with a custom_require, override its require
+	remove_method :require
   else
-    ##
-    # The Kernel#require from before RubyGems was loaded.
+	##
+	# The Kernel#require from before RubyGems was loaded.
 
-    alias rakish_original_require require
-    private :rakish_original_require
+	alias rakish_original_require require
+	private :rakish_original_require
   end
 
   @@_rakish_={}
 
   def require path
-      # $: is search path list
-      # $" is array of loaded files?
+	  # $: is search path list
+	  # $" is array of loaded files?
 
-      if rakish_original_require path
-      	puts("************ requiring #{path}");
-      	puts("                loaded #{$".last}");
-      	true
-      else
-      	false
-      end
+	  if rakish_original_require path
+		puts("************ requiring #{path}");
+		puts("                loaded #{$".last}");
+		true
+	  else
+		false
+	  end
   end
   private :require
 
@@ -68,16 +68,16 @@ module Rakish
 
 			fileLine = "";
 			unless('INFO' === severity)
-                caller.each do |clr|
-                    unless(/\/logger.rb:/ =~ clr)
-                        fileLine = clr;
-                        break;
-                    end
-                end
-                fileLine = fileLine.split(':in `',2)[0];
-                fileLine.sub!(/:(\d)/, '(\1');
-                fileLine += ') : ';
-            end
+				caller.each do |clr|
+					unless(/\/logger.rb:/ =~ clr)
+						fileLine = clr;
+						break;
+					end
+				end
+				fileLine = fileLine.split(':in `',2)[0];
+				fileLine.sub!(/:(\d)/, '(\1');
+				fileLine += ') : ';
+			end
 
 			if(msg.is_a? Exception)
 				"#{fileLine}#{msg}\n    #{formatBacktraceLine(msg.backtrace[0])}\n"
@@ -107,9 +107,9 @@ module Rakish
 				Rakish.log
 			end
 		end
-	    def log
-            Rakish.log
-        end
+		def log
+			Rakish.log
+		end
 	end
 
 	def self.log
@@ -127,14 +127,18 @@ module Rakish
 			if(cmdline.respond_to?(:to_ary))
 				log.info("\"#{cmdline.join("\" \"")}\"") if opts[:verbose]
 				# it is the array form of command
-				cmdline.unshift(opts[:env]) if opts[:env];
+				unless (Hash === cmdline[0]) # to handle ruby style environment argument - env is cmdline[0]
+					cmdline.unshift(opts[:env]) if opts[:env];
+				end
 			else
+				# TODO: handle parsing command line into array of arguments if opts[:env]
 				log.info("#{cmdline}") if opts[:verbose]
 			end
 
+			# TODO: handle throwing exception if the process aborts with an error return code
 			IO.popen(cmdline) do |output|
 				# be nice if there was a log.flush method.
-				STDOUT.flush;  # should not be done in "batch" non TTY processes.
+				# STDOUT.flush;  # should not be done in "batch" non TTY processes.
 				while line = output.gets do
 					log.info line.strip!
 				end
@@ -162,26 +166,26 @@ module Rake
 	end
 
 	class << self
-	    def get_unique_name
-	        @_s_||=0
-	        @_s_ += 1
-	        :"_nona_#{@_s_}"
-	    end
+		def get_unique_name
+			@_s_||=0
+			@_s_ += 1
+			:"_nona_#{@_s_}"
+		end
 	end
 
-    module TaskManager
-       # the only difference here is flattening the dependencies
-       def resolve_args(args)
-         if args.last.is_a?(Hash)
-           deps = args.pop
-           ret = resolve_args_with_dependencies(args, deps)
-           ret[2].flatten!
-           ret
-         else
-           resolve_args_without_dependencies(args)
-         end
-       end
-    end
+	module TaskManager
+	   # the only difference here is flattening the dependencies
+	   def resolve_args(args)
+		 if args.last.is_a?(Hash)
+		   deps = args.pop
+		   ret = resolve_args_with_dependencies(args, deps)
+		   ret[2].flatten!
+		   ret
+		 else
+		   resolve_args_without_dependencies(args)
+		 end
+	   end
+	end
 
 	class Application
 
@@ -213,47 +217,47 @@ module Rake
 		attr_accessor :config
 	  end
 
-      rake_extension('data') do
+	  rake_extension('data') do
 		# optional "per instance" field on Rake Task objects
 		attr_accessor :data
 	  end
 
 	  # see Rake.Task as this overrides it's method
-      def enhance(args,&b)
-        # instead of |=
-        @prerequisites = [@prerequisites,args].flatten if args
-        @actions << b if block_given?
-        self
-      end
+	  def enhance(args,&b)
+		# instead of |=
+		@prerequisites = [@prerequisites,args].flatten if args
+		@actions << b if block_given?
+		self
+	  end
 
-      def scopeExec(args=nil)
-          @application.in_namespace_scope(@scope) do
-              FileUtils.cd @_p_.projectDir do
-                  _baseExec_(args);
-              end
-          end
-      end
+	  def scopeExec(args=nil)
+		  @application.in_namespace_scope(@scope) do
+			  FileUtils.cd @_p_.projectDir do
+				  _baseExec_(args);
+			  end
+		  end
+	  end
 	  private :scopeExec
 
-      rake_extension('setProjectScope') do
-        def setProjectScope(d)
-            return self if(@_p_)
-            instance_eval do
-                alias :_baseExec_ :execute
-                alias :execute :scopeExec
-            end
-            @_p_=d;
-            self
-        end
-      end
+	  rake_extension('setProjectScope') do
+		def setProjectScope(d)
+			return self if(@_p_)
+			instance_eval do
+				alias :_baseExec_ :execute
+				alias :execute :scopeExec
+			end
+			@_p_=d;
+			self
+		end
+	  end
 
-      class << self
-        # define a task with a unique anonymous name
-	    # TODO: doesn't handle :name=>[] hash dependencies
-	    def define_unique_task(*args,&b)
-            args.unshift(Rake.get_unique_name)
-            Rake.application.define_task(self,*args,&b);
-	    end
+	  class << self
+		# define a task with a unique anonymous name
+		# TODO: doesn't handle :name=>[] hash dependencies
+		def define_unique_task(*args,&b)
+			args.unshift(Rake.get_unique_name)
+			Rake.application.define_task(self,*args,&b);
+		end
 	  end
 	end
 	
@@ -281,11 +285,11 @@ module Rake
 			end
 		end
 
-        # this allows for explicitly setting an "absolute" namespace
+		# this allows for explicitly setting an "absolute" namespace
 		rake_extension('in_namespace_scope') do
-            def in_namespace_scope(scope)
+			def in_namespace_scope(scope)
 				prior = @scope;
-                @scope = scope;
+				@scope = scope;
 				if options.trace
 					_trc
 				end
@@ -298,25 +302,25 @@ module Rake
 					_trc
 				end
 			end
-        end
+		end
 
-        # this allows for explicitly setting an "absolute" namespace from string
+		# this allows for explicitly setting an "absolute" namespace from string
 		rake_extension('in_namespace_path') do
 			def in_namespace_path(name,&b)
 				prior=@scope
-                if(name.instance_of?(String))
-                    spl = name.split(':');
-                    if(spl.size() == 0 || spl[0].length == 0) # absolute
-                        spl.shift();
-                        @scope = spl;
-                    else # relative
-                        @scope = Array.new(prior).concat(spl);
-                    end
-                elsif(name)
-                    @scope=Array.new(prior).push(name);
-                else
-                    @scope=Array.new
-                end
+				if(name.instance_of?(String))
+					spl = name.split(':');
+					if(spl.size() == 0 || spl[0].length == 0) # absolute
+						spl.shift();
+						@scope = spl;
+					else # relative
+						@scope = Array.new(prior).concat(spl);
+					end
+				elsif(name)
+					@scope=Array.new(prior).push(name);
+				else
+					@scope=Array.new
+				end
 				if options.trace
 					_trc
 				end
@@ -357,25 +361,25 @@ module Rakish
 			end
 		end
 
-        def addInitBlock(&b)
-            (@_init_||=[])<<b if block_given?
-        end
+		def addInitBlock(&b)
+			(@_init_||=[])<<b if block_given?
+		end
 
-        def _initBlocks_
-            @_init_;
-        end
+		def _initBlocks_
+			@_init_;
+		end
 
 	end
 
-    class ::Class
+	class ::Class
 
-        # monkey hack to call the initBlocks of all modules included in this class in the included order
-        # nicely provided by the ancestors list
-        # use this in an instance initializer:
-        #
-        #    obj.class.initializeIncluded(obj,*args);
+		# monkey hack to call the initBlocks of all modules included in this class in the included order
+		# nicely provided by the ancestors list
+		# use this in an instance initializer:
+		#
+		#    obj.class.initializeIncluded(obj,*args);
 
-        def initializeIncluded(obj,*args)
+		def initializeIncluded(obj,*args)
 			# call the included modules init blocks with arguments
 			self.ancestors.reverse_each do |mod|
 				inits = mod._initBlocks_;
@@ -385,8 +389,8 @@ module Rakish
 					end
 				end
 			end
-        end
-    end
+		end
+	end
 
 	class MultiProcessTask < Rake::Task
 	private
@@ -432,31 +436,31 @@ module Rakish
 		include ::Rake::DSL
 		include Rakish::Logger
 				
-        module Git
+		module Git
 
-            class << self
-                def clone(src,dest,opts={})
-                    if(!File.directory?(dest))
+			class << self
+				def clone(src,dest,opts={})
+					if(!File.directory?(dest))
 
-                        origin = opts[:remote] || "origin";
+						origin = opts[:remote] || "origin";
 
-                        puts("Git.clone -o \"#{origin}\" -n \"#{src}\" \"#{dest}\"");
+						puts("Git.clone -o \"#{origin}\" -n \"#{src}\" \"#{dest}\"");
 
-                        system("git clone -o \"#{origin}\" -n \"#{src}\" \"#{dest}\"");
-                        cd dest do
-                            system("git config -f ./.git/config --replace-all core.autocrlf true");
-                            system("git reset -q --hard");
-                        end
-                    end
-                end
+						system("git clone -o \"#{origin}\" -n \"#{src}\" \"#{dest}\"");
+						cd dest do
+							system("git config -f ./.git/config --replace-all core.autocrlf true");
+							system("git reset -q --hard");
+						end
+					end
+				end
 
-                def addRemote(dir, name, uri)
-                    cd dir do
-                        system("git remote add \"#{name}\" \"#{uri}\"");
-                    end
-                end
-            end
-        end
+				def addRemote(dir, name, uri)
+					cd dir do
+						system("git remote add \"#{name}\" \"#{uri}\"");
+					end
+				end
+			end
+		end
 
 
 		# like each but checks for null and if object doesn't respond to each
@@ -469,24 +473,24 @@ module Rakish
 		end
 
 	protected
-        # Task action to simply copy source to destination
+		# Task action to simply copy source to destination
 		SimpleCopyAction_ = ->(t) { FileUtils.cp(t.source, t.name) }
 
-        # Task action to do nothing.
-        DoNothingAction_ = ->(t) {}
+		# Task action to do nothing.
+		DoNothingAction_ = ->(t) {}
 
 
 	public
 
 		# execute shell command and pipe output to Logger
-     	def execLogged(cmd, opts={})
-     		Rakish.execLogged(cmd,opts)
-     	end
+		def execLogged(cmd, opts={})
+			Rakish.execLogged(cmd,opts)
+		end
 
-        # Generate an anonymous name.
-        def currentNamespace
-            ":#{Rake.application.current_scope.join(':')}";
-        end
+		# Generate an anonymous name.
+		def currentNamespace
+			":#{Rake.application.current_scope.join(':')}";
+		end
 
 		# Used like Rake's 'namespace' to execute the block 
 		# in the specified namespace, except it enables
@@ -929,13 +933,13 @@ module Rakish
 					end
 				end
 
-                destFile = "#{dir}/#{File.basename(f)}";  # name of task
-		        if((!preserve) || ((tsk = Rake.application.lookup(destFile)) == nil))
-                    tsk = file destFile => [ f, dir ], &block
-                    tsk.sources = tsk.prerequisites
-                    tsk.config = config if config
-		        end
-                flist << tsk # will always be task and not name here
+				destFile = "#{dir}/#{File.basename(f)}";  # name of task
+				if((!preserve) || ((tsk = Rake.application.lookup(destFile)) == nil))
+					tsk = file destFile => [ f, dir ], &block
+					tsk.sources = tsk.prerequisites
+					tsk.config = config if config
+				end
+				flist << tsk # will always be task and not name here
 			end
 			flist
 		end				
@@ -1229,7 +1233,7 @@ public
 		def to_ary
 			@h.keys
 		end
-    end
+	end
 
 	class OrderedFileSet < FileSet
 		def initaliaze
@@ -1270,9 +1274,9 @@ public
 		end
 
 		def each_pair(&b)
-		    @h.each_pair do |k,v|
-		        yield k,v
-		    end
+			@h.each_pair do |k,v|
+				yield k,v
+			end
 		end
 		# returns array of all values in the hash
 		def values
@@ -1436,15 +1440,15 @@ public
 		end
 		
 		def prettyPrint
-            filesByDir do |k,v|
-                if(v.length > 0)
-                    puts("\n");
-                end
-                puts("directory #{k}");
-                v.each do |f|
-                    puts( "      \"#{f}\"")
-                end
-            end
+			filesByDir do |k,v|
+				if(v.length > 0)
+					puts("\n");
+				end
+				puts("directory #{k}");
+				v.each do |f|
+					puts( "      \"#{f}\"")
+				end
+			end
 		end
 		
 		# generate processing tasks for all files in this copy set
@@ -1465,16 +1469,16 @@ public
 				# dir = File.join(destDir,dir);
 				ensureDirectoryTask(dir)
 				files.each do |srcfile|
-                    destname = File.basename(srcfile);
-                    oldext = File.extname(destname);
-                    if(oldext)
-                        newext = suffixMap[oldext];
-                        destname = destname.pathmap("%n#{newext}") if newext
-                    end
+					destname = File.basename(srcfile);
+					oldext = File.extname(destname);
+					if(oldext)
+						newext = suffixMap[oldext];
+						destname = destname.pathmap("%n#{newext}") if newext
+					end
 					dest = File.join(dir, destname);
-			        task = file dest=>[srcfile,dir], &block
+					task = file dest=>[srcfile,dir], &block
 					task.sources = task.prerequisites
-                    # set configuration data on task if desired
+					# set configuration data on task if desired
 					if(cfg = args[:config])
 						task.config = cfg
 					end
