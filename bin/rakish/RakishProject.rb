@@ -168,12 +168,22 @@ class Project < BuildConfig
 	# when called from within a project, exports a namespace internal task to
 	# a global task by the same name as the task within the projects namespace scope.
 	# not safe if called on a task outside the project's namespace
+	# returns task that is exported if present
 	def export(name)
 
+		exported = name;
 	    if(name.is_a? Rake::Task)
 	        # note: doesn't check if task is actually in this namespace
             name = name.to_s().sub("#{myNamespace}:",'').to_sym;
+        else
+        	# todo look up actual task and set exported to it for return value.
+        	exported = nil
 	    end
+
+		if(exported.is_a? Rake::FileTask)
+			log.warn("attempt to export FileTask #{name.name}");
+			return exported;
+		end
 
 	    @exported_ ||= Set.new;
         if(@exported_.add?(name))
@@ -181,6 +191,7 @@ class Project < BuildConfig
 				task name;
 			end
 		end
+	#	return(exported);
 	end
 
 	task :default		=> [ :build ];
