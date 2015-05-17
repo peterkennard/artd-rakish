@@ -122,6 +122,8 @@ module Rakish
 	#     :verbose - if set to true (testable value is true) will print command when executing
 	#     :env - environment hash for spawned process
 	#
+	#  returns status return from spawned process.
+
 	def self.execLogged(cmdline, opts={})
 		begin
 			if(cmdline.respond_to?(:to_ary))
@@ -143,6 +145,7 @@ module Rakish
 					log.info line.strip!
 				end
 			end
+			return $?
 		rescue => e
 			if(opts[:verbose])
 				if(cmdline.respond_to?(:to_ary))
@@ -151,7 +154,8 @@ module Rakish
 				end
 				log.error("failure executing: #{cmdline}");
 			end
-			log.error {e};
+			log.error(e);
+			raise(e);
 		end
 	end
 
