@@ -253,6 +253,9 @@ public
     def doCompileJava(t)
 
         config = t.config;
+
+        FileUtils::mkdir_p(config.javaOutputClasspath);
+
         outClasspath = getRelativePath(config.javaOutputClasspath);
 
         cmdline = "\"#{config.java_home}/bin/javac\"";
