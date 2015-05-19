@@ -1366,9 +1366,9 @@ public
 		# add files all assigned to the destdir directory
 		def addFiles(destdir, *files)			
 			destdir = destdir.to_s
-			if(destdir =~ /^\//)
-				destdir = $'
-			end
+#			if(destdir =~ /^\//)
+#				destdir = $'
+#			end
 			if(!files.empty?)
 				ilist = (@byDir_[destdir] ||= [])
 				add_files_a(ilist,files,nil)
@@ -1458,12 +1458,16 @@ public
 		# generate processing tasks for all files in this copy set
 		# using the task action provided or a simple copy if not
 		# hash args
-		#     :suffixMap map from source suffi to destination suffi
-		#     :config value to set for task.config
+		#     :suffixMap - map from source suffi to destination suffi
+		#     :config - value to set for task.config
+		#     TODO:ensureOutputDirs - if true ensure a task is present for creating
+		#                         the output directory and assign it as prerequisite
+		#                         default is true
 		#     TODO: :outputDir value of directory to place output files
 
 		def generateFileTasks(args={}, &block)
 
+			ensureOutputDirs = args[:ensureOutputDirs];
 			suffixMap = args[:suffixMap]||{};
 			tasks = [];
 			block = SimpleCopyAction_ unless block_given?
@@ -1471,7 +1475,6 @@ public
 			filesByDir do |dir,files|
 				# TODO: maybe have an output directory option and maybe relative path option for destinations ?
 				# dir = File.join(destDir,dir);
-				log.debug("ensuring dir \"#{dir}\"")
 				ensureDirectoryTask(dir)
 
 				files.each do |srcfile|
