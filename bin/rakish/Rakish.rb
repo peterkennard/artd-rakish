@@ -1366,7 +1366,7 @@ public
 		# add files all assigned to the destdir directory
 		def addFiles(destdir, *files)			
 			destdir = destdir.to_s
-			if(destdir =~ /^\//) 
+			if(destdir =~ /^\//)
 				destdir = $'
 			end
 			if(!files.empty?)
@@ -1420,9 +1420,9 @@ public
 		def addFileTree(destdir, basedir, *files)
 			opts = (Hash === files.last) ? files.pop : {}			
 			destdir = destdir.to_s
-			if (destdir =~ /^\//)
-				destdir = $'
-			end
+#			if (destdir =~ /^\//)
+#				destdir = $'
+#			end
 			basedir = File.expand_path(basedir)	
 			regx = Regexp.new('^' + Regexp.escape(basedir+'/'),Regexp::IGNORECASE);
 			add_filet_a(destdir,regx,files,opts[:data])
