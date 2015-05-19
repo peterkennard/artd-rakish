@@ -1357,9 +1357,9 @@ public
 	public
 		# add a directory with no source files to this set, if not already there.
 		def addDir(dir)
-			if(dir =~ /^\//) 
-				dir = $'
-			end
+#			if(dir =~ /^\//)
+#				dir = $'           # truncate leading '/' ???
+#			end
 			@byDir_[dir]||=[]
 		end
 		
@@ -1471,7 +1471,9 @@ public
 			filesByDir do |dir,files|
 				# TODO: maybe have an output directory option and maybe relative path option for destinations ?
 				# dir = File.join(destDir,dir);
+				log.debug("ensuring dir \"#{dir}\"")
 				ensureDirectoryTask(dir)
+
 				files.each do |srcfile|
 					destname = File.basename(srcfile);
 					oldext = File.extname(destname);
