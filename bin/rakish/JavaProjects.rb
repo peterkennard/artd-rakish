@@ -282,7 +282,8 @@ public
             cmdline << " \"#{getRelativePath(src)}\"";
         end
 
-        execLogged(cmdline, :verbose=>verbose?);
+        ret = execLogged(cmdline, :verbose=>verbose?);
+        raise "Java compile failure" if(ret.exitstatus != 0);
     end
 
     class JavaCTask < Rake::Task
