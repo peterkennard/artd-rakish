@@ -100,7 +100,7 @@ module JavadocBuilderModule
         def initialize(parent)
             super(parent);
             self.enableNewFields do |my|
-                my.docOutDir="#{BUILDDIR()}/javadoc/#{moduleName}/api";
+                my.docOutputDir="#{BUILDDIR()}/javadoc/#{moduleName}/api";
             end
         end
 
@@ -108,11 +108,11 @@ module JavadocBuilderModule
 
             cfg = t.config;
 
-            log.debug("doc output path is [#{cfg.docOutDir}]");
+            log.debug("doc output path is [#{cfg.docOutputDir}]");
 
-            FileUtils.mkdir_p(cfg.docOutDir);
+            FileUtils.mkdir_p(cfg.docOutputDir);
 
-            cmdline = "\"#{cfg.java_home}/bin/javadoc\" -d \"#{cfg.docOutDir}\"";
+            cmdline = "\"#{cfg.java_home}/bin/javadoc\" -d \"#{cfg.docOutputDir}\"";
 
             unless(cfg.javaClassPaths.empty?)
                 classpath = cfg.javaClassPaths.join(';');
@@ -359,7 +359,15 @@ public
         docBuilder = createJavadocBuilder();
         docTask = docBuilder.javadocTask;
 
-	    export task :dist => [ :libs, docTask ]
+        zipBuilder = createZipBuilder();
+        zipBuilder.addDirectory(docBuilder.docOutputDir "**/*");
+
+        docZip = zipBuilder.zipTask(jarTask.name.pathmap('%X-doc.zip'));
+        docZip.enhance(docTask);
+
+	    export task :javadoc => [ docZip ]
+
+	    export task :dist => [ :libs, :javadoc ]
 
     end
 
