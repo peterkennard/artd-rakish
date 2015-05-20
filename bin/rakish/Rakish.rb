@@ -1229,6 +1229,21 @@ public
 				yield(k.to_s)
 			end
 		end
+
+		# like array.join
+		def join(separator)
+			out = nil;
+			each do |p|
+				if out
+					out += separator; # TODO: not too efficient - memory thrashing
+			   		out += p;
+				else
+					out = p;
+				end
+			end
+			out||'';
+		end
+
 		# returns then number of entries in this set
 		def size
 			@h.size
@@ -1260,6 +1275,10 @@ public
 		# returns an array of all path entries in this set
 		def to_ary
 			@ordered
+		end
+
+		def join
+			@ordered.join
 		end
 		
 	end

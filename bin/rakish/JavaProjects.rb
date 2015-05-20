@@ -93,11 +93,64 @@ module JarBuilderModule
 
 end
 
+module JavadocBuilderModule
+
+    class JavadocBuilder < BuildConfig
+
+        def initialize(parent)
+            super(parent);
+            self.enableNewFields do |my|
+                my.docOutDir="#{BUILDDIR()}/javadoc/#{moduleName}/api";
+            end
+        end
+
+        def doBuildJavadoc(t)
+
+            cfg = t.config;
+
+            log.debug("doc output path is [#{cfg.docOutDir}]");
+
+            FileUtils.mkdir_p(cfg.docOutDir);
+
+            cmdline = "\"#{cfg.java_home}/bin/javadoc\" -d \"#{cfg.docOutDir}\"";
+
+            unless(cfg.javaClassPaths.empty?)
+                classpath = cfg.javaClassPaths.join(';');
+                cmdline += " -classpath \"#{classpath}\"";
+            end
+
+            sourcepath = cfg.javaSourceRoots.join(';');
+            cmdline += " -sourcepath \"#{sourcepath}\"";
+            cmdline += " -subpackages \"com\"";
+
+            log.debug(cmdline);
+            execLogged(cmdline, :verbose=>cfg.verbose?);
+
+        end
+
+        BuildJavadocAction = ->(t) do
+            t.config.doBuildJavadoc(t);
+        end
+
+        def javadocTask(opts={})
+            tsk = Rake::Task.define_unique_task &BuildJavadocAction
+            tsk.config = self;
+            tsk
+        end
+    end
+
+    def createJavadocBuilder
+        JavadocBuilder.new(self)
+    end
+
+end
+
 
 module JavaProjectModule
     include JavaProjectConfig
     include JarBuilderModule
     include ZipBuilderModule
+    include JavadocBuilderModule
 
 protected
 
@@ -296,13 +349,17 @@ public
 
 
         zipBuilder = createZipBuilder();
-        @javaSourceDirs_.each do |dir|
+        javaSourceRoots.each do |dir|
             zipBuilder.addDirectory(dir, "**/*.java");
         end
         srcZip = zipBuilder.zipTask(jarTask.name.pathmap('%X-src.zip'));
 
         export task :libs => [jarTask, srcZip ]
-	    export task :dist => [ :libs ]
+
+        docBuilder = createJavadocBuilder();
+        docTask = docBuilder.javadocTask;
+
+	    export task :dist => [ :libs, docTask ]
 
     end
 
