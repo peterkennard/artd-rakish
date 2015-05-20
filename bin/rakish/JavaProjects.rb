@@ -1,5 +1,5 @@
 myPath = File.dirname(File.expand_path(__FILE__));
-require "#{myPath}/ArchiveBuilder.rb"
+require "#{myPath}/ZipBuilder.rb"
 
 module Rakish
 
@@ -41,7 +41,7 @@ module JarBuilderModule
    	    def doBuildJarAction(t)
             cfg = t.config;
 
-            puts("creating #{t.name}");
+            log.info("creating #{t.name}") if cfg.verbose
 
             # delete old jar file and liberate space ? jar when creating clears old file
             # FileUtils.rm_f t.name;
@@ -65,7 +65,7 @@ module JarBuilderModule
                         cmdOpts = cmdOpts.gsub('v','');
                     end
 
-                    cmdline = "\'#{cfg.java_home}/bin/jar\' #{cmdOpts} \'#{getRelativePath(t.name)}\' .";
+                    cmdline = "\"#{cfg.java_home}/bin/jar\" #{cmdOpts} \"#{getRelativePath(t.name)}\" .";
                     execLogged(cmdline, :verbose=>cfg.verbose?);
                 end
              # ruby seems to do this ok on windows and screws
@@ -97,6 +97,7 @@ end
 module JavaProjectModule
     include JavaProjectConfig
     include JarBuilderModule
+    include ZipBuilderModule
 
 protected
 
@@ -252,6 +253,7 @@ protected
 public
 
     def createJarFileTask(opts={})
+
         jarPath = opts[:name]||"#{BINDIR()}/#{moduleName}.jar";
         jarPath = jarPath.pathmap("%X.jar");
 
@@ -266,7 +268,7 @@ public
                 cmdOpts = cmdOpts.gsub('v','');
             end
 
-            cmdline = "\"#{config.java_home}/bin/jar\" #{cmdOpts} \'#{getRelativePath(t.name)}\'";
+            cmdline = "\"#{config.java_home}/bin/jar\" #{cmdOpts} \"#{getRelativePath(t.name)}\"";
 
             t.jarContents.each do |path|
                 cmdline += " -C \"#{getRelativePath(path)}\" .";
@@ -276,6 +278,32 @@ public
         end
         tsk.config = self;
         tsk
+    end
+
+    # adds and exports configured targets for building classes, creating jar file, src.zip file
+    # and exports :compile (classes), :libs (jar files), and :dist (tar file, src.zip file
+    # requires that source roots and compile classpaths are set in the project.
+    def addJavaLibraryTargets()
+
+        export task :resources => [];
+
+        javac = javacTask
+
+        jarTask = createJarFileTask();
+        jarTask.enhance(javac); # add dependency on compile task
+
+        jarTask.addDirectoryContents(javaOutputClasspath());
+
+
+        zipBuilder = createZipBuilder();
+        @javaSourceDirs_.each do |dir|
+            zipBuilder.addDirectory(dir, "**/*.java");
+        end
+        srcZip = zipBuilder.zipTask(jarTask.name.pathmap('%X-src.zip'));
+
+        export task :libs => [jarTask, srcZip ]
+	    export task :dist => [ :libs ]
+
     end
 
 end
