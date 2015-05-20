@@ -1,6 +1,5 @@
 myPath = File.dirname(File.expand_path(__FILE__));
-require "#{myPath}/RakishProject.rb"
-require 'tmpdir'
+require "#{myPath}/ArchiveBuilder.rb"
 
 module Rakish
 
@@ -21,43 +20,10 @@ end
 
 module JarBuilderModule
 
-    class JarBuilder < BuildConfig
+    class JarBuilder < ArchiveBuilder
 
     public
-        attr_reader :jarContents_
 
-        addInitBlock do |pnt,opts|
-            @jarContents_ = [];
-        end
-
-        # jar contents has these "fields"
-        # :files   - list of file paths (can use wild cards)
-        # :baseDir - base directory of file list as "source root dir" to be truncated from resolved paths
-        # :destDir - destination folder in jar file to have truncated files paths added to in jar file.
-        # :cacheList - cache the file list and auto-add dependencies only defined if true
-
-        # note not resolved until configured task is invoked
-        def addFileTree(destdir, basedir, *files)
-            entry = {};
-            entry[:destDir]=(destdir);
-            entry[:baseDir]=(File.expand_path(basedir));
-
-            filePaths = [];
-
-            files.flatten.each do |file|
-                filePaths << File.expand_path(file);
-            end
-
-            entry[:files]=filePaths;
-            @jarContents_ << entry;
-        end
-
-        # Adds all directory contents to root of jar file recursively
-        # contents resolved when jar file task is invoked
-        # filters - 0 or more selects files within the directory to put in the jar
-        # with the wildcard path relative to the source directory
-        # the default filer is all files in the dir.
-        # The list of files is resolved when the builder task is invoked.
         def addDirectory(dir,*filters)
             if(filters.length < 1)
                filters=['**/*.class'];
@@ -68,70 +34,11 @@ module JarBuilderModule
             addFileTree('.',dir,*filters);
         end
 
-
-        # set up task to extract contents from the given jar file, will apply filters
-        # and add the extracted files/folders to the root of the
-        # new jar file recursively, the extraction is done when the
-        # jarTask is invoked.
-        # filters - 0 or more selects files within the directory to put in the jar
-        # with the wildcard path relative to the root of the source jar file
-        # the default filter is all files in source jar.
         def addJarContents(jarPath,*filters)
-
-            if(filters.length < 1)
-               filters=['*'];
-            end
-            entry = {};
-            entry[:destDir]=('.');
-            entry[:baseDir]=("#{File.expand_path(jarPath)}###");
-            entry[:files]=filters;
-            @jarContents_ << entry;
+            addZipContents(jarPath,*filters);
         end
 
-        class JarTask < Rake::FileTask
-
-            # I wonder if there is a better way in rake to auto generate prerequisites when
-            # they are demanded
-            def resolvePrerequisites
-                unless defined? @filesResolved_
-                    @filesResolved_ = true;
-                    contents = config.jarContents_;
-
-                    contents.each do |entry|
-                        baseDir = entry[:baseDir];
-                        spl = baseDir.split('###',2)
-                        if(spl.length > 1)
-                            @prerequisites << spl[0]
-                        else
-                            copySet = FileCopySet.new;
-                            # for each entry add files to the copy set
-                            copySet.addFileTree(entry[:destDir],baseDir,entry[:files]);
-                            @prerequisites |= copySet.sources;
-                            # replace file list in entry with the resolved copy set
-                            entry[:files] = copySet if entry[:cacheList]
-                        end
-                    end
-                end
-            end
-
-            # List of prerequisite tasks
-            def prerequisite_tasks
-                resolvePrerequisites unless defined? @filesResolved_
-                prerequisites.collect { |pre| lookup_prerequisite(pre) }
-            end
-
-            # Is this file task needed?  Yes if it doesn't exist, or if its time stamp
-            # is out of date.
-            # extension - redo of needed? method which resolves all the specified file lists
-            # and adds them all as prerequisites to the task which the purporse is to copy the sources into
-            # a destination archive
-            def needed?
-                resolvePrerequisites unless defined? @filesResolved_
-                !File.exist?(name) || out_of_date?(timestamp);
-            end
-        end
-
-   	    def doJarTaskAction(t)
+   	    def doBuildJarAction(t)
             cfg = t.config;
 
             puts("creating #{t.name}");
@@ -149,7 +56,7 @@ module JarBuilderModule
 
                 FileUtils.cd dir do
 
-                    cfg.jarContents_.each do |entry|
+                    cfg.archiveContents_.each do |entry|
 
                         # copy or extract all the files for the jar to a temporary folder
                         # then create a jar containing the contents
@@ -206,13 +113,13 @@ module JarBuilderModule
             end
         end
 
-        @@jarTaskAction_ = ->(t) do
-            t.config.doJarTaskAction(t);
+        @@buildJarAction_ = ->(t) do
+            t.config.doBuildJarAction(t);
         end
 
         # create task for building jar file to specifications stored in builder.
         def jarTask(*args)
-            tsk = JarTask.define_task(*args).enhance(nil,&@@jarTaskAction_);
+            tsk = ArchiveTask.define_task(*args).enhance(nil,&@@buildJarAction_);
             tsk.config = self;
             tsk
         end
