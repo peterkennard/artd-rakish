@@ -18,28 +18,28 @@ module ZipBuilderModule
             # delete old archive file and liberate space ? zip when creating clears old file
             # FileUtils.rm_f t.name;
 
-            # use persistent file for debugging
-            # dir = "d:/ziptemp";
-            # rm_rf dir;
-            # mkdir_p dir;
-            # cd dir
+             ### use persistent file for debugging
+             dir = "d:/ziptemp";
+             rm_rf dir;
+             mkdir_p dir;
+             cd dir do
 
-            Dir.mktmpdir do |dir|
+#            Dir.mktmpdir do |dir|
 
                 FileUtils.cd dir do
 
-                    loadTempDir(dir)
+                    cfg.loadTempDir(dir)
 
                     # ensure we have a place to put the new zip file in.
                     FileUtils.mkdir_p(t.name.pathmap('%d'));
 
-#                    cmdOpts = 'cvfM';
-#                    unless cfg.verbose?
-#                        cmdOpts = cmdOpts.gsub('v','');
-#                    end
-#
-#                    cmdline = "\"#{cfg.java_home}/bin/jar\" #{cmdOpts} \"#{getRelativePath(t.name)}\" .";
-#                    execLogged(cmdline, :verbose=>cfg.verbose?);
+                    cmdOpts = '-r -9 -v';
+                    unless cfg.verbose?
+                        cmdOpts = cmdOpts.gsub('-v','');
+                    end
+
+                    cmdline = "zip #{cmdOpts} -b \"#{getRelativePath(t.name)}\" .";
+                    execLogged(cmdline, :verbose=>cfg.verbose?);
                 end
              # ruby seems to do this ok on windows and screws
              # up if I do due to thread latency in spawning the command or something.
@@ -57,7 +57,6 @@ module ZipBuilderModule
             tsk.config = self;
             tsk
         end
-
     end
 
     def createZipBuilder
@@ -65,3 +64,5 @@ module ZipBuilderModule
     end
 
 end
+
+end # Rakish
