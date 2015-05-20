@@ -18,13 +18,13 @@ module ZipBuilderModule
             # delete old archive file and liberate space ? zip when creating clears old file
             # FileUtils.rm_f t.name;
 
-             ### use persistent file for debugging
-             dir = "d:/ziptemp";
-             rm_rf dir;
-             mkdir_p dir;
-             cd dir do
+#             ### use persistent file for debugging
+#             dir = "d:/ziptemp";
+#             rm_rf dir;
+#             mkdir_p dir;
+#             cd dir do
 
-#            Dir.mktmpdir do |dir|
+            Dir.mktmpdir do |dir|
 
                 FileUtils.cd dir do
 
@@ -33,12 +33,12 @@ module ZipBuilderModule
                     # ensure we have a place to put the new zip file in.
                     FileUtils.mkdir_p(t.name.pathmap('%d'));
 
-                    cmdOpts = '-r -9 -v';
+                    cmdOpts = '-r9v';
                     unless cfg.verbose?
-                        cmdOpts = cmdOpts.gsub('-v','');
+                        cmdOpts = cmdOpts.gsub!('v','');
                     end
 
-                    cmdline = "zip #{cmdOpts} -b \"#{getRelativePath(t.name)}\" .";
+                    cmdline = "zip #{cmdOpts} \'#{getRelativePath(t.name)}\' .";
                     execLogged(cmdline, :verbose=>cfg.verbose?);
                 end
              # ruby seems to do this ok on windows and screws

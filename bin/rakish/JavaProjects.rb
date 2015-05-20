@@ -65,7 +65,7 @@ module JarBuilderModule
                         cmdOpts = cmdOpts.gsub('v','');
                     end
 
-                    cmdline = "\"#{cfg.java_home}/bin/jar\" #{cmdOpts} \"#{getRelativePath(t.name)}\" .";
+                    cmdline = "\'#{cfg.java_home}/bin/jar\' #{cmdOpts} \'#{getRelativePath(t.name)}\' .";
                     execLogged(cmdline, :verbose=>cfg.verbose?);
                 end
              # ruby seems to do this ok on windows and screws
@@ -266,7 +266,7 @@ public
                 cmdOpts = cmdOpts.gsub('v','');
             end
 
-            cmdline = "\"#{config.java_home}/bin/jar\" #{cmdOpts} \"#{getRelativePath(t.name)}\"";
+            cmdline = "\"#{config.java_home}/bin/jar\" #{cmdOpts} \'#{getRelativePath(t.name)}\'";
 
             t.jarContents.each do |path|
                 cmdline += " -C \"#{getRelativePath(path)}\" .";
