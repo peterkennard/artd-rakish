@@ -53,47 +53,8 @@ module JarBuilderModule
             # cd dir
 
             Dir.mktmpdir do |dir|
-
                 FileUtils.cd dir do
-
-                    cfg.archiveContents_.each do |entry|
-
-                        # copy or extract all the files for the jar to a temporary folder
-                        # then create a jar containing the contents
-                        # and delete the directory
-
-                        baseDir = entry[:baseDir];
-
-                        spl = baseDir.split('###',2)
-                        if(spl.length > 1)
-
-                            # from unzip man page
-                            #         "*.c" matches "foo.c" but not "mydir/foo.c"
-                            #           "**.c" matches both "foo.c" and "mydir/foo.c"
-                            #           "*/*.c" matches "bar/foo.c" but not "baz/bar/foo.c"
-                            #           "??*/*" matches "ab/foo" and "abc/foo"
-                            #                   but not "a/foo" or "a/b/foo"
-
-                            cmd = "unzip -q \"#{spl[0]}\" \"#{entry[:files].join("\" \"")}\" -x \"META-INF/*\" -d \"#{dir}\"";
-
-                            execLogged(cmd, :verbose=>verbose?);
-
-                        else
-                            contents = entry[:files];
-                            unless(FileCopySet === contents)
-                                contents = FileCopySet.new; # a new set for each entry.
-                                # for each entry add files to a copy set
-                                contents.addFileTree(entry[:destDir],baseDir,entry[:files]);
-                            end
-                            # copy the file set to the temp folder
-                            contents.filesByDir do |destDir,files|
-                                FileUtils.mkdir_p destDir;
-                                files.each do |file|
-                                    FileUtils.cp(file,destDir)
-                                end
-                            end
-                        end
-                    end
+                    loadTempDir(dir)
 
                     # ensure we have a place to put the new jar file it.
                     FileUtils.mkdir_p(t.name.pathmap('%d'));
