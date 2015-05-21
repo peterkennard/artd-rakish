@@ -125,7 +125,7 @@ module JavadocBuilderModule
             execLogged(cmdline, :verbose=>cfg.verbose?);
 
             dtime = Time.new;
-            File.open(t.name,'w') do |file|
+            File.open("#{t.name}/_buildDate.txt",'w') do |file|
                 file.puts("documentation built on #{dtime}");
             end
         end
@@ -135,7 +135,7 @@ module JavadocBuilderModule
         end
 
         def javadocTask(opts={})
-            tsk = Rake::FileTask.define_task "#{docOutputDir}/_buildDate.txt";
+            tsk = Rake::FileTask.define_task docOutputDir;
             tsk.enhance([:compile], &BuildJavadocAction);
             tsk.config = self;
             tsk
@@ -361,7 +361,7 @@ public
 
         docBuilder = createJavadocBuilder();
         docTask = docBuilder.javadocTask;
-
+        docTask.enhance([:compile]);
 
         zipBuilder = createZipBuilder();
         zipBuilder.addDirectory(docBuilder.docOutputDir "**/*");
