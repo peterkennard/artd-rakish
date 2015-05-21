@@ -13,7 +13,9 @@ module ZipBuilderModule
    	    def doBuildZipAction(t)
             cfg = t.config;
 
-            puts("creating #{t.name}");
+            if(cfg.verbose?)
+                puts("creating #{t.name} verbose=#{cfg.verbose}");
+            end
 
             # delete old archive file and liberate space ? zip when creating clears old file
             # FileUtils.rm_f t.name;
@@ -33,9 +35,9 @@ module ZipBuilderModule
                     # ensure we have a place to put the new zip file in.
                     FileUtils.mkdir_p(t.name.pathmap('%d'));
 
-                    cmdOpts = '-r9v';
-                    unless cfg.verbose?
-                        cmdOpts = cmdOpts.gsub!('v','');
+                    cmdOpts = '-r9q';
+                    if cfg.verbose?
+                        cmdOpts = cmdOpts.gsub('q','v');
                     end
 
                     cmdline = "zip #{cmdOpts} \'#{getRelativePath(t.name)}\' .";

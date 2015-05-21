@@ -97,9 +97,8 @@ module JavadocBuilderModule
 
     class JavadocBuilder < BuildConfig
 
-        def initialize(parent)
-            super(parent);
-            self.enableNewFields do |my|
+        addInitBlock do |pnt,opts|
+            enableNewFields do |my|
                 my.docOutputDir="#{BUILDDIR()}/javadoc/#{moduleName}/api";
             end
         end
@@ -108,12 +107,12 @@ module JavadocBuilderModule
 
             cfg = t.config;
 
-            log.debug("doc output path is [#{cfg.docOutputDir}]");
+            # log.debug("doc output path is [#{cfg.docOutputDir}]");
 
             FileUtils.mkdir_p(cfg.docOutputDir);
 
             cmdline = "\"#{cfg.java_home}/bin/javadoc\" -d \"#{cfg.docOutputDir}\"";
-
+            cmdline += " -quiet";
             unless(cfg.javaClassPaths.empty?)
                 classpath = cfg.javaClassPaths.join(';');
                 cmdline += " -classpath \"#{classpath}\"";
@@ -123,7 +122,6 @@ module JavadocBuilderModule
             cmdline += " -sourcepath \"#{sourcepath}\"";
             cmdline += " -subpackages \"com\"";
 
-            log.debug(cmdline);
             execLogged(cmdline, :verbose=>cfg.verbose?);
 
         end
