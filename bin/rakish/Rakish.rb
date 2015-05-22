@@ -7,6 +7,8 @@
 gemPath = File.expand_path("#{File.dirname(File.expand_path(__FILE__))}/..");
 $LOAD_PATH.unshift(gemPath) unless $LOAD_PATH.include?(gemPath)
 
+require 'open3.rb'
+
 module Kernel
 
 
@@ -137,15 +139,24 @@ module Rakish
 				log.info("#{cmdline}") if opts[:verbose]
 			end
 
+			# this will redirect both stdout and stderr to the "output" pipe
 			# TODO: handle throwing exception if the process aborts with an error return code
-			IO.popen(cmdline) do |output|
-				# be nice if there was a log.flush method.
-				# STDOUT.flush;  # should not be done in "batch" non TTY processes.
+			exit_status = nil;
+			Open3.popen2(cmdline, :err => [:child, :out]) do |i,output,t|
 				while line = output.gets do
 					log.info line.strip!
 				end
+				exit_status = t.value; # Process::Status object returned.
 			end
-			return $?
+ 			return(exit_status);
+#			IO.popen(cmdline) do |output|
+#				# be nice if there was a log.flush method.
+#				# STDOUT.flush;  # should not be done in "batch" non TTY processes.
+#				while line = output.gets do
+#					log.info line.strip!
+#				end
+#			end
+#			return $?
 		rescue => e
 			if(opts[:verbose])
 				if(cmdline.respond_to?(:to_ary))
