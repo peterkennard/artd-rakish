@@ -1,10 +1,7 @@
 myDir = File.dirname(__FILE__);
-unless defined? BUILD_OPTIONS_LOADED
-    MAKEDIR=File.expand_path("#{myDir}/rakish");
-end
-require "#{MAKEDIR}/CppProjects.rb";
-require "#{MAKEDIR}/JavaProjects.rb";
-require "#{MAKEDIR}/IntellijConfig.rb";
+require "#{myDir}/../bin/rakish/CppProjects.rb";
+require "rakish/JavaProjects.rb";
+require "rakish/IntellijConfig.rb";
 
 
 InitBuildConfig :include=>[ Rakish::IntellijConfig, Rakish::CppProjectConfig] do |cfg|

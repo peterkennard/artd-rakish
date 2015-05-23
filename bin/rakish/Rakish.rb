@@ -150,12 +150,10 @@ module Rakish
 			end
  			return(exit_status);
 #			IO.popen(cmdline) do |output|
-#				# be nice if there was a log.flush method.
-#				# STDOUT.flush;  # should not be done in "batch" non TTY processes.
 #				while line = output.gets do
 #					log.info line.strip!
 #				end
-#			end
+  #			end
 #			return $?
 		rescue => e
 			if(opts[:verbose])
@@ -989,12 +987,14 @@ public
 	module PropertyBagMod
 
 		# constructor for PropertyBagMod to be called by including classes
+		# TODO: have this take an array of parents like a path first hit wins.
 		def init_PropertyBag(*args)			
 			@h_ = (Hash === args.last) ? args.pop : {}			
 			@parent_=args.shift
+			@parents_=args; # in progress
 		end
 
-		# get the parent of this property bag
+		# get the first parent of this property bag
 		def parent
 			@parent_
 		end
@@ -1040,7 +1040,14 @@ public
 					if(self.class.method_defined? sym)
 						v=__send__(sym)
 					else
-						v=@parent_.get(sym) if @parent_
+						if(@parent_)
+							v=@parent_.get(sym);
+#							v2 = @parents_.each do |p|
+#								val = p.get(sym);
+#								return(val) if val;
+#							end
+#							log.debug("is same #{v == v2}");
+						end
 					end
 				end
 			end
@@ -1127,7 +1134,7 @@ public
 #		end
 	end
 
-	# general purpose property bag :see: PropertyBabMod
+	# general purpose property bag :see: PropertyBagMod
 	class PropertyBag < Module
 		include PropertyBagMod
 		
