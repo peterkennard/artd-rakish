@@ -989,12 +989,16 @@ public
 		# constructor for PropertyBagMod to be called by including classes
 		# TODO: have this take an array of parents like a path first hit wins.
 		def init_PropertyBag(*args)			
-			@h_ = (Hash === args.last) ? args.pop : {}			
-			@parent_=args.shift
+
+
+			@h_ = (Hash === args.last) ? args.pop : {}
 			@parents_=args; # in progress
+			if(args.length > 0)
+				@parent_=args[0];
+		    end
 		end
 
-		# get the first parent of this property bag
+		# get the first parent of this property bag if any
 		def parent
 			@parent_
 		end
@@ -1031,7 +1035,19 @@ public
 			@h_[k]=v
 		end
 
-		# get value for property, traverse up parent tree to get first inherited 
+		# get inherited value value for property, traverse up parent tree to get first inherited
+		# value or nil ifnot found
+		def getInherited(sym)
+			if(@parents_)
+				@parents_.each do |p|
+					val = p.get(sym);
+					return(val) if val;
+				end
+			end
+			nil
+		end
+
+		# get value for property, traverse up parent tree to get first inherited
 		# value if not present on this node, returns nil if property not found or
 		# it's value is nil
 		def get(sym)
@@ -1041,12 +1057,10 @@ public
 						v=__send__(sym)
 					else
 						if(@parent_)
-							v=@parent_.get(sym);
-#							v2 = @parents_.each do |p|
-#								val = p.get(sym);
-#								return(val) if val;
-#							end
-#							log.debug("is same #{v == v2}");
+							@parents_.each do |p|
+								val = p.get(sym);
+								return(val) if val;
+							end
 						end
 					end
 				end
@@ -1106,8 +1120,14 @@ public
 						end
 						return(@h_[sym]=args[0]) # assign value to property
 					elsif @parent_ # recurse to parent
-						return @parent_.get(sym) if(self.class.method_defined?("#{sym}="))
-						return @parent_.__send__(sym)
+				    	if(self.class.method_defined?("#{sym}="))
+				    		@parents_.each do |p|
+				    		    v = p.get(sym);
+				    		    return v if(v);
+								v = p.__send__(sym);
+				    		    return v if(v);
+				    		end
+						end
 					else
 						return v if (self.class.method_defined?("#{sym}="))
 						c = caller

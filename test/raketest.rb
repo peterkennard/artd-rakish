@@ -134,84 +134,99 @@ FooObj do
 #	puts("NEWUPPER == \"#{NEWUPPER}\"")
 end
 
+#module Rakish
+#
+#class TestProject < Project
+#    include BuildConfigMod
+#
+#    def TEST_CONST
+#        :BLAH
+#    end
+#
+#end
+#
+#end
+
 module Rakish
 
-class TestProject < Project
-    include BuildConfigMod
-
-    def TEST_CONST
-        :BLAH
-    end
-
-end
-
-end
-
-module Rakish
-
-module BooBoo
-
-	addInitBlock do
-        log.debug("initializing a BooBoo block");
-    end
-
-end
-
-module BaDaBoom
-    include BooBoo;
-
-    addInitBlock do
-        log.debug("initializing BaDaBoom on #{self}");
-        @myString = "ba do boom";
-    end
-
-    def printStuff
-        log.debug(@myString);
-    end
-
-end
-
-module BaDaBing
-
-    def printStuff2
-        log.debug("ba da bing!");
-    end
-
-end
-
-Rakish::TestProject.new( :name=>'project0'
-) do |c|
-	log.debug("test const is #{c.TEST_CONST}");
-end
-
-config = RakishProject(:name=>'project1', :extends=>TestProject, :includes=>[BaDaBing,BaDaBoom,BaDaBing,BooBoo]) do |c|
-
-
-
-	c.printStuff();
-	c.printStuff2();
-	log.debug("test const is #{c.TEST_CONST}");
-	c.set(:mysym, 121)
-end
-
-config2 = RakishProject(:name=>'project2', :config=>config, :includes=>[BaDaBoom,BaDaBing,BaDaBing]) do |c|
-	c.printStuff();
-	c.printStuff2();
-	log.debug "### new symbol is #{c.get(:mysym)}"
-	log.debug("test const is #{c.TEST_CONST}");
-end
-
-NewClass = Class.new
-
-log.debug("new name is #{NewClass.new().class.name()}");
+#module BooBoo
+#
+#	addInitBlock do
+#        log.debug("initializing a BooBoo block");
+#    end
+#
+#end
+#
+#module BaDaBoom
+#    include BooBoo;
+#
+#    addInitBlock do
+#        log.debug("initializing BaDaBoom on #{self}");
+#        @myString = "ba do boom";
+#    end
+#
+#    def printStuff
+#        log.debug(@myString);
+#    end
+#
+#end
+#
+#module BaDaBing
+#
+#    def printStuff2
+#        log.debug("ba da bing!");
+#    end
+#
+#end
+#
+#Rakish::TestProject.new( :name=>'project0'
+#) do |c|
+#	log.debug("test const is #{c.TEST_CONST}");
+#end
+#
+#config = RakishProject(:name=>'project1', :extends=>TestProject, :includes=>[BaDaBing,BaDaBoom,BaDaBing,BooBoo]) do |c|
+#
+#
+#
+#	c.printStuff();
+#	c.printStuff2();
+#	log.debug("test const is #{c.TEST_CONST}");
+#	c.set(:mysym, 121)
+#end
+#
+#config2 = RakishProject(:name=>'project2', :config=>config, :includes=>[BaDaBoom,BaDaBing,BaDaBing]) do |c|
+#	c.printStuff();
+#	c.printStuff2();
+#	log.debug "### new symbol is #{c.get(:mysym)}"
+#	log.debug("test const is #{c.TEST_CONST}");
+#end
+#
+#NewClass = Class.new
+#
+#log.debug("new name is #{NewClass.new().class.name()}");
 
 task :artdRakishTest => [] do |t|
+
+    cf1 = BuildConfig.new do |cfg|
+        cfg.enableNewFields do
+            cfg.field1 = "field1"
+        end
+    end
+    cf2 = BuildConfig.new(cf1) do |cfg|
+        cfg.enableNewFields do
+            cfg.field2 = "field2"
+        end
+    end
+
+    f1 = cf2.get(:field1);
+
+    log.debug("f1 == #{f1}");
     log.debug("test complete");
 end
 
 
 
 
-end
+end  # Rakish
 
 

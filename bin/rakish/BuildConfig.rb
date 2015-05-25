@@ -16,6 +16,7 @@ module BuildConfigMod
  	addInitBlock do |pnt,opts|
 
  		init_PropertyBag(pnt);
+ 		log.debug("initializing BuildConfig #{pnt}")
  		enableNewFields do |cfg|
 			if(pnt)
  				cfg.CPP_CONFIG = pnt.get(:CPP_CONFIG);
