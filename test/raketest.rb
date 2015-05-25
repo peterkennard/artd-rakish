@@ -12,9 +12,9 @@ InitBuildConfig :include=>[ Rakish::IntellijConfig, Rakish::CppProjectConfig] do
 	cfg.BUILDDIR = "#{cfg.didiRoot}/build";
 	cfg.resourceDir = "#{cfg.BUILDDIR}/Didi/production/.didi";
 	cfg.demoRoot = "#{cfg.BUILDDIR}/Didi/DidiDemos";
-	cfg.javaHome = ENV['JAVA_HOME'];
+	cfg.java_home = ENV['JAVA_HOME'];
 
-	if(cfg.javaHome =~ /Program Files \(x86\)/)
+	if(cfg.java_home =~ /Program Files \(x86\)/)
 		cfg.CPP_CONFIG = 'Win32-VC10-MD-Debug';
 	else
 		cfg.CPP_CONFIG = 'Win64-VC10-MD-Debug'

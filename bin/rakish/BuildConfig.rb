@@ -16,7 +16,7 @@ module BuildConfigMod
  	addInitBlock do |pnt,opts|
 
  		init_PropertyBag(pnt);
- 		log.debug("initializing BuildConfig #{pnt}")
+ 	#	log.debug("initializing BuildConfig #{pnt}")
  		enableNewFields do |cfg|
 			if(pnt)
  				cfg.CPP_CONFIG = pnt.get(:CPP_CONFIG);
@@ -74,21 +74,21 @@ module BuildConfigMod
 
 
 	def BUILDDIR
-		@BUILDDIR||=(@parent_ ? @parent_.BUILDDIR : nil)
+		@BUILDDIR||=getInherited(:BUILDDIR);
 	end
 
 	def OBJDIR
-		@OBJDIR||=(@parent_ ? @parent_.OBJDIR : nil)
+		@OBJDIR||=getInherited(:OBJDIR);
 	end
 
 	def BINDIR
-        @BINDIR||=@parent_?@parent_.BINDIR():"#{BUILDDIR()}/bin";
+        @BINDIR||=getInherited(:BINDIR)||"#{BUILDDIR()}/bin";
 	end
 
 	attr_accessor 	:verbose
 
 	def verbose?
-		@verbose ||= (@parent_ ? @parent_.verbose? : nil)
+		@verbose ||= getInherited(:verbose);
 	end
 end
 

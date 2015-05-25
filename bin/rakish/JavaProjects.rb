@@ -7,12 +7,12 @@ module Rakish
 module JavaProjectConfig
 
     attr_reader :javaOutputClasspath
-    attr_reader :java_home
 
     def javaClassPaths
-        @javaClassPaths_||=(@parent_.get(:javaClassPaths)||FileSet.new);
+        @javaClassPaths_||=(getInherited(:javaClassPaths)||FileSet.new);
     end
     def addJavaClassPaths(*paths)
+        # TODO: needs to not clobber the ancestor's classpath
 		@javaClassPaths_||= FileSet.new;
         @javaClassPaths_.include(paths);
     end
@@ -82,13 +82,14 @@ module JarBuilderModule
         def jarTask(*args)
             tsk = ArchiveTask.define_task(*args).enhance(nil,&@@buildJarAction_);
             tsk.config = self;
+            log.debug("check xxxxx #{self.java_home}");
             tsk
         end
 
     end
 
     def createJarBuilder
-        JarBuilder.new(self); # for now we make the parent project the parent config
+        jb = JarBuilder.new(self); # for now we make the parent project the parent config
     end
 
 end
@@ -158,10 +159,9 @@ module JavaProjectModule
 protected
 
     addInitBlock do |pnt,opts|
-        if(pnt != nil)
-            @java_home = pnt.get(:java_home);
+        enableNewFields do |my|
+            my.java_home = my.getInherited(:java_home) || File.expand_path(ENV['JAVA_HOME']);
         end
-        @java_home ||= File.expand_path(ENV['JAVA_HOME']);
     end
 
     CompileJavaAction = ->(t) do

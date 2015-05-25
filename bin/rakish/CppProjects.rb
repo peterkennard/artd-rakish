@@ -246,17 +246,17 @@ module CppProjectConfig
  	end
 
 	def INCDIR
-		@INCDIR||=@parent_?@parent_.INCDIR():"#{BUILDDIR()}/include";
+		@INCDIR||=getInherited(:INCDIR)||"#{BUILDDIR()}/include";
 	end
 	def BINDIR
-		@BINDIR||=@parent_?@parent_.BINDIR():"#{BUILDDIR()}/bin";
+		@BINDIR||=getInherited(:BINDIR)||"#{BUILDDIR()}/bin";
 	end
 	def LIBDIR
-		@LIBDIR||=@parent_?@parent_.LIBDIR():"#{BUILDDIR()}/lib";
+		@LIBDIR||=getInherited(:LIBDIR)||"#{BUILDDIR()}/lib";
 	end
 
 	def vcprojDir
-		@vcprojDir||=@parent_?@parent_.vcprojDir():"#{BUILDDIR()}/vcproj";
+		@vcprojDir||=getInherited(:vcprojDir)||"#{BUILDDIR()}/vcproj";
 	end
 
     # add include paths in order to the current list of include paths.

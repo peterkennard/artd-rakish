@@ -988,22 +988,35 @@ public
 
 		# constructor for PropertyBagMod to be called by including classes
 		# TODO: have this take an array of parents like a path first hit wins.
-		def init_PropertyBag(*args)			
-
-
+		def init_PropertyBag(*args)
 			@h_ = (Hash === args.last) ? args.pop : {}
-			@parents_=args; # in progress
 			if(args.length > 0)
 				@parent_=args[0];
 		    end
-		end
+		    # make parents array the array in the of order of encounter all all unique parents.
+		    allP = [];
+			args.each do |p|
+            	if(p)
+					allP << p;
+					allP << p.parents;
+            	end
+			end
+			@parents_ = allP.flatten.uniq;
+
+			# log.debug("****** parents #{@parents_} allP #{allP}")
+  		end
 
 		# get the first parent of this property bag if any
 		def parent
 			@parent_
 		end
 
-		# enable creation of new fields in a property bag within the suppiled block.
+		# get the list of ancestors (flattened) in search order.
+		def parents
+			@parents_
+		end
+
+		# enable creation of new fields in a property bag within the supplied block.
 		# may be called recursively
 		
 		def enableNewFields(&b)
@@ -1035,12 +1048,12 @@ public
 			@h_[k]=v
 		end
 
-		# get inherited value value for property, traverse up parent tree to get first inherited
-		# value or nil ifnot found
-		def getInherited(sym)
+		# get inherited value value for property, traverse up parent tree via flattened
+		# ancestor list to get first inherited value or nil if not found
+		def getInherited(sym, opts={})
 			if(@parents_)
 				@parents_.each do |p|
-					val = p.get(sym);
+					val = p.getMy(sym);
 					return(val) if val;
 				end
 			end
@@ -1058,7 +1071,7 @@ public
 					else
 						if(@parent_)
 							@parents_.each do |p|
-								val = p.get(sym);
+								val = p.getMy(sym);
 								return(val) if val;
 							end
 						end
@@ -1091,7 +1104,19 @@ public
 		def has_key?(k)
 			@h_.has_key?(k)
 		end
-		
+
+		def hasAncestorKey(sym)
+			@parents_.each do |p|
+				return(true) if p.has_key?(sym);
+			end
+			false
+		end
+
+		# needed so we can flatten the parents array.
+		def to_ary
+		   	nil
+		end
+
 		# allows 'dot' access to properties.
 		#   ie:  value = bag.nameOfProperty
 		#        bag.nameOfProperty = newValue
@@ -1104,27 +1129,34 @@ public
 		#
 		def method_missing(sym, *args, &block)
 
+
 			if((v=@h_[sym]).nil?)
 				unless @h_.has_key?(sym) # if property exists nil is a valid value
 					if sym.to_s =~ /=$/ # it's an attempted asignment ie: ':sym='
 						sym = $`.to_sym  # $` has symbol with '=' chopped off
-						unless @ul_ # if locked check if there is an inherited 
+						unless @ul_ # if not locked check if there is an inherited
 									# property declared by an ancestor to assign to
-							p = self
-							until(p.has_key?(sym))
-								super unless(p=p.parent) # raise no method exception!
+							unless(has_key?(sym))
+						        log.debug(" check ancestor key #{sym}");
+								super unless hasAncestorKey(sym); # raise no method exception if no key!
 							end
+#							p = self
+#							until()
+#								super unless(p=p.parent)
+#							end
 						end
 						if(self.class.method_defined? sym)
+							log.debug(" class method defined #{sym}");
 							raise PropertyBagMod::cantOverideX_(sym)
 						end
 						return(@h_[sym]=args[0]) # assign value to property
 					elsif @parent_ # recurse to parent
+						if(sym === :java_home)
+							log.debug(" looking in parents for java_home #{getInherited(:java_home)}")
+						end
 				    	if(self.class.method_defined?("#{sym}="))
 				    		@parents_.each do |p|
-				    		    v = p.get(sym);
-				    		    return v if(v);
-								v = p.__send__(sym);
+				    		    v = p.getMy(sym);
 				    		    return v if(v);
 				    		end
 						end
