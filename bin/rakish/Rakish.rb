@@ -1135,9 +1135,8 @@ public
 					if sym.to_s =~ /=$/ # it's an attempted asignment ie: ':sym='
 						sym = $`.to_sym  # $` has symbol with '=' chopped off
 						unless @ul_ # if not locked check if there is an inherited
-									# property declared by an ancestor to assign to
+									# property key declared by an ancestor to assign to
 							unless(has_key?(sym))
-						        log.debug(" check ancestor key #{sym}");
 								super unless hasAncestorKey(sym); # raise no method exception if no key!
 							end
 #							p = self
@@ -1146,19 +1145,16 @@ public
 #							end
 						end
 						if(self.class.method_defined? sym)
-							log.debug(" class method defined #{sym}");
 							raise PropertyBagMod::cantOverideX_(sym)
 						end
 						return(@h_[sym]=args[0]) # assign value to property
-					elsif @parent_ # recurse to parent
-						if(sym === :java_home)
-							log.debug(" looking in parents for java_home #{getInherited(:java_home)}")
-						end
-				    	if(self.class.method_defined?("#{sym}="))
+					elsif @parent_ # recurse to parents
+					# we don't recurse here but check the flattened parent list in order
+				    #	if(self.class.method_defined?("#{sym}="))
 				    		@parents_.each do |p|
 				    		    v = p.getMy(sym);
 				    		    return v if(v);
-				    		end
+				    #		end
 						end
 					else
 						return v if (self.class.method_defined?("#{sym}="))

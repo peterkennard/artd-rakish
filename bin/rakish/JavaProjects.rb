@@ -26,7 +26,7 @@ module JarBuilderModule
 
         def addDirectory(dir,*filters)
             if(filters.length < 1)
-               filters=['**/*.class'];
+               filters=['**/*'];
             end
             filters.map! do |filter|
                 File.join(dir,filter);
@@ -46,11 +46,11 @@ module JarBuilderModule
             # delete old jar file and liberate space ? jar when creating clears old file
             # FileUtils.rm_f t.name;
 
-            # use persistent file for debugging
-            # dir = "d:/jartemp";
-            # rm_rf dir;
-            # mkdir_p dir;
-            # cd dir
+#             ## use persistent file for debugging
+#             dir = "d:/jartemp";
+#             rm_rf dir;
+#             mkdir_p dir;
+#             cd dir do
 
             Dir.mktmpdir do |dir|
                 FileUtils.cd dir do
@@ -82,7 +82,6 @@ module JarBuilderModule
         def jarTask(*args)
             tsk = ArchiveTask.define_task(*args).enhance(nil,&@@buildJarAction_);
             tsk.config = self;
-            log.debug("check xxxxx #{self.java_home}");
             tsk
         end
 
