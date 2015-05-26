@@ -24,16 +24,6 @@ module JarBuilderModule
 
     public
 
-        def addDirectory(dir,*filters)
-            if(filters.length < 1)
-               filters=['**/*'];
-            end
-            filters.map! do |filter|
-                File.join(dir,filter);
-            end
-            addFileTree('.',dir,*filters);
-        end
-
         def addJarContents(jarPath,*filters)
             addZipContents(jarPath,*filters);
         end
