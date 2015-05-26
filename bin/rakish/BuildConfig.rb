@@ -19,7 +19,7 @@ module BuildConfigMod
  	#	log.debug("initializing BuildConfig #{pnt}")
  		enableNewFields do |cfg|
 			if(pnt)
- 				cfg.CPP_CONFIG = pnt.get(:CPP_CONFIG);
+ 				cfg.CPP_CONFIG = getInherited(:CPP_CONFIG);
  			end
  		end
  	end
