@@ -3,7 +3,6 @@ require "#{myDir}/../bin/rakish/CppProjects.rb";
 require "rakish/JavaProjects.rb";
 require "rakish/IntellijConfig.rb";
 
-
 InitBuildConfig :include=>[ Rakish::IntellijConfig, Rakish::CppProjectConfig] do |cfg|
 
 	cfg.thirdPartyPath = File.expand_path("#{myDir}/../../third-party");
@@ -221,10 +220,20 @@ task :artdRakishTest => [] do |t|
     f1 = cf2.get(:field1);
 
     log.debug("f1 == #{f1}");
-    log.debug("test complete");
+
+    path = ENV["PATH"];
+
+    path = path.split(';');
+
+    path = path.join("\n           ");
+
+    puts("path = #{path}");
+
 end
 
-
+task :default => [ :artdRakishTest ] do |t|
+    log.debug("test complete");
+end
 
 
 end  # Rakish
