@@ -8,10 +8,21 @@ module ZipBuilderModule
 
     class ZipBuilder < ArchiveBuilder
 
+        addInitBlock do |pnt,opts|
+			if(BASEHOSTTYPE =~ /Windows/)
+                @@zipPath_ ||= "#{thirdPartyPath}/tools/msysgit/bin/zip.exe";
+            else
+                @@zipPath_ ||= '/bin/zip';
+            end
+        end
+
     public
 
    	    def doBuildZipAction(t)
+
+
             cfg = t.config;
+
 
             if(cfg.verbose?)
                 puts("creating #{t.name} verbose=#{cfg.verbose}");
@@ -40,7 +51,7 @@ module ZipBuilderModule
                         cmdOpts = cmdOpts.gsub('q','v');
                     end
 
-                    cmdline = "zip #{cmdOpts} \'#{getRelativePath(t.name)}\' .";
+                    cmdline = "\"#{@@zipPath_}\" #{cmdOpts} \'#{getRelativePath(t.name)}\' .";
                     execLogged(cmdline, :verbose=>cfg.verbose?);
                 end
              # ruby seems to do this ok on windows and screws

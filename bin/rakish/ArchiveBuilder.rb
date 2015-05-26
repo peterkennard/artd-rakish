@@ -12,6 +12,13 @@ module Rakish
 
         addInitBlock do |pnt,opts|
             @archiveContents_ = [];
+
+            if(BASEHOSTTYPE =~ /Windows/)
+                @@unzipPath_ ||= "#{thirdPartyPath}/tools/msysgit/bin/unzip.exe";
+            else
+                @@unzipPath_ ||= '/bin/unzip';
+            end
+
         end
 
         # archiveContents has these "fields"
@@ -94,7 +101,7 @@ module Rakish
                     #           "??*/*" matches "ab/foo" and "abc/foo"
                     #                   but not "a/foo" or "a/b/foo"
 
-                    cmd = "unzip -q \"#{spl[0]}\" \"#{entry[:files].join("\" \"")}\" -x \"META-INF/*\" -d \"#{dir}\"";
+                    cmd = "\"#{@@unzipPath_}\" -q \"#{spl[0]}\" \"#{entry[:files].join("\" \"")}\" -x \"META-INF/*\" -d \"#{dir}\"";
 
                     execLogged(cmd, :verbose=>verbose?);
 
