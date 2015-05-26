@@ -110,6 +110,7 @@ module Rakish
 			end
 		end
 		def log
+			STDOUT.flush;
 			Rakish.log
 		end
 	end
