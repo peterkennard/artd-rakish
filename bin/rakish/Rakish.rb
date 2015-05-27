@@ -143,7 +143,7 @@ module Rakish
 			# this will redirect both stdout and stderr to the "output" pipe
 			# TODO: handle throwing exception if the process aborts with an error return code
 			exit_status = nil;
-			Open3.popen2(cmdline, :err => [:child, :out]) do |i,output,t|
+			Open3.popen2(*cmdline, :err => [:child, :out]) do |i,output,t|
 				while line = output.gets do
 					log.info line.strip!
 				end
