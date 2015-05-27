@@ -287,8 +287,15 @@ module Rake
 	end
 
 	module TaskManager
-		def _trc
-			puts("** namespace \":#{@scope.join(':')}\"");
+
+		if(RUBY_VERSION =~ /^2./)
+			def _trc
+				puts("** namespace \":#{@scope.path}\"");
+			end
+		else # ruby 1.9.X
+			def _trc
+				puts("** namespace \":#{@scope.join(':')}\"");
+			end
 		end
 		private :_trc
 
@@ -318,36 +325,83 @@ module Rake
 			end
 		end
 
-		# this allows for explicitly setting an "absolute" namespace from string
-		rake_extension('in_namespace_path') do
-			def in_namespace_path(name,&b)
-				prior=@scope
-				if(name.instance_of?(String))
-					spl = name.split(':');
-					if(spl.size() == 0 || spl[0].length == 0) # absolute
-						spl.shift();
-						@scope = spl;
-					else # relative
-						@scope = Array.new(prior).concat(spl);
+		if(RUBY_VERSION =~ /^2./)
+			# this allows for explicitly setting an "absolute" namespace from string
+			rake_extension('in_namespace_path') do
+				def in_namespace_path(name,&b)
+
+					# handle new scope which is a linked list instead of an array
+					prior=@scope
+					if(name.instance_of?(String))
+						spl = name.split(':');
+						newScope = @scope;
+						if(spl.size() == 0 || spl[0].length == 0) # absolute, begins with ':'
+							spl.shift();
+							# Rakish.log.debug("prior scope is \"#{name}\" => \"#{prior.path}\"");
+							newScope = Scope.make;
+						# else # relative
+						    # TODO: handle '..:..: for back a level ???
+						end
+						spl.each do |elem|
+							newScope = Scope.new(elem,newScope);
+						end
+						@scope = newScope;
+						# Rakish.log.debug("new scope is \"#{@scope.path}\"");
+					elsif(name) # untested
+						Rakish.log.debug("prior scope is \"#{prior.path}\"");
+						@scope=Scope.new(name,@scope);
+						Rakish.log.debug("new scope is \"#{@scope.path}\"");
+					else # untested
+						Rakish.log.debug("prior scope is \"#{prior.path}\"");
+						@scope=Scope.make; # explicit to root
+						Rakish.log.debug("new scope is \"#{@scope.path}\"");
 					end
-				elsif(name)
-					@scope=Array.new(prior).push(name);
-				else
-					@scope=Array.new
-				end
-				if options.trace
-					_trc
-				end
-				ns = NameSpace.new(self,@scope);
-				yield(ns)
-				ns
-			ensure
-				@scope=prior;
-				if options.trace
-					_trc
+					if options.trace
+						_trc
+					end
+					ns = NameSpace.new(self,@scope);
+					yield(ns)
+					ns
+				ensure
+					@scope=prior;
+					if options.trace
+						_trc
+					end
 				end
 			end
-		end
+
+		else # Ruby 1.9.X
+			# this allows for explicitly setting an "absolute" namespace from string
+			rake_extension('in_namespace_path') do
+				def in_namespace_path(name,&b)
+					prior=@scope
+					if(name.instance_of?(String))
+						spl = name.split(':');
+						if(spl.size() == 0 || spl[0].length == 0) # absolute
+							spl.shift();
+							@scope = spl;
+						else # relative
+							@scope = Array.new(prior).concat(spl);
+						end
+					elsif(name)
+						@scope=Array.new(prior).push(name);
+					else
+						@scope=Array.new
+					end
+					if options.trace
+						_trc
+					end
+					ns = NameSpace.new(self,@scope);
+					yield(ns)
+					ns
+				ensure
+					@scope=prior;
+					if options.trace
+						_trc
+					end
+				end
+			end
+		end # ruby 1.9.X
 	end
 end
 

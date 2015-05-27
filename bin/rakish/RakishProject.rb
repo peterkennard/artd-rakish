@@ -328,7 +328,12 @@ class Project < BuildConfig
                 # initialize properties from the parent configuration and initialize included modules.
                 super(parent,args) {}
 
-				@myNamespace = "#{Rake.application.current_scope.join(':')}"
+				if(RUBY_VERSION =~ /^2./)
+					@myNamespace = Rake.application.current_scope.path;
+				else
+					@myNamespace = "#{Rake.application.current_scope.join(':')}"
+				end
+
 		        initProject(args);
 				instance_eval(&block) if block;
 			end
