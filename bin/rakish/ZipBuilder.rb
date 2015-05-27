@@ -51,7 +51,7 @@ module ZipBuilderModule
                         cmdOpts = cmdOpts.gsub('q','v');
                     end
 
-                    cmdline = "\"#{@@zipPath_}\" #{cmdOpts} \'#{getRelativePath(t.name)}\' .";
+                    cmdline = "\"#{@@zipPath_}\" #{cmdOpts} \'#{t.name)}\' .";
                     execLogged(cmdline, :verbose=>cfg.verbose?);
                 end
              # ruby seems to do this ok on windows and screws
