@@ -8,10 +8,8 @@ module JavaProjectConfig
 
     attr_reader :javaOutputClasspath
 
-
-    puts "XXXXXXXXXXXX  #{RUBY_PLATFORM}"
     def classpathSeparator
-       @@classpathSeparator_||=';'
+       @@classpathSeparator_||= (RUBY_PLATFORM =~ /linux/ ? ':' : ';');
     end
 
     def javaClassPaths
@@ -185,11 +183,13 @@ public
         cmdline = "\"#{config.java_home}/bin/javac\"";
         cmdline << " -g -d \"#{outClasspath}\""
 
+        separator = config.classpathSeparator;
         paths = config.javaClassPaths
+
         unless(paths.empty?)
             cmdline << " -classpath \"#{outClasspath}";
             paths.each do |path|
-                cmdline << ";#{getRelativePath(path)}"
+                cmdline << "#{separator}#{getRelativePath(path)}"
             end
             cmdline << "\"";
         end
@@ -199,7 +199,7 @@ public
             prepend = " -sourcepath \"";
             paths.each do |path|
                 cmdline << "#{prepend}#{getRelativePath(path)}"
-                prepend = ';'
+                prepend = separator;
             end
             cmdline << "\"";
         end
