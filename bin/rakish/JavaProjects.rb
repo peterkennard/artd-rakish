@@ -9,7 +9,7 @@ module JavaProjectConfig
     attr_reader :javaOutputClasspath
 
     def classpathSeparator
-       @@classpathSeparator_||= (BASEHOSTTYPE =~ /Windows/ ? ';' : ':');
+       @@classpathSeparator_||= ( BuildConfig.BASEHOSTTYPE =~ /Windows/ ? ';' : ':');
     end
 
     def javaClassPaths
