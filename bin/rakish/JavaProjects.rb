@@ -105,11 +105,12 @@ module JavadocBuilderModule
             # log.debug("doc output path is [#{cfg.docOutputDir}]");
 
             FileUtils.mkdir_p(cfg.docOutputDir);
+            separator = cfg.classpathSeparator;
 
             cmdline = "\"#{cfg.java_home}/bin/javadoc\" -d \"#{cfg.docOutputDir}\"";
             cmdline += " -quiet";
             unless(cfg.javaClassPaths.empty?)
-                classpath = cfg.javaClassPaths.join(';');
+                classpath = cfg.javaClassPaths.join(separator);
                 cmdline += " -classpath \"#{classpath}\"";
             end
 
