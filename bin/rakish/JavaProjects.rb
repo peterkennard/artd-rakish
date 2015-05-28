@@ -8,6 +8,12 @@ module JavaProjectConfig
 
     attr_reader :javaOutputClasspath
 
+
+    puts "XXXXXXXXXXXX  #{RUBY_PLATFORM}"
+    def classpathSeparator
+       @@classpathSeparator_||=';'
+    end
+
     def javaClassPaths
         @javaClassPaths_||=(getInherited(:javaClassPaths)||FileSet.new);
     end
