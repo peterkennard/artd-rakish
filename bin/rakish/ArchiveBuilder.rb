@@ -16,7 +16,7 @@ module Rakish
             if(BASEHOSTTYPE =~ /Windows/)
                 @@unzipPath_ ||= "#{thirdPartyPath}/tools/msysgit/bin/unzip.exe";
             else
-                @@unzipPath_ ||= '/bin/unzip';
+                @@unzipPath_ ||= 'unzip'; # let path search find it
             end
 
         end

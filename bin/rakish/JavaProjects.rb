@@ -9,7 +9,7 @@ module JavaProjectConfig
     attr_reader :javaOutputClasspath
 
     def classpathSeparator
-       @@classpathSeparator_||= (RUBY_PLATFORM =~ /linux/ ? ':' : ';');
+       @@classpathSeparator_||= (BASEHOSTTYPE =~ /Windows/ ? ';' : ':');
     end
 
     def javaClassPaths
