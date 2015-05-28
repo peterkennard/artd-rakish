@@ -159,8 +159,12 @@ protected
 
 public
 
+    def javaClassPaths
+        # todo: DON'T ALLOCATE COPY UNTIL THINGS ARE ADDED NEED FLAG :)
+        @javaClassPaths_||=FileSet.new(getInherited(:javaClassPaths));
+    end
     def addJavaClassPaths(*paths)
-		@javaClassPaths_||= FileSet.new;
+        @javaClassPaths_||= FileSet.new(getInherited(:javaClassPaths));
         @javaClassPaths_.include(paths);
     end
 
