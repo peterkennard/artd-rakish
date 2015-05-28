@@ -5,11 +5,12 @@ module Rakish
 
 
 module JavaProjectConfig
+    include BuildConfigMod
 
     attr_reader :javaOutputClasspath
 
     def classpathSeparator
-       @@classpathSeparator_||= ( BuildConfig.BASEHOSTTYPE =~ /Windows/ ? ';' : ':');
+       @@classpathSeparator_||= ( BASEHOSTTYPE =~ /Windows/ ? ';' : ':');
     end
 
     def javaClassPaths
