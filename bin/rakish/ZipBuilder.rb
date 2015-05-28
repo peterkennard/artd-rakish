@@ -12,7 +12,7 @@ module ZipBuilderModule
 			if(BASEHOSTTYPE =~ /Windows/)
                 @@zipPath_ ||= "#{thirdPartyPath}/tools/msysgit/bin/zip.exe";
             else
-                @@zipPath_ ||= '/bin/zip';
+                @@zipPath_ ||= 'zip'; # allow path to find it
             end
         end
 
