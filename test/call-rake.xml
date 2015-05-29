@@ -1,8 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="call-rake" default="">
 
+	<dirname property="my.directory" file="${ant.file.call-rake}"/>
+	<dirname property="jsdk.home" file="${java.home}"/>
+
 	<condition property="rake.exec.path"
-			   value="${ant.file.call-rake}\..\third-party\tools\exec-rake.bat"
+			   value="${my.directory}\..\..\..\third-party\tools\exec-rake.bat"
 			   else="/usr/bin/rake">
 		<os family="windows"/>
 	</condition>
@@ -11,8 +14,6 @@
 		<echoproperties/>
 	</target>
 
-	<dirname property="tools.path" file="${ant.file.call-rake}"/>
-	<dirname property="jsdk.home" file="${java.home}"/>
 
     <macrodef name="call-rake">
 		<attribute name="file" default="./rakefile.rb"/>
