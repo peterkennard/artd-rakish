@@ -31,24 +31,22 @@
 	</condition>
 
 	<macrodef name="createOsMacros">
-		<sequential>
-			<sequential if:set="os.windows">
-				<macrodef name="doOsMacro">
-					<attribute name="printstring" default="windows string"/>
-					<sequential>
-						<echo message="@{printstring}" />
-					</sequential>
-				</macrodef>
-			</sequential>
-			<sequential if:set="os.linux">
-				<macrodef name="doOsMacro">
-					<attribute name="printstring" default="unix string"/>
-					<sequential>
-						<echo message="@{printstring}" />
-					</sequential>
-				</macrodef>
-			</sequential>
-		</sequential>
+        <sequential if:set="os.windows">
+            <macrodef name="doOsMacro">
+                <attribute name="printstring" default="windows string"/>
+                <sequential>
+                    <echo message="@{printstring}" />
+                </sequential>
+            </macrodef>
+        </sequential>
+        <sequential if:set="os.linux">
+            <macrodef name="doOsMacro">
+                <attribute name="printstring" default="unix string"/>
+                <sequential>
+                    <echo message="@{printstring}" />
+                </sequential>
+            </macrodef>
+        </sequential>
 	</macrodef>
 
 	<createOsMacros />
