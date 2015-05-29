@@ -19,7 +19,7 @@
         <attribute name="target" default="_not_set_" />
 		<attribute name="log" default="rake.log"/>
 		<attribute name="trace" default=""/>
-		<attribute name="rake.path" default="${tools.path}\exec-rake.bat"/>
+		<attribute name="rake.path" default="${rake.exec.path}"/>
 		<attribute name="java.home" default="${jsdk.home}"/>
 		<attribute name="idea.project" default="${user.dir}/.idea"/>
         <sequential>
