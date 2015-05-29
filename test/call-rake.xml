@@ -3,7 +3,7 @@
 
 	<condition property="rake.exec.path"
 			   value="${ant.file.call-rake}\..\third-party\tools\exec-rake.bat"
-			   else="rake">
+			   else="/usr/bin/rake">
 		<os family="windows"/>
 	</condition>
 
