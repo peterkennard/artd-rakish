@@ -1,7 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="rake-targets" default="">
 
-    <import file="../../third-party/tools/call-rake.xml"  />
+    <import file="./call-rake.xml"  />
+
+
+    <target name="showprops">
+        <echoproperties/>
+    </target>
 
     <target name="resources" description="install resources in runtime area">
         <call-rake target="resources" />
