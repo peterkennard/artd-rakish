@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project name="call-rake" default="">
+<project
+		name="call-rake"
+		default=""
+		xmlns:if="ant:if"
+		>
 
 	<dirname property="my.directory" file="${ant.file.call-rake}"/>
 	<dirname property="jsdk.home" file="${java.home}"/>
@@ -10,39 +14,80 @@
 		<os family="windows"/>
 	</condition>
 
+	<condition property="use.windows.macros"
+			   value="true">
+		<os family="windows"/>
+	</condition>
+	<condition property="use.linux.macros"
+			   value="true">
+		<os family="unix"/>
+	</condition>
+
+	<condition property="os.windows">
+		<os family="windows"/>
+	</condition>
+	<condition property="os.linux">
+		<os family="unix" name="linux" />
+	</condition>
+
+	<macrodef name="createOsMacros">
+		<sequential>
+			<sequential if:set="os.windows">
+				<macrodef name="doOsMacro">
+					<attribute name="printstring" default="windows string"/>
+					<sequential>
+						<echo message="@{printstring}" />
+					</sequential>
+				</macrodef>
+			</sequential>
+			<sequential if:set="os.linux">
+				<macrodef name="doOsMacro">
+					<attribute name="printstring" default="unix string"/>
+					<sequential>
+						<echo message="@{printstring}" />
+					</sequential>
+				</macrodef>
+			</sequential>
+		</sequential>
+	</macrodef>
+
+	<createOsMacros />
+
+	<doOsMacro />
+
 	<target name="showprops">
 		<echoproperties/>
 	</target>
 
 
-    <macrodef name="call-rake">
+	<macrodef name="call-rake">
 		<attribute name="file" default="./rakefile.rb"/>
-        <attribute name="target" default="_not_set_" />
+		<attribute name="target" default="_not_set_" />
 		<attribute name="log" default="rake.log"/>
 		<attribute name="trace" default=""/>
 		<attribute name="rake.path" default="${rake.exec.path}"/>
 		<attribute name="java.home" default="${jsdk.home}"/>
 		<attribute name="idea.project" default="${user.dir}/.idea"/>
-        <sequential>
+		<sequential>
 			<property name="_rake_target_" value="@{target}" />
 			<script language="javascript">
 				if(project.getProperty("_rake_target_") == "_not_set_") {
-					project.setProperty("_rake_target_", self.getOwningTarget());
+				project.setProperty("_rake_target_", self.getOwningTarget());
 				}
 			</script>
 			<record name="@{log}" action="start"/>
-		    <exec executable="cmd">
-                <arg value="/c"/>
-                <arg value="@{rake.path}"/>
-                <arg value="-f"/>
-                <arg value="@{file}"/>
-                <arg value="@{trace}"/>
-                <arg value="${_rake_target_}"/>
+			<exec executable="cmd">
+				<arg value="/c"/>
+				<arg value="@{rake.path}"/>
+				<arg value="-f"/>
+				<arg value="@{file}"/>
+				<arg value="@{trace}"/>
+				<arg value="${_rake_target_}"/>
 				<arg value="&quot;'JAVA_HOME=@{java.home}'&quot;"/>
 				<arg value="&quot;'IDEA_PROJECT=@{idea.project}'&quot;"/>
-            </exec>
-            <record name="@{log}" action="stop"/>
-        </sequential>
-    </macrodef>
+			</exec>
+			<record name="@{log}" action="stop"/>
+		</sequential>
+	</macrodef>
 
 </project>
