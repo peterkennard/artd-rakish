@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="call-rake" default="">
 
-
-	<condition property="IS_WINDOWS" value="we are in a windows call" else="not in a windows call">
+	<condition property="rake.exec.path"
+			   value="${ant.file.call-rake}\..\third-party\tools\exec-rake.bat"
+			   else="rake">
 		<os family="windows"/>
 	</condition>
 
