@@ -4,12 +4,6 @@
 	<dirname property="my.directory" file="${ant.file.call-rake}"/>
 	<dirname property="jsdk.home" file="${java.home}"/>
 
-	<condition property="rake.exec.path"
-			   value="${my.directory}\..\..\..\third-party\tools\exec-rake.bat"
-			   else="/usr/bin/rake">
-		<os family="windows"/>
-	</condition>
-
 	<condition property="os.windows">
 		<os family="windows"/>
 	</condition>
@@ -19,6 +13,8 @@
 
 	<macrodef name="createOsMacros">
         <sequential if:set="os.windows">
+            <property name="rake.exec.path"
+                       value="${my.directory}\..\..\third-party\tools\exec-rake.bat" />
             <macrodef name="call-rake">
                 <attribute name="file" default="./rakefile.rb"/>
                 <attribute name="target" default="_not_set_" />
@@ -82,8 +78,8 @@
 
 	<createOsMacros />
 
-	<target name="showprops">
+	<!-- target name="showprops">
 		<echoproperties/>
-	</target>
+	</target> -->
 
 </project>
