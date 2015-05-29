@@ -1,6 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="call-rake" default="">
-	
+
+
+	<condition property="IS_WINDOWS" value="we are in a windows call" else="not in a windows call">
+		<os family="windows"/>
+	</condition>
+
+	<target name="showprops">
+		<echoproperties/>
+	</target>
+
 	<dirname property="tools.path" file="${ant.file.call-rake}"/>
 	<dirname property="jsdk.home" file="${java.home}"/>
 
