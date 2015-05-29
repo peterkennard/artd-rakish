@@ -67,8 +67,8 @@
                         <arg value="@{file}"/>
                         <arg value="@{trace}"/>
                         <arg value="${_rake_target_}"/>
-                        <arg value="&quot;JAVA_HOME=@{java.home}&quot;"/>
-                        <arg value="&quot;IDEA_PROJECT=@{idea.project}&quot;"/>
+                        <arg value="JAVA_HOME=@{java.home}"/>
+                        <arg value="IDEA_PROJECT=@{idea.project}"/>
                     </exec>
                     <record name="@{log}" action="stop"/>
                 </sequential>
