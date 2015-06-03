@@ -18,12 +18,12 @@ class Build
 		
 		task :resolve do |t|
 		    if(defined? Rakish::GlobalConfig.instance.CPP_CONFIG)
-			    puts "Starting build. for #{Rakish::GlobalConfig.instance.CPP_CONFIG}\""
+			    log.info "Starting build. for #{Rakish::GlobalConfig.instance.CPP_CONFIG}\""
 			else
 			#	if(Rakish::GlobalConfig.instance)
 			#		Rakish::GlobalConfig.instance.CPP_CONFIG() = "not set";
 			#	end
-                puts "Starting build.";
+                log.info "Starting build.";
             end
 			@projects.each do |p|
 				p.preBuild

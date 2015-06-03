@@ -16,6 +16,7 @@ module JavaProjectConfig
     def javaClassPaths
         @javaClassPaths_||=(getInherited(:javaClassPaths)||FileSet.new);
     end
+
     def addJavaClassPaths(*paths)
         # TODO: needs to not clobber the ancestor's classpath
 		@javaClassPaths_||= FileSet.new;
@@ -164,6 +165,10 @@ protected
     end
 
 public
+
+    def getDelimitedClasspath
+        javaClassPaths.join(classpathSeparator);
+    end
 
     def javaClassPaths
         # todo: DON'T ALLOCATE COPY UNTIL THINGS ARE ADDED NEED FLAG :)
