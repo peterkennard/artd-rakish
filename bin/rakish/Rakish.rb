@@ -783,7 +783,7 @@ module Rakish
 				return('.') if(relto == path)
 				return(path)
 			end
-			
+
 			diff = rtspl.size - cmpi
 
 			# puts("   ##### diff #{diff}")
