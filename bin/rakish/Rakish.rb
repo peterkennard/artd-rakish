@@ -189,11 +189,15 @@ module Rake
 
 	module TaskManager
 	   # the only difference here is flattening the dependencies
+	   # and it will recognize a leading ':' as an indicator of global root scope
 	   def resolve_args(args)
 		 if args.last.is_a?(Hash)
 		   deps = args.pop
 		   ret = resolve_args_with_dependencies(args, deps)
 		   ret[2].flatten!
+		   ret[2].map! do |e|
+		     (e=~/^:/)?"rake#{e}":e
+		   end
 		   ret
 		 else
 		   resolve_args_without_dependencies(args)
@@ -916,9 +920,11 @@ module Rakish
 			end
 			task
 		end
-		
+
+		# look up a task in the task table using a leading ':' as
+		# the indicator of an absolute 'path' like 'rake:'
 		def lookupTask(tname)
-			Rake.application.lookup(tname);
+			Rake.application.lookup((tname=~/^:/)?"rake#{tname}":tname);
 		end
 		
 		# create a single simple "copy" task to process source file 

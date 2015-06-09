@@ -231,6 +231,38 @@ task :artdRakishTest => [] do |t|
 
 end
 
+RakishProject(
+ 	:name=>'test-project1',
+ 	:dependsUpon=> [
+ 	]
+) do
+
+    task :test do |t|
+        log.debug("doing #{t.name}");
+    end
+
+end
+
+
+RakishProject(
+ 	:name=>'test-project2',
+ 	:dependsUpon=> [
+ 	]
+) do
+
+    task :test => [ ':test-project1:test' ] do |t|
+        log.debug("doing #{t.name}");
+        tsk = lookupTask(':test-project1:test');
+        log.debug("found #{tsk}");
+    end
+
+
+
+end
+
+
+
+
 task :default => [ :artdRakishTest ] do |t|
     log.debug("test complete");
 end
