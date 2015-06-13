@@ -202,9 +202,15 @@ public
         end
 
         paths = config.javaSourceRoots
+        javaSrc = FileList.new;
+
         unless(paths.empty?)
+
             prepend = " -sourcepath \"";
             paths.each do |path|
+
+                javaSrc.include("#{path}/**/*.java");
+
                 cmdline << "#{prepend}#{getRelativePath(path)}"
                 prepend = separator;
             end
@@ -212,7 +218,17 @@ public
         end
 
 
-        t.sources.each do |src|
+#        javaSourceRoots.each do |root|
+#            srcFiles.addFileTree(javaOutputClasspath, root, files );
+#            files = FileList.new
+#            files.include("#{root}/**/*");
+#            files.exclude("#{root}/**/*.java");
+#            copyFiles.addFileTree(javaOutputClasspath, root, files);
+#        end
+
+      # we collect the sources above as geenrated code may not be present when the task is created
+       javaSrc.each do |src|
+ #       t.sources.each do |src|
             cmdline << " \"#{getRelativePath(src)}\"";
         end
 
@@ -264,6 +280,7 @@ public
         tsk = JavaCTask.define_unique_task &CompileJavaAction
         task :compile=>[tsk]
 
+        # add sources we know about
         tasks = srcFiles.generateFileTasks( :config=>tsk, :suffixMap=>{ '.java'=>'.class' }) do |t|  # , &DoNothingAction_);
             # add this source prerequisite file to the compile task if it is needed.
             t.config.sources << t.source
