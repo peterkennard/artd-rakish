@@ -2,6 +2,7 @@ myDir = File.dirname(__FILE__);
 require "#{myDir}/../bin/rakish/CppProjects.rb";
 require "rakish/JavaProjects.rb";
 require "rakish/IntellijConfig.rb";
+require "rakish/RubydocModule.rb";
 
 InitBuildConfig :include=>[ Rakish::IntellijConfig, Rakish::CppProjectConfig] do |cfg|
 
@@ -149,50 +150,7 @@ end
 module Rakish
 
 
-module RubydocModule
-    include BuildConfigModule
 
-protected
-
-    addInitBlock do |pnt,opts|
-        if(pnt != nil)
-        end
-    end
-
-    class RubydocBuilder < BuildConfig
-        include RubydocModule
-
-        CreateRubydocAction = ->(t) do
-            t.config.doBuildRubydocs(t);
-        end
-
-        def doBuildRubydocs(t)
-
-
-            cd "#{t.config.projectDir}/../bin/rakish" do
-                command = [ 'rdoc',
-                            "--output=#{t.config.projectDir}/doc",
-                          ];
-                execLogged(command);
-            end
-
-
-        end
-
-        def rubydocTask
-            tsk = Task.define_unique_task &CreateRubydocAction;
-            tsk.config = self;
-            tsk
-        end
-    end
-
-    def createRubydocBuilder
-        RubydocBuilder.new(self);
-    end
-
-public
-
-end
 
 
 #module BooBoo
