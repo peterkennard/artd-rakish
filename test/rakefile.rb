@@ -167,7 +167,16 @@ protected
         end
 
         def doBuildRubydocs(t)
-           log.debug("######## building rubydocs");
+
+
+            cd "#{t.config.projectDir}/../bin/rakish" do
+                command = [ 'rdoc',
+                            "--output=#{t.config.projectDir}/doc",
+                          ];
+                execLogged(command);
+            end
+
+
         end
 
         def rubydocTask
