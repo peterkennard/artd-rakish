@@ -136,7 +136,7 @@ end
 #module Rakish
 #
 #class TestProject < Project
-#    include BuildConfigMod
+#    include BuildConfigModule
 #
 #    def TEST_CONST
 #        :BLAH
@@ -147,6 +147,44 @@ end
 #end
 
 module Rakish
+
+
+module RubydocModule
+    include BuildConfigModule
+
+protected
+
+    addInitBlock do |pnt,opts|
+        if(pnt != nil)
+        end
+    end
+
+    class RubydocBuilder < BuildConfig
+        include RubydocModule
+
+        CreateRubydocAction = ->(t) do
+            t.config.doBuildRubydocs(t);
+        end
+
+        def doBuildRubydocs(t)
+           log.debug("######## building rubydocs");
+        end
+
+        def rubydocTask
+            tsk = Task.define_unique_task &CreateRubydocAction;
+            tsk.config = self;
+            tsk
+        end
+    end
+
+    def createRubydocBuilder
+        RubydocBuilder.new(self);
+    end
+
+public
+
+end
+
 
 #module BooBoo
 #
@@ -245,12 +283,17 @@ end
 
 
 RakishProject(
+    :includes=> [ Rakish::RubydocModule ],
  	:name=>'test-project2',
  	:dependsUpon=> [
  	]
 ) do
 
-    task :test => [ ':test-project1:test' ] do |t|
+    docs = createRubydocBuilder();
+
+    export task :rubydocs => [ docs.rubydocTask() ];
+
+    task :test => [ :rubydocs, ':test-project1:test' ] do |t|
         log.debug("doing #{t.name}");
         tsk = lookupTask(':test-project1:test');
         log.debug("found #{tsk}");
@@ -263,7 +306,7 @@ end
 
 
 
-task :default => [ :artdRakishTest ] do |t|
+task :default => [ ':test-project2:test' ] do |t|
     log.debug("test complete");
 end
 

@@ -9,7 +9,7 @@ class InvalidConfigError < Exception
 	end
 end
 
-module BuildConfigMod
+module BuildConfigModule
 	include PropertyBagMod
 	include Rake::DSL
 
@@ -105,7 +105,7 @@ class BuildConfig
         self.class.initializeIncluded(self,pnt,opts);
 		yield self if block_given?
     end
-    include BuildConfigMod
+    include BuildConfigModule
 
 end
 

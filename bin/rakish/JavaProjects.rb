@@ -5,7 +5,7 @@ module Rakish
 
 
 module JavaProjectConfig
-    include BuildConfigMod
+    include BuildConfigModule
 
     attr_reader :javaOutputClasspath
 
