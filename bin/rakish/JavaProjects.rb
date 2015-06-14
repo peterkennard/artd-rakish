@@ -304,9 +304,15 @@ public
         tsk;
     end
 
+    # add source rot dirertory to the list of source roots for thie compile.
+    # options:
+    # :generated - part or all of this directory or it's contents will not exists until after
+    # a dependency target to the compile task has built it's contents.
     def addJavaSourceRoot(*roots)
+        opts = (roots.last.is_a?(Hash) ? roots.pop : {})
         (@javaSourceDirs_||=FileSet.new).include(roots);
     end
+
     def javaSourceRoots
         @javaSourceDirs_||=[File.join(projectDir,'src')];
     end
