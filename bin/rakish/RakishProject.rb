@@ -71,38 +71,35 @@ class Build
 
 		rakefiles = FileSet.new(args);
 		projs=[];
-		namespace ':' do
-			path = ''
-			dir = File.expand_path(pwd)
-			begin
-				rakefiles.each do |path|
-				
-					projdir = nil;
-				
-					if(File.directory?(path))
-						projdir = path;
-						path = File.join(projdir,'rakefile.rb');
-					else
-						projdir = File.dirname(path);
-					end
+		FileUtils.cd File.expand_path(pwd) do;
+			namespace ':' do
+				lastpath = '';
+				begin
+					rakefiles.each do |path|
 
-					cd(projdir,:verbose=>false) do
-						if(require(path)) 
-						#	puts "project #{path} loaded" if verbose?
+						lastpath = path;
+						projdir = nil;
+
+						if(File.directory?(path))
+							projdir = path;
+							path = File.join(projdir,'rakefile.rb');
+						else
+							projdir = File.dirname(path);
 						end
+
+						FileUtils.cd(projdir) do
+							if(require(path))
+								#	puts "project #{path} loaded" if verbose?
+							end
+						end
+						projs |= @projectsByFile[path];
 					end
-					projs |= @projectsByFile[path];
+				rescue LoadError => e
+					log.error("#{e}");
+					raise e;
 				end
-			rescue => e
-				cd dir
-				log.error("failure loading #{path}"); 
-				if(verbose?)
-					puts e
-					puts e.backtrace.join("\n\t")
-				end
-				raise e			
-			end
-		end # namespace
+			end # namespace
+		end # cd
 		projs
 	end
 end
@@ -228,12 +225,19 @@ class Project < BuildConfig
 	end
 
     def addProjectDependencies(*args)
-        projs = @build.loadProjects(*args);
-        if(@dependencies)
-            @dependencies = @dependencies + (projs - @dependencies);
-        else
-            @dependencies = projs;
-        end
+    	# NOTE: for some unknown reason when this is called from initialize excepton handling is
+    	# somehow screwed up so we don't call it from there.
+		begin
+			projs = @build.loadProjects(*args);
+			if(@dependencies)
+				@dependencies = @dependencies + (projs - @dependencies);
+			else
+				@dependencies = projs;
+			end
+		rescue LoadError=>e
+			log.error("dependency not found in #{myFile}: #{e}");
+			raise e
+		end
     end
 
 	# add file or files to be deleted in the :clean task
@@ -295,7 +299,7 @@ class Project < BuildConfig
 		#		break
 		# end
 
-		fileDependencies = args[:dependsUpon];
+		fileDependencies = args[:dependsUpon] || Array.new;
 
 		parent = args[:config]
 		parent ||= GlobalConfig.instance
@@ -318,8 +322,13 @@ class Project < BuildConfig
 
 		cd @projectDir, :verbose=>verbose? do
 
-			# load all projects this is dependent on relative to this project's directory
-			@dependencies = (fileDependencies ? @build.loadProjects(fileDependencies) : []);
+			# load all project files this is dependent on relative to this project's directory
+			begin
+				@dependencies = @build.loadProjects(*fileDependencies);
+			rescue LoadError => e
+				log.error("dependency not found in #{myFile}: #{e}");
+				raise e
+			end
 
 			# call instance initializer block inside local namespace and project's directory.
 			# and in the directory the defining file is contained in.

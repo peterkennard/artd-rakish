@@ -14,7 +14,7 @@ module Kernel
 
 if false
   if defined?(rakish_original_require) then
-	# Ruby ships with a custom_require, override its require
+	# Ru    by ships with a custom_require, override its require
 	remove_method :require
   else
 	##

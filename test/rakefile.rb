@@ -273,9 +273,9 @@ end
 
 
 
-task :default => [ ':test-project2:test' ] do |t|
-    log.debug("test complete");
-end
+#task :default => [ ':test-project2:test' ] do |t|
+#    log.debug("test complete");
+#end
 
 
 end  # Rakish
