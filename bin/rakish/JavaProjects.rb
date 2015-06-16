@@ -374,8 +374,10 @@ public
 
         javac = javacTask
 
+        export task :compile => javac;
+
         jarTask = createJarFileTask();
-        jarTask.enhance(javac); # add dependency on compile task
+        jarTask.enhance(:compile);
 
         jarTask.addDirectoryContents(javaOutputClasspath());
 
