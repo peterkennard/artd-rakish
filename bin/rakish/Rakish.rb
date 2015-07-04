@@ -1086,6 +1086,7 @@ public
 			@ul_=@ul_ ? @ul_+1:1
 			yield self
 			remove_instance_variable(:@ul_) if((@ul_-=1) < 1)
+			self # return self for convenience
 		end
 		
 		# item from "Module" we want overidable
