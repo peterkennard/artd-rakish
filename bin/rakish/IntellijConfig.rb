@@ -30,7 +30,6 @@ module Rakish
                 if(@tagPath === @@outPath)
                     path = attributes['url'];
                     path = File.expand_path(path.sub('file://$PROJECT_DIR$',config.projectRoot));
-                    log.debug("intellij outputPath is #{path}");
                     config.outputPath = path;
                 end
             end
