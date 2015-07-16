@@ -162,18 +162,27 @@ class Project < BuildConfig
         Rake::FileTask.define_task(*args, &block).setProjectScope(self);
     end
 
-	# when called from within a project, exports a namespace internal task to
+	# When called from within a project, exports a namespace internal task to
 	# a global task by the same name as the task within the projects namespace scope.
 	# not safe if called on a task outside the project's namespace
-	# returns task that is exported if present
+	# returns the task that is exported if present
+	# WARNING ruby syntax precedence causes the block not to be set in the task
+	# with the line:
+	#  export task :myTask do |t|
+	#  end
+	# you must parenthesize as below
+	#  export (task :myTask do |t|
+	#  end)
 	def export(name)
 
 		exported = name;
 	    if(name.is_a? Rake::Task)
+
 	        # note: doesn't check if task is actually in this namespace
             name = name.to_s().sub("#{myNamespace}:",'').to_sym;
         else
-        	# todo look up actual task and set exported to it for return value.
+        	# TODO: look up actual task and set exported to it for return value.
+        	name = name.to_sym;
         	exported = nil
 	    end
 
@@ -363,7 +372,7 @@ class Project < BuildConfig
 		targets.merge(@@globalTargets);
 
 		targets.each do |gt|
-			tname = "#{@myNamespace}:#{gt}"
+			tname = "rake:#{@myNamespace}:#{gt}"
 			tsk = Rake.application.lookup(tname);
 			# overide invoke_with_call_chain to print the tasks as they are invoked
 			if(tsk)
