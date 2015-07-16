@@ -370,11 +370,11 @@ public
     # requires that source roots and compile classpaths are set in the project.
     def addJavaLibraryTargets()
 
-        export task :resources => [];
+        export task :resources;
 
         javac = javacTask
 
-        export task :compile => javac;
+        export (task :compile => javac);
 
         jarTask = createJarFileTask();
         jarTask.enhance(:compile);
@@ -388,7 +388,7 @@ public
         end
         srcZip = zipBuilder.zipTask(jarTask.name.pathmap('%X-src.zip'));
 
-        export task :libs => [jarTask, srcZip ]
+        export (task :libs => [jarTask, srcZip ])
 
         docBuilder = createJavadocBuilder();
         docTask = docBuilder.javadocTask;
@@ -400,9 +400,9 @@ public
         docZip = zipBuilder.zipTask(jarTask.name.pathmap('%X-doc.zip'));
         docZip.enhance(docTask);
 
-	    export task :javadoc => [ docZip ]
+	    export (task :javadoc => [ docZip ])
 
-	    export task :dist => [ :libs, :javadoc ]
+	    export (task :dist => [ :libs, :javadoc ])
 
     end
 

@@ -258,7 +258,7 @@ RakishProject(
 
     docs = createRubydocBuilder();
 
-    export task :rubydocs => [ docs.rubydocTask() ];
+    export (task :rubydocs => [ docs.rubydocTask() ]);
 
     task :test => [ :rubydocs, ':test-project1:test' ] do |t|
         log.debug("doing #{t.name}");
