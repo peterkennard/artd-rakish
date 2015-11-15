@@ -169,6 +169,11 @@ module Rakish
 		end
 	end
 
+    # convenience method like Rake::task
+    def self.task(*args,&block)
+        Rake::Task.define_task(*args, &block)
+    end
+
 end
 
 # rake extensions
