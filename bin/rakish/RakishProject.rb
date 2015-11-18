@@ -151,11 +151,6 @@ class Project < BuildConfig
 	    Rake::Task.define_task(*args, &block).setProjectScope(self);
 	end
 
-    # convenience method like Rake::task
-	def task(*args,&block)
-		Rake::Task.define_task(*args, &block)
-	end
-
     # this task will execute all actions in the directory of this project
     # it will only set the project scope ONCE upon the first call
     def fileInDir(*args, &block)

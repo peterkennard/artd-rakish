@@ -539,6 +539,10 @@ module Rakish
 			end
 		end
 
+        # convenience method like Rake::task
+        def task(*args,&block)
+            Rake::Task.define_task(*args, &block)
+        end
 
 		# like each but checks for null and if object doesn't respond to each
 		# use like 
