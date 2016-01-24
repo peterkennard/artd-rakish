@@ -17,11 +17,11 @@ class Build
 		@projectsByFile={}  # each entry is an array of one or more projects
 		
 		task :resolve do |t|
-		    if(defined? Rakish::GlobalConfig.instance.CPP_CONFIG)
-			    log.info "Starting build. for #{Rakish::GlobalConfig.instance.CPP_CONFIG}\""
+		    if(defined? Rakish::GlobalConfig.instance.nativeConfigName)
+			    log.info "Starting build. for #{Rakish::GlobalConfig.instance.nativeConfigName}\""
 			else
 			#	if(Rakish::GlobalConfig.instance)
-			#		Rakish::GlobalConfig.instance.CPP_CONFIG() = "not set";
+			#		Rakish::GlobalConfig.instance.nativeConfigName() = "not set";
 			#	end
                 log.info "Starting build.";
             end
@@ -216,12 +216,16 @@ class Project < BuildConfig
 	attr_reader :dependencies
 
 	# output directory for this module common to all configurations
-	def OBJDIR
-		@OBJDIR||="#{BUILDDIR()}/obj/#{moduleName()}";
+	def nativeObjDir
+		@nativeObjDir||="#{getInherited(:nativeObjDir)}/#{moduleName()}";
 	end
 
-	def OUTPUT_SUFFIX
-		@OUTPUT_SUFFIX||=CPP_CONFIG();
+	# directory containing the file for this project
+	attr_property :projectObjectPath
+
+	# configuration specific intermediate output directory
+	def nativeObjectPath
+		@nativeObjectPath||="#{nativeObjDir()}/#{nativeConfigName()}";
 	end
 
 	def project

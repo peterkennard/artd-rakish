@@ -9,15 +9,15 @@ InitBuildConfig :include=>[ Rakish::IntellijConfig, Rakish::CppProjectConfig] do
 	cfg.thirdPartyPath = File.expand_path("#{myDir}/../../third-party");
 	cfg.verbose = false;
 	cfg.didiRoot = File.expand_path("#{myDir}/..");
-	cfg.BUILDDIR = "#{cfg.didiRoot}/build";
-	cfg.resourceDir = "#{cfg.BUILDDIR}/Didi/production/.didi";
-	cfg.demoRoot = "#{cfg.BUILDDIR}/Didi/DidiDemos";
+	cfg.buildDir = "#{cfg.didiRoot}/build";
+	cfg.resourceDir = "#{cfg.buildDir}/Didi/production/.didi";
+	cfg.demoRoot = "#{cfg.buildDir}/Didi/DidiDemos";
 	cfg.java_home = ENV['JAVA_HOME'];
 
 	if(cfg.java_home =~ /Program Files \(x86\)/)
-		cfg.CPP_CONFIG = 'Win32-VC10-MD-Debug';
+		cfg.nativeConfigName = 'Win32-VC10-MD-Debug';
 	else
-		cfg.CPP_CONFIG = 'Win64-VC10-MD-Debug'
+		cfg.nativeConfigName = 'Win64-VC10-MD-Debug'
 	end
 
     cfg.cppDefine('WINVER=0x0700');
@@ -101,9 +101,9 @@ class MyObj < Module
 	include Rakish::PropertyBagMod
 	
 	CONSTA = 'yyyyy'	
-#	BINDIR = 'build dir'
+#	binDir = 'build dir'
 
-def BINDIR
+def binDir
 	'build dir'
 end
 	
@@ -130,7 +130,7 @@ class MyObj
 end
 
 FooObj do 
-#	puts("in init BINDIR == \"#{BINDIR}\"")
+#	puts("in init binDir == \"#{binDir}\"")
 #	puts("NEWUPPER == \"#{NEWUPPER}\"")
 end
 

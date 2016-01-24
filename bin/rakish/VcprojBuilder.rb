@@ -51,8 +51,8 @@ EOTEXT
 		out << "<PropertyGroup Condition=\"'$(Configuration)|$(Platform)'=='#{config}|Win32'\" Label=\"Configuration\">";
 		out << '  <ConfigurationType>Makefile</ConfigurationType>';
 		out << '  <UseDebugLibraries>false</UseDebugLibraries>';
-	    out << "  <IntDir>#{cppProject.OBJPATH()}</IntDir>";
-		out << "  <OutDir>#{cppProject.BINDIR()}</OutDir>";
+	    out << "  <IntDir>#{cppProject.nativeObjectPath()}</IntDir>";
+		out << "  <OutDir>#{cppProject.binDir()}</OutDir>";
 		out << '</PropertyGroup>';
 	end
 

@@ -32,6 +32,7 @@ LoadableModule.onLoaded(Module.new do
 		include CTools
 
 		# platform specific file extensions
+		# TODO - make these project wide dependent on platform ???
 		def OBJEXT
 			'.obj'
 		end	
@@ -462,7 +463,7 @@ LoadableModule.onLoaded(Module.new do
 			objfile = t.name;
 			cfig = t.config;
 
-			cmdline = "\"#{@MSVC_EXE}\" \"#{cppfile}\" -Fd\"#{cfig.OBJDIR}/vc80.pdb\" -c -Fo\"#{objfile}\" "; 
+			cmdline = "\"#{@MSVC_EXE}\" \"#{cppfile}\" -Fd\"#{cfig.nativeObjDir}/vc80.pdb\" -c -Fo\"#{objfile}\" ";
 			cmdline += getFormattedMSCFlags(cfig)
 			cmdline += ' /showIncludes'
 
@@ -490,10 +491,10 @@ LoadableModule.onLoaded(Module.new do
 
 		# Override for CTools
 		def initCompileTask(cfg)
-			cfg.project.addCleanFiles("#{cfg.OBJPATH()}/*#{OBJEXT()}",
-							"#{cfg.OBJPATH()}/*.sbr");
+			cfg.project.addCleanFiles("#{cfg.nativeObjectPath()}/*#{OBJEXT()}",
+							"#{cfg.nativeObjectPath()}/*.sbr");
 			Rake::Task.define_task :compile => [:includes,
-												cfg.OBJPATH(),
+												cfg.nativeObjectPath(),
 												:depends]
 		end	
 
@@ -515,9 +516,9 @@ LoadableModule.onLoaded(Module.new do
 			log.info("asembling #{File.basename(t.name)}")
 			deleteFile(t.name)
 			writeLinkref(cfg,cfg.targetBaseName,t.name);
-			lnkfile = t.name.pathmap("#{cfg.OBJPATH}/%f.response");
+			lnkfile = t.name.pathmap("#{cfg.nativeObjectPath}/%f.response");
 
-			#	echo -n $(PROJECT_TARGET_NAME)-$(OUTPUT_SUFFIX) > $(TARGET_REF)
+			#	echo -n $(PROJECT_TARGET_NAME)-$(nativeOutputSuffix) > $(TARGET_REF)
 			#	@echo -n "$(CPP_OBJS_BASE) $(C_OBJS_BASE)" > $(TARGET_LOBJ)
 
 			File.open(lnkfile,'w') do |f|
@@ -549,7 +550,7 @@ LoadableModule.onLoaded(Module.new do
 			deleteFile(t.name);
 			writeLinkref(cfg,cfg.targetBaseName,t.sources[:implib]);
 
-			lnkfile = t.name.pathmap("#{cfg.OBJPATH()}/%f.response");
+			lnkfile = t.name.pathmap("#{cfg.nativeObjectPath()}/%f.response");
 
 			# build linker source file
 			begin
@@ -618,7 +619,7 @@ LoadableModule.onLoaded(Module.new do
 			log.info("linking #{File.basename(t.name)}")
 					
 			deleteFile(t.name);
-			lnkfile = t.name.pathmap("#{cfg.OBJPATH}/%f.response");
+			lnkfile = t.name.pathmap("#{cfg.nativeObjectPath}/%f.response");
 					
 			# build linker source file
 			begin
@@ -704,7 +705,7 @@ LoadableModule.onLoaded(Module.new do
 			
 			resobjs=[]
 			rcobjs=[]
-			basePath = File.join(cfg.OBJPATH,cfg.targetBaseName);
+			basePath = File.join(cfg.nativeObjectPath,cfg.targetBaseName);
 					
 			if(@ManifestSource) # not present if not needed
 				manifest_rc = "#{basePath}.manifest.rc"
@@ -714,7 +715,7 @@ LoadableModule.onLoaded(Module.new do
 					# manifest resource
 					cfg.project.addCleanFiles(manifest_rc,manifest_txt);
 												
-					tsk = Rake::FileTask.define_task manifest_rc => [ cfg.OBJPATH, cfg.projectFile, @ManifestSource ]
+					tsk = Rake::FileTask.define_task manifest_rc => [ cfg.nativeObjectPath, cfg.projectFile, @ManifestSource ]
 					tsk.enhance &@@makeManifestAction;
 					tsk.config = cfg
 					tsk.data = { :txt=>manifest_txt }
@@ -730,7 +731,7 @@ LoadableModule.onLoaded(Module.new do
 
 				cfg.project.addCleanFiles(autores_rc,autores_res,autores_obj);
 						
-				restask = Rake::FileTask.define_task autores_obj => [ cfg.OBJPATH, cfg.projectFile, rcobjs].flatten do |t|
+				restask = Rake::FileTask.define_task autores_obj => [ cfg.nativeObjectPath, cfg.projectFile, rcobjs].flatten do |t|
 					log.info("Generating #{t.name}")
 					File.open(autores_rc,'w') do |f|
 						t.sources.each do |src|
@@ -755,7 +756,7 @@ LoadableModule.onLoaded(Module.new do
 				
 				when 'APP'
 
-					targetName = "#{cfg.BINDIR()}/#{cfg.targetName}.exe";
+					targetName = "#{cfg.binDir()}/#{cfg.targetName}.exe";
 					
 					resobjs = getAutoResourcesObjs(cfg)
 					mapfile = targetName.pathmap("%X.map");
@@ -772,13 +773,13 @@ LoadableModule.onLoaded(Module.new do
 	
 				when 'LIB'
 					
-					targetName = "#{cfg.LIBDIR()}/#{cfg.targetName}.lib";
+					targetName = "#{cfg.nativeLibDir()}/#{cfg.targetName}.lib";
 					doLink = Rake::FileTask.define_task targetName, 
 							&@@buildLibAction;
 				
 				when 'DLL'
 					
-					targetName = "#{cfg.BINDIR()}/#{cfg.targetName}.dll";
+					targetName = "#{cfg.binDir()}/#{cfg.targetName}.dll";
 
 					#LIBS_DEP_WINDOWS := $(subst $(THIRD_PARTY_PATH),$(THIRD_PARTY_PATH),$(THIRD_PARTY_LIB_FILES) $(SPECIFIC_LIBS))
 					#$(TARGET_FILE): $(OBJS) $(STATIC_LIB_FILES) $(AUTORESOURCES_OBJ) $(LIBS_DEP_WINDOWS)
@@ -787,7 +788,7 @@ LoadableModule.onLoaded(Module.new do
 						
 					mapfile = targetName.pathmap("%X.map");
 					pdbfile = targetName.pathmap("%X.pdb");
-					implib = "#{cfg.BINDIR()}/#{cfg.targetName}.lib";
+					implib = "#{cfg.binDir()}/#{cfg.targetName}.lib";
 						
 					cfg.project.addCleanFiles(mapfile,pdbfile,implib);
 

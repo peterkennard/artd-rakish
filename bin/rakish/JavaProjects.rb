@@ -95,7 +95,7 @@ module JavadocBuilderModule
 
         addInitBlock do |pnt,opts|
             enableNewFields do |my|
-                my.docOutputDir="#{BUILDDIR()}/javadoc/#{moduleName}/api";
+                my.docOutputDir="#{buildDir()}/javadoc/#{moduleName}/api";
             end
         end
 
@@ -319,7 +319,7 @@ public
 
     # output directory common to all configurations
     def javaOutputClasspath
-        @javaOutputClasspath||="#{BUILDDIR()}/production/#{moduleName()}";
+        @javaOutputClasspath||="#{buildDir()}/production/#{moduleName()}";
     end
 
 protected
@@ -339,7 +339,7 @@ public
 
     def createJarFileTask(opts={})
 
-        jarPath = opts[:name]||"#{BINDIR()}/#{moduleName}.jar";
+        jarPath = opts[:name]||"#{binDir()}/#{moduleName}.jar";
         jarPath = jarPath.pathmap("%X.jar");
 
         tsk = JarFileTask.define_task jarPath do |t|

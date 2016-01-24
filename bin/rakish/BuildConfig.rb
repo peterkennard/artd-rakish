@@ -19,7 +19,7 @@ module BuildConfigModule
  	#	log.debug("initializing BuildConfig #{pnt}")
  		enableNewFields do |cfg|
 			if(pnt)
- 				cfg.CPP_CONFIG = getInherited(:CPP_CONFIG);
+ 				cfg.nativeConfigName = getInherited(:nativeConfigName);
  			end
  		end
  	end
@@ -67,22 +67,56 @@ module BuildConfigModule
 		end
 	end
 
-	attr_accessor 	:LIBDIR
-	attr_accessor 	:BINDIR
+    # folder to output native libraries and "linkref" files
+    # pointing to the actual libraries if not there ( windows DLL libs )
+	attr_property 	:nativeLibDir
+
+    # folder to output native object and intermediate files to
+	attr_property 	:nativeObjDir
+
+    # folder to output native binary dll and so files to
+	attr_property 	:binDir
+
+    # path to third party unix like utilities on windows machines
  	attr_property	:thirdPartyPath
-	attr_property   :CPP_CONFIG
 
+ 	# parsable native configuration name as configuration and
+ 	# used as a reference to which librarys to link with for a particular
+ 	# compiler and processor configuration
+	attr_property   :nativeConfigName
 
-	def BUILDDIR
-		@BUILDDIR||=getInherited(:BUILDDIR);
+    # suffix to append to native output binary and library files
+    # defaults to the nativeConfigName
+	attr_property   :nativeOutputSuffix
+
+    # root folder for buuild output files
+	def buildDir
+		@buildDir||=getInherited(:buildDir);
 	end
 
-	def OBJDIR
-		@OBJDIR||=getInherited(:OBJDIR);
+    # folder to output native executable and dll files to.
+    # defaults to (buildDir)/bin
+	def binDir
+        @binDir||=getInherited(:binDir)||"#{buildDir()}/bin";
 	end
 
-	def BINDIR
-        @BINDIR||=getInherited(:BINDIR)||"#{BUILDDIR()}/bin";
+    # folder to output native library files and link references to.
+    # defaults to (buildDir)/lib
+	def nativeLibDir
+		@nativeLibDir||=getInherited(:nativeLibDir)||"#{buildDir()}/lib";
+	end
+
+    # folder to output native intermedite and object files to.
+    # config defaults to (buildDir)/obj
+    # in a project module defaults to the value set in th (configValue)/(moduleName)
+	def nativeObjDir
+		@nativeObjDir||=getInherited(:nativeObjDir)||"#{buildDir()}/obj";
+	end
+
+    # suffix to add to native output files
+    # defaults to nativeConfigName
+	def nativeOutputSuffix
+		@nativeOutputSuffix||=nativeConfigName();
 	end
 
 	attr_accessor 	:verbose
@@ -125,8 +159,8 @@ class GlobalConfig < BuildConfig
 		end
 	end
 
-   	def BUILDDIR=(val)
-   	    @BUILDDIR=val;
+   	def buildDir=(val)
+   	    @buildDir=val;
    	end
 
 	def initialize(*args, &b)
@@ -157,8 +191,8 @@ class GlobalConfig < BuildConfig
 			cfg.thirdPartyPath ||= File.join(ENV['ARTD_TOOLS'],'../.');
 			cfg.thirdPartyPath = File.expand_path(cfg.thirdPartyPath);
 
-			@BUILDDIR ||= ENV['RakishBuildRoot']||"#{Rake.original_dir}/build";
-			@BUILDDIR = File.expand_path(@BUILDDIR);
+			@buildDir ||= ENV['RakishBuildRoot']||"#{Rake.original_dir}/build";
+			@buildDir = File.expand_path(@buildDir);
 
 			config = nil;
 			if(HOSTTYPE =~ /Macosx/)
@@ -169,19 +203,19 @@ class GlobalConfig < BuildConfig
 
 
 			# set defaults if not set above
-			@LIBDIR ||= "#{@BUILDDIR}/lib"
-			@BINDIR ||= "#{@BUILDDIR}/bin"
-			@INCDIR ||= "#{@BUILDDIR}/include"
+			@nativeLibDir ||= "#{@buildDir}/lib"
+			@binDir ||= "#{@buildDir}/bin"
+			@INCDIR ||= "#{@buildDir}/include"
 
 			# get config from command line
-			cfg.CPP_CONFIG ||= ENV['CPP_CONFIG'];
-			cfg.CPP_CONFIG ||= defaultConfig
+			cfg.nativeConfigName ||= ENV['nativeConfigName'];
+			cfg.nativeConfigName ||= defaultConfig
 
 		end
 
 		puts("host is #{HOSTTYPE()}") if self.verbose?
 
-        ensureDirectoryTask(@BUILDDIR);
+        ensureDirectoryTask(@buildDir);
 
 		RakeFileUtils.verbose(@@gcfg.verbose?)
 		if(@@gcfg.verbose?)

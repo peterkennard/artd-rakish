@@ -29,7 +29,7 @@ module CTools
 	# parses and validates an unknown string configuration name 
 	# of the format [TargetPlatform]-[Compiler]-(items specific to compiler type)
 	# and loads if possible an instance of a set of configured "CTools" 
-	# for the specified "CPP_CONFIG" configuration.
+	# for the specified "nativeConfigName" configuration.
 	def self.loadConfiguredTools(strCfg)
 		
 		splitcfgs = strCfg.split('-');
@@ -45,8 +45,8 @@ module CTools
 
 	def writeLinkref(cfg,baseName,targetName)
 					
-		defpath = "#{cfg.LIBDIR}/#{baseName}-#{cfg.CPP_CONFIG}.linkref"
-		reltarget = getRelativePath(targetName,cfg.LIBDIR);
+		defpath = "#{cfg.nativeLibDir}/#{baseName}-#{cfg.nativeConfigName}.linkref"
+		reltarget = getRelativePath(targetName,cfg.nativeLibDir);
 		File.open(defpath,'w') do |f|
 			f.puts("libs = [\'#{reltarget}\']")
 		end
@@ -157,7 +157,7 @@ module CTools
     def createCompileTasks(files,cfg)                
         # format object files name
 	                                 
-        mapstr = "#{cfg.OBJPATH()}/%n#{OBJEXT()}";
+        mapstr = "#{cfg.nativeObjectPath()}/%n#{OBJEXT()}";
 
         objs=FileList[];
         files.each do |source|
@@ -169,17 +169,17 @@ module CTools
     end
 	
 	def initCompileTask(cfg)
-		cfg.project.addCleanFiles("#{cfg.OBJPATH()}/*#{OBJEXT()}");
+		cfg.project.addCleanFiles("#{cfg.nativeObjectPath()}/*#{OBJEXT()}");
 		Rake::Task.define_task :compile => [:includes,
-											cfg.OBJPATH(),
+											cfg.nativeObjectPath(),
 											:depends]
 	end	
 
 	def initDependsTask(cfg) # :nodoc:		
                
 		# create dependencies file by concatenating all .raked files				
-		tsk = file "#{cfg.OBJPATH()}/depends.rb" => [ :includes, cfg.OBJPATH() ] do |t|
-			cd(cfg.OBJPATH(),:verbose=>false) do					
+		tsk = file "#{cfg.nativeObjectPath()}/depends.rb" => [ :includes, cfg.nativeObjectPath() ] do |t|
+			cd(cfg.nativeObjectPath(),:verbose=>false) do
 				File.open('depends.rb','w') do |out|
 					out.puts("# puts \"loading #{t.name}\"");
 				end
@@ -190,12 +190,12 @@ module CTools
 			end
 		end
 		# build and import the consolidated dependencies file
-		task :depends => [ "#{cfg.OBJPATH()}/depends.rb" ] do |t|
-			load("#{cfg.OBJPATH()}/depends.rb")
+		task :depends => [ "#{cfg.nativeObjectPath()}/depends.rb" ] do |t|
+			load("#{cfg.nativeObjectPath()}/depends.rb")
 		end		
 		task :cleandepends do
-			depname = "#{cfg.OBJPATH()}/depends.rb";
-			deleteFiles("#{cfg.OBJPATH()}/*.raked");
+			depname = "#{cfg.nativeObjectPath()}/depends.rb";
+			deleteFiles("#{cfg.nativeObjectPath()}/*.raked");
 
 			# if there is no task defined for the 'raked' file then create a dummy
 			# that dos nothing so the prerequisites resolve - this is the case where the
@@ -246,17 +246,17 @@ module CppProjectConfig
  	end
 
 	def INCDIR
-		@INCDIR||=getInherited(:INCDIR)||"#{BUILDDIR()}/include";
+		@INCDIR||=getInherited(:INCDIR)||"#{buildDir()}/include";
 	end
-	def BINDIR
-		@BINDIR||=getInherited(:BINDIR)||"#{BUILDDIR()}/bin";
+	def binDir
+		@binDir||=getInherited(:binDir)||"#{buildDir()}/bin";
 	end
-	def LIBDIR
-		@LIBDIR||=getInherited(:LIBDIR)||"#{BUILDDIR()}/lib";
+	def nativeLibDir
+		@nativeLibDir||=getInherited(:nativeLibDir)||"#{buildDir()}/lib";
 	end
 
 	def vcprojDir
-		@vcprojDir||=getInherited(:vcprojDir)||"#{BUILDDIR()}/vcproj";
+		@vcprojDir||=getInherited(:vcprojDir)||"#{buildDir()}/vcproj";
 	end
 
     # add include paths in order to the current list of include paths.
@@ -352,11 +352,6 @@ module CppProjectModule
         @cppCompileTaskInitialized = false;
     end
 
-	# configuration specific intermediate output directory
-	def OBJPATH
-		@OBJPATH||="#{OBJDIR()}/#{CPP_CONFIG()}";
-	end
-
 	VCProjBuildAction_ = lambda do |t|
         require "#{Rakish::MAKEDIR}/VcprojBuilder.rb"
         VcprojBuilder.onVcprojTask(t.config);
@@ -386,8 +381,8 @@ module CppProjectModule
 	# starts executing tasks
 
 	def doCppPreBuild()
-        addIncludePaths( [ OBJPATH(),INCDIR() ] );
-        @cppBuildConfig = resolveConfiguration(CPP_CONFIG());
+        addIncludePaths( [ nativeObjectPath(),INCDIR() ] );
+        @cppBuildConfig = resolveConfiguration(nativeConfigName());
         resolveConfiguredTasks();
         if(@projectId)
             ensureDirectoryTask(vcprojDir);
@@ -414,7 +409,7 @@ module CppProjectModule
 		end
 		tsk.enhance(objs)
 
- 		unless tsk = Rake.application.lookup("#{@OBJDIR}/depends.rb")
+ 		unless tsk = Rake.application.lookup("#{@nativeObjDir}/depends.rb")
             tsk = tools.initDependsTask(self)
  		end
 
@@ -426,15 +421,15 @@ module CppProjectModule
 		tsk.enhance(raked);
 
 		@objs = objs;
-		ensureDirectoryTask(OBJPATH());
+		ensureDirectoryTask(nativeObjectPath());
 
 		## link tasks
 		tsk = tools.createLinkTask(objs,cfg);
 		if(tsk)
-			ensureDirectoryTask(cfg.LIBDIR);
-			ensureDirectoryTask(cfg.BINDIR);
+			ensureDirectoryTask(cfg.nativeLibDir);
+			ensureDirectoryTask(cfg.binDir);
 
-			task :build => [ :compile, cfg.LIBDIR, cfg.BINDIR, tsk ].flatten
+			task :build => [ :compile, cfg.nativeLibDir, cfg.binDir, tsk ].flatten
 
 		end
 
@@ -540,8 +535,8 @@ module CppProjectModule
 			libs=[]
 			project.dependencies.each do |dep|
                 # TODO: should this check for the type of project?
-                if(dep.LIBDIR != nil)
-                    ldef = ctools.loadLinkref(dep.LIBDIR,configName,dep.moduleName);
+                if(dep.nativeLibDir != nil)
+                    ldef = ctools.loadLinkref(dep.nativeLibDir,configName,dep.moduleName);
                     if(ldef != nil)
                         deflibs = ldef[:libs];
                         libs += deflibs if deflibs;
@@ -663,7 +658,7 @@ public
 
 	def getBuildId
 		unless defined? @@buildId_
-			idfile = "#{@BUILDDIR}/obj/.rakishBuildId.txt"
+			idfile = "#{@buildDir}/obj/.rakishBuildId.txt"
 
 			if File.exists? idfile
 				File.open(idfile,'r') do |file|
@@ -681,7 +676,7 @@ public
 					end
 				end
 			else
-				mkdir_p("#{@BUILDDIR}/obj", :verbose=>false)
+				mkdir_p("#{@buildDir}/obj", :verbose=>false)
 			end
 
 			@@buildId_ = acquireBuildId($BUILD_ROOT);
