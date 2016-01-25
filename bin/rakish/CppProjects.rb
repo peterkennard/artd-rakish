@@ -245,12 +245,10 @@ module CppProjectConfig
 		end
  	end
 
-	def INCDIR
-		@INCDIR||=getInherited(:INCDIR)||"#{buildDir()}/include";
-	end
 	def binDir
 		@binDir||=getInherited(:binDir)||"#{buildDir()}/bin";
 	end
+
 	def nativeLibDir
 		@nativeLibDir||=getInherited(:nativeLibDir)||"#{buildDir()}/lib";
 	end
@@ -381,7 +379,7 @@ module CppProjectModule
 	# starts executing tasks
 
 	def doCppPreBuild()
-        addIncludePaths( [ nativeObjectPath(),INCDIR() ] );
+        addIncludePaths( [ nativeObjectPath(),buildIncludeDir() ] );
         @cppBuildConfig = resolveConfiguration(nativeConfigName());
         resolveConfiguredTasks();
         if(@projectId)
@@ -441,7 +439,7 @@ module CppProjectModule
 	# Also adds removal of output files or links to task ':cleanincludes'
 	#
 	# <b>named args:</b>
-	#   :destdir => destination directory to place output files, defaults to INCDIR/myPackage
+	#   :destdir => destination directory to place output files, defaults to buildIncludeDir/myPackage
 	#
 	def addPublicIncludes(*args)
 
@@ -452,7 +450,7 @@ module CppProjectModule
 		unless(destdir = opts[:destdir])
 			destdir = myPackage;
 		end
-		destdir = File.join(INCDIR(),destdir || '');
+		destdir = File.join(buildIncludeDir(),destdir || '');
 		ensureDirectoryTask(destdir);
 		flist = createCopyTasks(destdir,files,:config => self,&LinkIncludeAction_)
 		task :includes => flist

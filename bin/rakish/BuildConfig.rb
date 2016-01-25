@@ -119,6 +119,13 @@ module BuildConfigModule
 		@nativeOutputSuffix||=nativeConfigName();
 	end
 
+    # temporary include directory built for compiling
+    # where generated include files or links to the project sources
+    # are created
+	def buildIncludeDir
+        @buildIncludeDir ||= getInherited(:buildIncludeDir)||"#{@buildDir}/include"
+	end
+
 	attr_accessor 	:verbose
 
 	def verbose?
@@ -205,7 +212,6 @@ class GlobalConfig < BuildConfig
 			# set defaults if not set above
 			@nativeLibDir ||= "#{@buildDir}/lib"
 			@binDir ||= "#{@buildDir}/bin"
-			@INCDIR ||= "#{@buildDir}/include"
 
 			# get config from command line
 			cfg.nativeConfigName ||= ENV['nativeConfigName'];
