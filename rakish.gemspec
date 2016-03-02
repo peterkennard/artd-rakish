@@ -7,5 +7,5 @@ Gem::Specification.new do |s|
   s.email       = 'peterk@livingwork.com'
   s.files       = ["lib/rakish.rb"]
   s.homepage    = ''
-  s.licens      = 'BSD'
+  s.license     = 'BSD'
 end
