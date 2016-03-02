@@ -5,6 +5,7 @@ Gem::Specification.new do |s|
   s.description = "Rakish build support gem"
   s.authors     = ["Peter Kennard"]
   s.email       = 'peterk@livingwork.com'
+  s.files       = ["lib/rakish.rb"]
   s.homepage    = ''
-  s.files       = ["lib/freewill.rb", ...]
+  s.licens      = 'BSD'
 end
