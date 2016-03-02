@@ -23,7 +23,7 @@ protected
         def doBuildRubydocs(t)
 
 
-            cd "#{t.config.projectDir}/../bin/rakish" do
+            cd "#{t.config.projectDir}/../lib/rakish" do
                 command = [ 'rdoc',
                             "--output=#{t.config.projectDir}/doc",
                           ];

@@ -1,5 +1,5 @@
 myDir = File.dirname(__FILE__);
-require "#{myDir}/../bin/rakish/CppProjects.rb";
+require "#{myDir}/../lib/rakish/CppProjects.rb";
 require "rakish/JavaProjects.rb";
 require "rakish/IntellijConfig.rb";
 require "rakish/RubydocModule.rb";
