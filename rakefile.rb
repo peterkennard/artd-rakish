@@ -13,7 +13,7 @@ task :installGem do |t|
 	
 	cd myDir do
 		system("gem build rakish.gemspec");
-		system("gem install rakish-#{spec.version}.gem");
+		system("gem install --user-install rakish-#{spec.version}.gem");
 	end
 end
 
