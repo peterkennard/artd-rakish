@@ -1,3 +1,5 @@
+require 'rake'
+
 Gem::Specification.new do |s|
   s.name        = 'rakish'
   s.version     = '0.9.0'
@@ -5,7 +7,9 @@ Gem::Specification.new do |s|
   s.description = "Rakish build support gem"
   s.authors     = ["Peter Kennard"]
   s.email       = 'peterk@livingwork.com'
-  s.files       = ["lib/rakish.rb"]
+  s.files       =  FileList.new  ["lib/rakish.rb"
+                                  "lib/rakish/*"
+                   ].to_a();
   s.homepage    = ''
   s.license     = 'BSD'
 end
