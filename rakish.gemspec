@@ -10,6 +10,10 @@ Gem::Specification.new do |s|
   s.files       =  FileList.new(["lib/rakish.rb",
                                   "lib/rakish/*"
                    ]).to_a();
+				   
+  s.add_runtime_dependency 'rake',
+  '>= 0.9.0.0'
+				   
   s.homepage    = ''
   s.license     = 'BSD'
 end
