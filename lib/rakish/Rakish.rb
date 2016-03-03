@@ -228,10 +228,24 @@ module Rake
 
 		  if options.trace
 			$stderr.puts Rakish::Logger.formatBacktrace(backtrace)
-		  else
-			$stderr.puts(Rakish::Logger.formatBacktraceLine(backtrace[0]));
-			$stderr.puts rakefile_location(backtrace);
-		  end
+    		  else
+
+    		lineNum = 0;
+    		useLine = 0;
+    		backtrace.each do |line|
+                lineNum = lineNum + 1;
+			    sp = line.split(':in `',2);
+                if(sp.length > 1)
+    		        if(sp[1] =~ /const_missing'$/)
+    		            useLine = lineNum;
+                        break;
+    		        end
+    		    end
+    		end
+
+			$stderr.puts(Rakish::Logger.formatBacktraceLine(backtrace[useLine]));
+			$stderr.puts(rakefile_location(backtrace));
+          end
 
 		  $stderr.puts "Tasks: #{ex.chain}" if has_chain?(ex)
 		  $stderr.puts "(See full trace by running task with --trace)" unless options.trace

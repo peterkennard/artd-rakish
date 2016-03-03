@@ -27,6 +27,8 @@ end
 
 include Rakish::Util
 
+log.debug("logging with util included");
+
 module Rakish
 
     log.debug "JAVA_HOME is #{ENV['JAVA_HOME']}"
@@ -148,9 +150,6 @@ end
 module Rakish
 
 
-
-
-
 #module BooBoo
 #
 #	addInitBlock do
@@ -207,8 +206,6 @@ module Rakish
 #
 #log.debug("new name is #{NewClass.new().class.name()}");
 
-log.debug("declaring task");
-
 task :artdRakishTest => [] do |t|
 
     cf1 = BuildConfig.new do |cfg|
@@ -236,8 +233,6 @@ task :artdRakishTest => [] do |t|
 
 end
 
-log.debug("done declaring task");
-
 RakishProject(
  	:name=>'test-project1',
  	:dependsUpon=> [
@@ -249,8 +244,6 @@ RakishProject(
     end
 
 end
-
-Rakish::Logger.log.debug("here");
 
 RakishProject(
     :includes=> [ Rakish::RubydocModule ],
@@ -273,7 +266,7 @@ RakishProject(
 
 end
 
-
+blah() # cause an abort
 
 
 #task :default => [ ':test-project2:test' ] do |t|
