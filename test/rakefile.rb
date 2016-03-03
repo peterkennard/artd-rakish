@@ -29,23 +29,23 @@ include Rakish::Util
 
 module Rakish
 
-    puts "JAVA_HOME is #{ENV['JAVA_HOME']}"
+    log.debug "JAVA_HOME is #{ENV['JAVA_HOME']}"
 
     module Mod1
         addInitBlock do
-            puts("initializing Mod1");
+            log.debug("initializing Mod1");
         end
     end
 
     module Mod2
         addInitBlock do
-            puts("initializing Mod2");
+            log.debug("initializing Mod2");
         end
     end
 
     module Mod1
         addInitBlock do |arg|
-            puts("initializing Mod1-extension");
+            log.debug("initializing Mod1-extension");
         end
     end
 
@@ -54,7 +54,7 @@ module Rakish
         include Mod2
 
         addInitBlock do |arg|
-            puts("initializing Mod3 on #{self} XX #{arg[0]}");
+            log.debug("initializing Mod3 on #{self} XX #{arg[0]}");
             @foo = "string set by Mod3";
         end
     end
@@ -66,13 +66,11 @@ module Rakish
 
         def initialize(*args)
             self.class.initializeIncluded(self,args[0]);
-            puts "initialized #{@foo}";
+            log.debug "initialized #{@foo}";
         end
     end
 
     InitClass.new("arg1","arg2");
-
-
 
 
 	module Util
@@ -209,6 +207,8 @@ module Rakish
 #
 #log.debug("new name is #{NewClass.new().class.name()}");
 
+log.debug("declaring task");
+
 task :artdRakishTest => [] do |t|
 
     cf1 = BuildConfig.new do |cfg|
@@ -236,6 +236,8 @@ task :artdRakishTest => [] do |t|
 
 end
 
+log.debug("done declaring task");
+
 RakishProject(
  	:name=>'test-project1',
  	:dependsUpon=> [
@@ -248,6 +250,7 @@ RakishProject(
 
 end
 
+Rakish::Logger.log.debug("here");
 
 RakishProject(
     :includes=> [ Rakish::RubydocModule ],

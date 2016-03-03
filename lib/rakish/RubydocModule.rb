@@ -34,7 +34,7 @@ protected
         end
 
         def rubydocTask
-            tsk = Task.define_unique_task &CreateRubydocAction;
+            tsk = Rake::Task.define_unique_task &CreateRubydocAction;
             tsk.config = self;
             tsk
         end

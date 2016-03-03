@@ -11,15 +11,14 @@ require 'open3.rb'
 
 module Kernel
 
-
+#--
 if false
+
   if defined?(rakish_original_require) then
-	# Ru    by ships with a custom_require, override its require
+	# Ruby ships with a custom_require, override its require
 	remove_method :require
   else
-	##
 	# The Kernel#require from before RubyGems was loaded.
-
 	alias rakish_original_require require
 	private :rakish_original_require
   end
@@ -39,10 +38,10 @@ if false
 	  end
   end
   private :require
-
 end
 
 end # false
+#++
 
 require 'set'
 require 'logger'
@@ -52,9 +51,10 @@ require 'logger'
 task "" do
 end
 
-# define the Logger first so we can use it to abort
+
 module Rakish
 
+	# Logger module
 	# To use this Logger initialization include it in a class or module
 	# then you can do log.debug { "message" } etc 
 	# from methods or initializations in that class
@@ -154,7 +154,7 @@ module Rakish
 #				while line = output.gets do
 #					log.info line.strip!
 #				end
-  #			end
+#			end
 #			return $?
 		rescue => e
 			if(opts[:verbose])
@@ -171,18 +171,18 @@ module Rakish
 
     # convenience method like Rake::task
     def self.task(*args,&block)
-        Rake::Task.define_task(*args, &block)
+        ::Rake::Task.define_task(*args, &block)
     end
 
 end
 
-# rake extensions
-
-
+# Rake extensions
 module Rake
 
+    #--
 	module DSL  # so if a version doesn't have it it works
 	end
+	#++
 
 	class << self
 		def get_unique_name
@@ -192,9 +192,14 @@ module Rake
 		end
 	end
 
+    # Rake::TaskManager extensions
 	module TaskManager
-	   # the only difference here is flattening the dependencies
-	   # and it will recognize a leading ':' as an indicator of global root scope
+
+	   # Two difference here:
+	   # flattening of dependency lists
+	   # so arguments can be arrays of arrays
+	   # and it will recognize a leading ':' as an indicator of global root namespace scope
+	   # in additon to "rake:"
 	   def resolve_args(args)
 		 if args.last.is_a?(Hash)
 		   deps = args.pop
@@ -210,6 +215,7 @@ module Rake
 	   end
 	end
 
+    # Rake::Application extensions
 	class Application
 
 		# Display the error message that caused the exception.
@@ -246,6 +252,8 @@ module Rake
 	  end
 
 	  # see Rake.Task as this overrides it's method
+	  # it flattens dependencies so they can be provided as
+	  # nested arrays or arguments
 	  def enhance(args,&b)
 		# instead of |=
 		@prerequisites = [@prerequisites,args].flatten if args
@@ -284,7 +292,7 @@ module Rake
 	  end
 	end
 	
-	# force all file tasks to reference full path for file name
+	# force all file tasks to reference the full path for file name
 	class FileTask
 		class << self
 		    # Apply the scope to the task name according to the rules for this kind
