@@ -7,7 +7,7 @@ Gem::Specification.new do |s|
   s.description = "Rakish build support gem"
   s.authors     = ["Peter Kennard"]
   s.email       = 'peterk@livingwork.com'
-  s.files       =  FileList.new(["lib/rakish.rb"
+  s.files       =  FileList.new(["lib/rakish.rb",
                                   "lib/rakish/*"
                    ]).to_a();
   s.homepage    = ''
