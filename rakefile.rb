@@ -32,7 +32,7 @@ task :installGem do |t|
 	cd myDir do
 		system("gem build rakish.gemspec");
 		userstr = OS.windows? ? "" : "--user-install"
-		system("gem install #{userstr} rakish-#{spec.version}.gem");
+		system("gem install --local #{userstr} rakish-#{spec.version}.gem");
 	end
 end
 

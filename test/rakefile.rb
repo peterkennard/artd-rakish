@@ -266,7 +266,6 @@ RakishProject(
 
 end
 
-blah() # cause an abort
 
 
 #task :default => [ ':test-project2:test' ] do |t|

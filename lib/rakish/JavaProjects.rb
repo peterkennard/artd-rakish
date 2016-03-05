@@ -26,15 +26,25 @@ end
 
 module JarBuilderModule
 
+    #- Subclass of Rakish::ArchiveBuilder
     class JarBuilder < ArchiveBuilder
 
     public
+
+        # Add task to extract contents from the given jar file, if specified, will apply filters
+        # and add the extracted files/folders to the root of the
+        # new archive recursively, the extraction is done when the
+        # builder task is invoked.
+        # filters - if filters are specified, they select files within the source to put in the jar
+        # with the wildcard path relative to the source root in the format of a Rake::FileList
+        # the default if unspecified is to select all files in the source.
+        # The list of files is resolved when the builder task is invoked.
 
         def addJarContents(jarPath,*filters)
             addZipContents(jarPath,*filters);
         end
 
-   	    def doBuildJarAction(t)
+   	    def doBuildJarAction(t) # :nodoc:
             cfg = t.config;
 
             log.info("creating #{t.name}") if cfg.verbose
@@ -74,7 +84,7 @@ module JarBuilderModule
             t.config.doBuildJarAction(t);
         end
 
-        # create task for building jar file to specifications stored in builder.
+        # Create a task for building a jar file to specifications stored in this builder.
         def jarTask(*args)
             tsk = ArchiveTask.define_task(*args).enhance(nil,&@@buildJarAction_);
             tsk.config = self;
@@ -83,6 +93,7 @@ module JarBuilderModule
 
     end
 
+    # Create e new JarBuilder for the including project's context
     def createJarBuilder
         jb = JarBuilder.new(self); # for now we make the parent project the parent config
     end

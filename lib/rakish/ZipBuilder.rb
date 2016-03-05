@@ -3,9 +3,10 @@ require "#{myPath}/ArchiveBuilder.rb"
 
 module Rakish
 
-
+# module for including in projects that wish to build and output zip file archinves.
 module ZipBuilderModule
 
+    # Subclass of Rakish::ArchiveBuilder for creating zip files.
     class ZipBuilder < ArchiveBuilder
 
         addInitBlock do |pnt,opts|
@@ -18,11 +19,9 @@ module ZipBuilderModule
 
     public
 
-   	    def doBuildZipAction(t)
-
+   	    def doBuildZipAction(t) # :nodoc:
 
             cfg = t.config;
-
 
             if(cfg.verbose?)
                 puts("creating #{t.name} verbose=#{cfg.verbose}");
@@ -64,7 +63,7 @@ module ZipBuilderModule
             t.config.doBuildZipAction(t);
         end
 
-        # create task for building jar file to specifications stored in builder.
+        # create task for building a zip file to specifications stored in this builder.
         def zipTask(*args)
             tsk = ArchiveTask.define_task(*args).enhance(nil,&@@buildZipAction_);
             tsk.config = self;
@@ -72,6 +71,7 @@ module ZipBuilderModule
         end
     end
 
+    # Create a new zip builder for the including project's context
     def createZipBuilder
         ZipBuilder.new(self); # for now we make the parent project the parent config
     end
