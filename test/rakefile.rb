@@ -21,7 +21,7 @@ InitBuildConfig :include=>[ Rakish::IntellijConfig, Rakish::CppProjectConfig] do
 	end
 
     cfg.cppDefine('WINVER=0x0700');
-
+	
 end
 
 
@@ -206,7 +206,7 @@ module Rakish
 #
 #log.debug("new name is #{NewClass.new().class.name()}");
 
-task :artdRakishTest => [] do |t|
+task :propertyBagTest => [] do |t|
 
     cf1 = BuildConfig.new do |cfg|
         cfg.enableNewFields do
@@ -214,9 +214,29 @@ task :artdRakishTest => [] do |t|
         end
     end
     cf2 = BuildConfig.new(cf1) do |cfg|
-        cfg.enableNewFields do
+        log.debug("#### fields enabled #{cfg.newFieldsEnabled?}")
+		
+		begin
+		   cfg.unknown;
+		rescue
+		   log.debug("#### unknown field fail");
+		end
+		
+		cfg.enableNewFields do
+			cfg.unknown="value set into unknown";
+			begin
+			   log.debug(cfg.unknown);
+			rescue
+			   log.debug("#### unknown field fail");
+			end
+			if(cfg.newFieldsEnabled?)
+			   log.debug("true fields enabled #{cfg.newFieldsEnabled?}")
+			else 
+			   log.debug("false fields enabled #{cfg.newFieldsEnabled?}")
+			end
             cfg.field2 = "field2"
         end
+        log.debug("fields enabled #{cfg.newFieldsEnabled?}")
     end
 
     f1 = cf2.get(:field1);
@@ -250,9 +270,17 @@ RakishProject(
  	:name=>'test-project2',
  	:dependsUpon=> [
  	]
-) do
+) do |s|
 
-    docs = createRubydocBuilder();
+	log.debug(" here acccessing s");
+	
+    docs = s.createRubydocBuilder();
+
+		begin
+		   self.unknown;
+		rescue
+		   log.debug("#### unknown field fail");
+		end
 
     export (task :rubydocs => [ docs.rubydocTask() ]);
 
@@ -261,8 +289,6 @@ RakishProject(
         tsk = lookupTask(':test-project1:test');
         log.debug("found #{tsk}");
     end
-
-
 
 end
 

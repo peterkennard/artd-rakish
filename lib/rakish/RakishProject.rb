@@ -353,6 +353,7 @@ class Project < BuildConfig
 
 		        initProject(args);
 				instance_eval(&block) if block;
+				
 			end
 
             # register after the initialization has loaded all the other dependencies for proper dependency initialization order

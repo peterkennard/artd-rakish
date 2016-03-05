@@ -472,9 +472,10 @@ module Rakish
 
 	class ::Class
 
-		# monkey hack to call the initBlocks of all modules included in this class in the included order
-		# nicely provided by the ancestors list
-		# use this in an instance initializer:
+		# Monkey hack to enable constructor inheritance like C++ on mixin modules
+		# and call the "initBlocks" of all modules included in this class in the included order
+		# installed by included modules which are nicely provided by the ruby ancestors list
+		# use this in an instance initializer to pass arguments to all superclass mixin init blocks:
 		#
 		#    obj.class.initializeIncluded(obj,*args);
 
@@ -491,6 +492,9 @@ module Rakish
 		end
 	end
 
+    # Intended to clean up things to minimize thread usage and queue up these so as to
+    # keep avaiable processor cores saturated but without thread thrashing. Spawning lots of threads
+    # does not help in the process spawning case and actually slows things down.
 	class MultiProcessTask < Rake::Task
 	private
 		def invoke_prerequisites(args, invocation_chain)
@@ -566,7 +570,7 @@ module Rakish
             Rake::Task.define_task(*args, &block)
         end
 
-		# like each but checks for null and if object doesn't respond to each
+		# Like each but checks for null and if object doesn't respond to each
 		# use like 
 		# eachof [1,2,3] do |v|
 		# end
@@ -590,7 +594,7 @@ module Rakish
 			Rakish.execLogged(cmd,opts)
 		end
 
-		# Generate an anonymous name.
+		# Get current nsmespace as a string.
 		def currentNamespace
 			":#{Rake.application.current_scope.join(':')}";
 		end
@@ -611,7 +615,7 @@ module Rakish
 			File.exists?(name) ? File.mtime(name.to_s) : Rake::EARLY
 		end
 
-		# get simple task action block (lambda) to copy from t.source to t.name
+		# Get simple task action block (lambda) to copy from t.source to t.name
 		#   do |t|
 		#      cp t.source, t.name 
 		#   end	
@@ -1119,6 +1123,10 @@ public
 			remove_instance_variable(:@ul_) if((@ul_-=1) < 1)
 			self # return self for convenience
 		end
+
+		def newFieldsEnabled?() 
+			@ul_ ? @ul_:false			
+		end
 		
 		# item from "Module" we want overidable
 		def name
@@ -1187,13 +1195,7 @@ public
 			(self.class.method_defined? s) ? self.send(s) : @h_[s]
 		end
 
-		# class Eqnil
-		#	def self.nil?
-		#		true
-		#	end
-		# end
-		
-		# preperty is set on this node
+		# property is set on this object
 		def has_key?(k)
 			@h_.has_key?(k)
 		end
@@ -1205,11 +1207,25 @@ public
 			false
 		end
 
+		def h_ # :nodoc:
+		   @h_
+		end
+		
 		# needed so we can flatten the parents array.
 		def to_ary
 		   	nil
 		end
 
+		def throwUndefinedProperty(sym) # :nodoc:
+			c = caller
+			caller.each do |clr|
+				c.shift
+				unless(clr =~ /\/Rakish.rb:\d+:in `(method_missing|__send__)'/)
+					raise RuntimeError, "\n#{Logger.formatBacktraceLine(clr)} - undefined property or method \"#{sym}\"", c
+				end
+			end
+		end
+		
 		# allows 'dot' access to properties.
 		#   ie:  value = bag.nameOfProperty
 		#        bag.nameOfProperty = newValue
@@ -1220,8 +1236,7 @@ public
 		# Assignment to a property that does not exist will add a new field *only* if
 		# done so within an enableNewFields block
 		#
-		def method_missing(sym, *args, &block)
-
+		def method_missing(sym, *args, &block) # :nodoc:
 
 			if((v=@h_[sym]).nil?)
 				unless @h_.has_key?(sym) # if property exists nil is a valid value
@@ -1232,32 +1247,24 @@ public
 							unless(has_key?(sym))
 								super unless hasAncestorKey(sym); # raise no method exception if no key!
 							end
-#							p = self
-#							until()
-#								super unless(p=p.parent)
-#							end
 						end
 						if(self.class.method_defined? sym)
 							raise PropertyBagMod::cantOverideX_(sym)
 						end
 						return(@h_[sym]=args[0]) # assign value to property
-					elsif @parent_ # recurse to parents
-					# we don't recurse here but check the flattened parent list in order
-				    #	if(self.class.method_defined?("#{sym}="))
-				    		@parents_.each do |p|
-				    		    v = p.getMy(sym);
-				    		    return v if(v);
-				    #		end
+					elsif @parents_ # recurse to parents
+					    # we don't recurse here but check the flattened parent list in order
+						@parents_.each do |p|
+			               return(p.send(sym)) if(p.class.method_defined? sym);
+						   v = p.h_[sym];
+						   return(v) if v || p.h_.has_key?(sym);
 						end
+						# raise no method exception if no method or key found!		
+						throwUndefinedProperty(sym);
+						super 
 					else
 						return v if (self.class.method_defined?("#{sym}="))
-						c = caller
-						caller.each do |clr|
-							c.shift
-							unless(clr =~ /\/Rakish.rb:\d+:in `(method_missing|__send__)'/)
-								raise RuntimeError, "\n#{Logger.formatBacktraceLine(clr)} - undefined property or method \"#{sym}\"", c
-							end
-						end
+						throwUndefinedProperty("#{sym}=")
 						super
 					end
 				end
