@@ -1068,7 +1068,7 @@ public
 		@@utils
 	end
 
-	# Generic dynamic propety bag functionality
+	# Generic dynamic propety bag functionality module1
 	# allows 'dot' access to dynamicly set properties.
 	#   ie:  value = bag.nameOfProperty
 	#        bag.nameOfProperty = newValue
@@ -1078,6 +1078,11 @@ public
 	#
 	# Assignment to a property that does not exist will add a new field *only* if
 	# done so within an enableNewFields block
+	#
+	#   bag.newProperty = "new value" # throws missing method exception
+	#   bag.enableNewFields do |s|
+	#       s.newProperty = "new value" # OK
+	#   end 
 	#
 	
 	module PropertyBagMod
@@ -1151,8 +1156,9 @@ public
 			@h_[k]=v
 		end
 
-		# get inherited value value for property, traverse up parent tree via flattened
-		# ancestor list to get first inherited value or nil if not found
+		# Get inherited value value for property, traverse up parent tree via flattened
+		# ancestor list to get first inherited value or nil if not found.
+		# opts - none define at present
 		def getInherited(sym, opts={})
 			if(@parents_)
 				@parents_.each do |p|
@@ -1213,14 +1219,14 @@ public
 		end
 				
 	public
-		# get value for property. 
-		# does *not* traverse up tree, gets local value only.
+		# Get value for property. 
+		# Does *not* traverse up tree, gets local value only.
 		# returns nil if value is either nil or not present
 		def getMy(s)
 			(self.class.method_defined? s) ? self.send(s) : @h_[s]
 		end
 
-		# property is set in hash on this object
+		# true if property is set in hash on this object
 		def has_key?(k) # :nodoc: 
 			@h_.has_key?(k)
 		end
@@ -1273,18 +1279,9 @@ public
 			end
 			v
 		end
-		# enhancement for 1.9.X allows use of upper case names 
-		# for property accessors.
-		#
-		# tries to access method if symbol for const is missing
-		# alias :const_missing :__send__
-		
-#		def const_missing(name)
-#			raise "property bag const missing: #{name}"
-#		end
 	end
 
-	# general purpose property bag :see: PropertyBagMod
+	# General purpose property bag class includes PropertyBagMod
 	class PropertyBag < Module
 		include PropertyBagMod
 		
