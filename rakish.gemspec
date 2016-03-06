@@ -8,7 +8,8 @@ Gem::Specification.new do |s|
   s.authors     = ["Peter Kennard"]
   s.email       = 'peterk@livingwork.com'
   s.files       =  FileList.new(["lib/rakish.rb",
-                                  "lib/rakish/*"
+                                  "lib/rakish/*",
+								  "doc/*"
                    ]).to_a();
 				   
   s.add_runtime_dependency 'rake',

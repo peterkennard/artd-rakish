@@ -9,7 +9,7 @@ $LOAD_PATH.unshift(gemPath) unless $LOAD_PATH.include?(gemPath)
 
 require 'open3.rb'
 
-module Kernel
+module Kernel # :nodoc:
 
 #--
 if false
@@ -38,31 +38,40 @@ if false
 	  end
   end
   private :require
-end
+end # end false
 
-end # false
+end # Kernel
 #++
 
 require 'set'
 require 'logger'
 
 
-# stupid thing needed because rake doesn't check for "" arguments so we make an explicit task
+#-- stupid thing needed because rake doesn't check for "" arguments so we make an explicit task
+#++
 task "" do
 end
 
+# Module containg the package Rakish
+# includes the modules ::Rakish::Util, and ::Rakish::Logger
+#
+# :include:doc/RakishOverview.html
 
 module Rakish
 
 	# Logger module
 	# To use this Logger initialization include it in a class or module
-	# then you can do log.debug { "message" } etc 
-	# from methods or initializations in that class
-
+	# enables log.debug { "message" } etc 
+	# from methods or initializations in that class 
+	# Other than for INFO level output
+	# output messages are formatted to include the file and line number where 
+	# log.[level] was invoked.
+	
 	module Logger
 
 		@@_logger_ = ::Logger.new(STDOUT);
 
+		# Returns the singleton instance of ::Logger managed by the Rakish::Logger
 		def self.log
 			@@_logger_
 		end
@@ -88,7 +97,7 @@ module Rakish
 			end
 		end
 		
-		# format a backtrace line appropriately for the IDE we are using.
+		# Format a single backtrace line as defined for the IDE we are using.
 		def self.formatBacktraceLine(line)
 			sp = line.split(':in `',2);
 			sp0 = sp[0].sub(/:(\d)/, '(\1');
@@ -96,6 +105,8 @@ module Rakish
 			"#{sp0}) : #{sp1}";
 		end
 
+		# Format all lines in a backtrace using formatBacktraceLine() into a 
+        # single printable string with entries separated by "\\n"
 		def self.formatBacktrace(backtrace)
 			out=[];
 			backtrace.each do |line|
@@ -104,28 +115,33 @@ module Rakish
 			out.join("\n");
 		end
 		
-		def self.included(by)
+		# Defines the method "log" in any including 
+		# module or class at the class "static" level
+		def self.included(by)  # :nodoc: 
 			by.class.send(:define_method, :log) do
-				Rakish.log
+				::Rakish.log
 			end
 		end
+		
+		# Returns the singleton instance of ::Logger managed by the Rakish::Logger
 		def log
 			STDOUT.flush;
-			Rakish.log
+			::Rakish.log
 		end
 	end
 
-	def self.log
+	def self.log # :nodoc:
 		Rakish::Logger.log
 	end
 
 	# Execute shell command in sub process and pipe output to Logger
 	# cmdline - single string command line, or array of command and arguments
-	# opts:
+	#  opts:
 	#     :verbose - if set to true (testable value is true) will print command when executing
-	#     :env - environment hash for spawned process
+	#     :env - optional environment hash for spawned process
 	#
 	#  returns status return from spawned process.
+	#  uses Open3:popen2()
 
 	def self.execLogged(cmdline, opts={})
 		begin
@@ -462,7 +478,7 @@ module Rakish
 			end
 		end
 
-		# Allows for the decaration and initialization of 
+		# Allows for the declaration and initialization of 
 		# "Constructor" chains in the way C++ or Java operates where base classes (here mixin modules)
 		# can be optionally "automagically" invoked in inclusion order on class instance initialization.
 		# Any Class and Module may now take advantage of this. see ::Class.initializeIncluded
