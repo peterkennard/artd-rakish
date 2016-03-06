@@ -1068,7 +1068,7 @@ public
 		@@utils
 	end
 
-	# generic dynamic propety bag functionality
+	# Generic dynamic propety bag functionality
 	# allows 'dot' access to dynamicly set properties.
 	#   ie:  value = bag.nameOfProperty
 	#        bag.nameOfProperty = newValue
@@ -1123,28 +1123,30 @@ public
 			remove_instance_variable(:@ul_) if((@ul_-=1) < 1)
 			self # return self for convenience
 		end
-
+		
+		# returns false if outside an enableNewFields block the nesting count if
+		# inside a enebleNewFields block if(newFieldsEnabled?)  will test true in this case.
 		def newFieldsEnabled?() 
 			@ul_ ? @ul_:false			
 		end
 		
 		# item from "Module" we want overidable
-		def name
+		def name # :nodoc:
 			@h_[:name]
 		end
 		
 		# item from "Module" we want overidable
-		def name=(v)
+		def name=(v) # :nodoc:
 			@h_[:name]=v		
 		end
 		
-		def self.included(by)
+		def self.included(by) # :nodoc:
 		end
 		
 		# set or create property irrespective of property (field) creation lock on this object
 		def set(k,v)
 			if self.class.method_defined? k
-				raise PropertyBagMod::cantOverideX_(k)
+				raise PropertyBagMod::cantOverrideX_(k)
 			end
 			@h_[k]=v
 		end
@@ -1183,24 +1185,12 @@ public
 		end
 	
 	protected
-		def self.cantOverideX_(k)
+		def self.cantOverrideX_(k) # :nodoc:
 			"can't overide method \"#{k}\" with a property"
 		end
 	
-	public
-		# get value for property. 
-		# does *not* traverse up tree, gets local value only.
-		# returns nil if value is either nil or not present
-		def getMy(s)
-			(self.class.method_defined? s) ? self.send(s) : @h_[s]
-		end
-
-		# property is set on this object
-		def has_key?(k)
-			@h_.has_key?(k)
-		end
-
-		def hasAncestorKey(sym)
+		# returns true if any ancestor has a ke defined in the hashtable
+		def hasAncestorKey(sym) # :nodoc:
 			@parents_.each do |p|
 				return(true) if p.has_key?(sym);
 			end
@@ -1210,20 +1200,35 @@ public
 		def h_ # :nodoc:
 		   @h_
 		end
-		
-		# needed so we can flatten the parents array.
-		def to_ary
-		   	nil
-		end
 
-		def throwUndefinedProperty(sym) # :nodoc:
-			c = caller
+		def raiseUndef_(sym) # :nodoc:
+			c = caller;
 			caller.each do |clr|
 				c.shift
 				unless(clr =~ /\/Rakish.rb:\d+:in `(method_missing|__send__)'/)
+					# log.debug("\n#{Logger.formatBacktraceLine(clr)} - ##### undefined property or method \"#{sym}\"");
 					raise RuntimeError, "\n#{Logger.formatBacktraceLine(clr)} - undefined property or method \"#{sym}\"", c
 				end
 			end
+		end
+				
+	public
+		# get value for property. 
+		# does *not* traverse up tree, gets local value only.
+		# returns nil if value is either nil or not present
+		def getMy(s)
+			(self.class.method_defined? s) ? self.send(s) : @h_[s]
+		end
+
+		# property is set in hash on this object
+		def has_key?(k) # :nodoc: 
+			@h_.has_key?(k)
+		end
+
+
+		# needed so we can flatten the parents array.
+		def to_ary # :nodoc:
+		   	nil
 		end
 		
 		# allows 'dot' access to properties.
@@ -1249,7 +1254,7 @@ public
 							end
 						end
 						if(self.class.method_defined? sym)
-							raise PropertyBagMod::cantOverideX_(sym)
+							raise PropertyBagMod::cantOverrideX_(sym)
 						end
 						return(@h_[sym]=args[0]) # assign value to property
 					elsif @parents_ # recurse to parents
@@ -1259,13 +1264,10 @@ public
 						   v = p.h_[sym];
 						   return(v) if v || p.h_.has_key?(sym);
 						end
-						# raise no method exception if no method or key found!		
-						throwUndefinedProperty(sym);
-						super 
+						raiseUndef_ sym;
 					else
 						return v if (self.class.method_defined?("#{sym}="))
-						throwUndefinedProperty("#{sym}=")
-						super
+						raiseUndef_ sym;
 					end
 				end
 			end

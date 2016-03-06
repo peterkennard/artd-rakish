@@ -218,16 +218,16 @@ task :propertyBagTest => [] do |t|
 		
 		begin
 		   cfg.unknown;
-		rescue
-		   log.debug("#### unknown field fail");
+		rescue  Exception => ex
+		   log.debug("#### unknown field fail #{ex}");
 		end
 		
 		cfg.enableNewFields do
 			cfg.unknown="value set into unknown";
 			begin
 			   log.debug(cfg.unknown);
-			rescue
-			   log.debug("#### unknown field fail");
+			rescue  Exception => ex
+			   log.debug("#### unknown field fail #{ex}");
 			end
 			if(cfg.newFieldsEnabled?)
 			   log.debug("true fields enabled #{cfg.newFieldsEnabled?}")
@@ -278,8 +278,8 @@ RakishProject(
 
 		begin
 		   self.unknown;
-		rescue
-		   log.debug("#### unknown field fail");
+		rescue  Exception => ex
+		   log.debug("#### unknown field fail #{ex}");
 		end
 
     export (task :rubydocs => [ docs.rubydocTask() ]);
