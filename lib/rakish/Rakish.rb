@@ -56,7 +56,9 @@ end
 # includes the modules ::Rakish::Util, and ::Rakish::Logger
 #
 # :include:doc/RakishOverview.html
-
+#
+# For more information see UserGuide[link:./doc/UserGuide.html]
+#
 module Rakish
 
 	# Logger module

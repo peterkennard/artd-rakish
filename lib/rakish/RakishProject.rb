@@ -1,15 +1,14 @@
-##### accumulating stuff later to be organized
-
 myPath = File.dirname(File.expand_path(__FILE__));
 require "#{myPath}/Rakish.rb"
 require "#{myPath}/BuildConfig.rb"
 
 module Rakish
 
+# Mostly internal singleton for ::Rakish::Project loading, configuration and management 
 class Build
 	include Rakish::Util
 	
-	def initialize
+	def initialize # :nodoc:
 		@startTime = Time.new
 
 		@projects=[]
@@ -39,17 +38,19 @@ class Build
 		Rake.application.top_level_tasks << :_end_;
 	end
 	
-	def verbose?
+	def verbose? # :nodoc:
 		true
 	end
 	
-	def onComplete
+	# Called when the rake invocation of thie Rakish::Build is complete
+	# prints a log.info message of the time taken to execute this invocation of 'rake'.
+	def onComplete 
 		dtime = Time.new.to_f - @startTime.to_f;		
 		ztime = (Time.at(0).utc) + dtime;
 		puts(ztime.strftime("Build complete in %H:%M:%S:%3N"))	
 	end
 	
-	def registerProject(p)
+	def registerProject(p) # :nodoc: internal used by projects
 		pname = p.moduleName;
 		if(@projectsByModule[pname]) 
 			raise("Error: project \"#{pname}\" already registered") 
@@ -59,6 +60,7 @@ class Build
 		(@projectsByFile[p.projectFile]||=[]).push(p);
 	end
 
+	# Retrieve a Rakish::Project by the project name, nil if not found.
 	def projectByName(name)
 		@projectsByModule[name];
 	end
@@ -67,7 +69,7 @@ class Build
 	# selects namespace appropriately
 	# returns array of all projects referenced directly by this load
 
-	def loadProjects(*args)
+	def loadProjects(*args) # :nodoc: knternal called by RakishProject to load dependencies.
 
 		rakefiles = FileSet.new(args);
 		projs=[];
@@ -105,14 +107,18 @@ class Build
 end
 
 # --------------------------------------------------------------------------
-# Rakish module singleton methods.
+# Rakish module singleton methods added for Rakish::Project handling.
 #
+
+
 class << self
-	# Current Build
+	# Retrieve the process' singleton instance of the root Rakish::Build for this rake invocation.
 	def build
 	  @application ||= Rakish::Build.new
 	end
 
+	# Retrieve a Rakish::Project by the project name.
+	# calls Rakish::build.projectByName(name)
 	def projectByName(name)
 		@application.projectByName(name)
 	end

@@ -11,7 +11,9 @@ Gem::Specification.new do |s|
                                   "lib/rakish/*",
 								  "doc/*"
                    ]).to_a();
-				   
+  s.extra_rdoc_files = [
+      'doc/UserGuide'
+  ];
   s.add_runtime_dependency 'rake',
   '>= 0.9.0.0'
 				   
