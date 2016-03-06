@@ -438,13 +438,15 @@ end
 
 module Rakish
 
-	MAKEDIR = File.dirname(File.expand_path(__FILE__));
+	MAKEDIR = File.dirname(File.expand_path(__FILE__)); # :nodoc:
 
+	# Extensons to root level Module 
+	
 	class ::Module
 		
-		# static method used like ruby's attr_accessor declaration
+		# Static method used like ruby's attr_accessor declaration
 		# for use in declaring added properties on a class
-		# inheriting from a PropertyBag
+		# inheriting from a Rakish::PropertyBag or including a Rakish::PropertyBagMod
 
 		def attr_property(*args)
 			if(self.include? ::Rakish::PropertyBagMod)
@@ -460,11 +462,32 @@ module Rakish
 			end
 		end
 
+		# Allows for the decaration and initialization of 
+		# "Constructor" chains in the way C++ or Java operates where base classes (here mixin modules)
+		# can be optionally "automagically" invoked in inclusion order on class instance initialization.
+		# Any Class and Module may now take advantage of this. see ::Class.initializeIncluded
+		#   
+		#    Module HasConstructor
+		#       addInitBlock do |args|
+		#           @myVariable_ = "initialized in constructor of HasContructor"
+        #           log.debug("initializing HasConstructor - on #{self} XX #{arg[0]}");
+		#       end
+		#    end
+		#
+		#    class MyObject
+		#        include HasConstructor
+		#
+		#        initialize(*args)
+		#            self.class.initializeIncluded(self,args[0]);
+		#        end
+		#    end
+		
 		def addInitBlock(&b)
 			(@_init_||=[])<<b if block_given?
 		end
 
-		def _initBlocks_
+	
+		def _initBlocks_ # :nodoc:
 			@_init_;
 		end
 
@@ -472,12 +495,14 @@ module Rakish
 
 	class ::Class
 
-		# Monkey hack to enable constructor inheritance like C++ on mixin modules
+		# Monkey Hack to enable constructor inheritance like C++ on mixin modules
 		# and call the "initBlocks" of all modules included in this class in the included order
 		# installed by included modules which are nicely provided by the ruby ancestors list
-		# use this in an instance initializer to pass arguments to all superclass mixin init blocks:
+		# To do this use this in a Class instance initializer, the arguments will be passed to all superclass mixin init blocks:
 		#
 		#    obj.class.initializeIncluded(obj,*args);
+		#
+		# see ::Module and ::Module.addInitBlock() for example.
 
 		def initializeIncluded(obj,*args)
 			# call the included modules init blocks with arguments

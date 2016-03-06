@@ -35,19 +35,19 @@ module Rakish
 
     module Mod1
         addInitBlock do
-            log.debug("initializing Mod1");
+            log.debug("initializing Mod1 - no includes");
         end
     end
 
     module Mod2
         addInitBlock do
-            log.debug("initializing Mod2");
+            log.debug("initializing Mod2 - no inlcudes");
         end
     end
 
     module Mod1
         addInitBlock do |arg|
-            log.debug("initializing Mod1-extension");
+            log.debug("initializing Mod1 - extension");
         end
     end
 
@@ -56,19 +56,29 @@ module Rakish
         include Mod2
 
         addInitBlock do |arg|
-            log.debug("initializing Mod3 on #{self} XX #{arg[0]}");
+            log.debug("initializing Mod3 - includes Mod1, Mod2 on #{self} XX #{arg[0]}");
             @foo = "string set by Mod3";
         end
     end
 
+	module Mod4
+	    include Mod3
+ 
+		addInitBlock do |arg|
+            log.debug("initializing Mod4 - includes Mod3");
+            log.debug "Mod4 initialized #{@foo}";
+        end
+ 	end
+		
     class InitClass
         include Mod2
         include Mod1
+		include Mod4
         include Mod3
 
         def initialize(*args)
             self.class.initializeIncluded(self,args[0]);
-            log.debug "initialized #{@foo}";
+            log.debug "InintClass initialized #{@foo}";
         end
     end
 
