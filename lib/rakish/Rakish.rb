@@ -292,7 +292,7 @@ module Rake
 		@actions << b if block_given?
 		self
 	  end
-
+	  
 	  def scopeExec(args=nil)
 		  @application.in_namespace_scope(@scope) do
 			  FileUtils.cd @_p_.projectDir do

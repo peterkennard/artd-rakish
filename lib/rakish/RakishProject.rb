@@ -164,22 +164,23 @@ class Project < BuildConfig
     end
 
 	# When called from within a project, exports a namespace internal task to
-	# a global task by the same name as the task within the projects namespace scope.
+	# a global task by the same name as the task within the projects namespace.
 	# not safe if called on a task outside the project's namespace
-	# returns the task that is exported if present
-	# WARNING ruby syntax precedence causes the block not to be set in the task
-	# with the line:
-	#  export task :myTask do |t|
-	#  end
-	# you must parenthesize as below
-	#  export (task :myTask do |t|
-	#  end)
-	def export(name)
+	# returns the task that is exported if the input argument is a task.
+	# example:
+	#    exportedTask = export task :aTask => [ :prerequisite ] do |t|
+	#        log.debug("invoking #{t.name}");
+	#    end
+	def export(name, &b)
 
 		exported = name;
 	    if(name.is_a? Rake::Task)
-
-	        # note: doesn't check if task is actually in this namespace
+			if(block_given?) 
+				# this to cover for ruby argument parsing and precidence
+				# so you don't have to add parentheses around the task declaraton
+				# as in: export (task => [prereq] do |t| { blah blah });
+				name.actions << b;
+			end
             name = name.to_s().sub("#{myNamespace}:",'').to_sym;
         else
         	# TODO: look up actual task and set exported to it for return value.
@@ -198,7 +199,7 @@ class Project < BuildConfig
 				task name;
 			end
 		end
-	#	return(exported);
+		return(exported);
 	end
 
 	task :default		=> [ :build ];

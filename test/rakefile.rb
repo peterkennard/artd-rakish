@@ -292,7 +292,11 @@ RakishProject(
 		   log.debug("#### unknown field fail #{ex}");
 		end
 
-    export (task :rubydocs => [ docs.rubydocTask() ]);
+    export task :rubydocs => [ docs.rubydocTask() ];
+
+    export task :exportTest => [] do |t|
+		log.debug("executing block for #{t.name}")
+	end;
 
     task :test => [ :rubydocs, ':test-project1:test' ] do |t|
         log.debug("doing #{t.name}");
