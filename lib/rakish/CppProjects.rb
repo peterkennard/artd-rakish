@@ -614,7 +614,7 @@ end # Rakish
 
 if false
 
-	def acquireBuildId(dir, map=nil)
+	def acquireBuildId(dir, map=nil) # :nodoc:
 		outOfSync = false;
 		rev = 'test'
 		count = 0
@@ -656,7 +656,7 @@ public
 	# have been made and the last ID is 'test' will not call svnversion
 	# again (which is very slow) but will return 'test'
 
-	def getBuildId
+	def getBuildId # :nodoc:
 		unless defined? @@buildId_
 			idfile = "#{@buildDir}/obj/.rakishBuildId.txt"
 
@@ -686,6 +686,5 @@ public
 		end
 		@@buildId_
 	end
-
 end # false
 

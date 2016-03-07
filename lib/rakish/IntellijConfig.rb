@@ -1,7 +1,4 @@
 myDir = File.dirname(__FILE__);
-unless defined? BUILD_OPTIONS_LOADED
-    MAKEDIR=File.expand_path("#{myDir}");
-end
 
 require "#{myDir}/BuildConfig.rb";
 require 'rexml/document';

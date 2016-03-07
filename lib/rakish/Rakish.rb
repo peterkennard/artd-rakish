@@ -274,14 +274,18 @@ module Rake
 	  include Rakish::Logger
 	  
 	  rake_extension('config') do
-		# optional "config" field on Rake Task objects
-		attr_accessor :config
+		# note commented because Rdoc does not parse this 
+		# attr_accessor :config
 	  end
-
+	  # optional "config" field on Rake Task objects
+	  attr_accessor :config
+	  
 	  rake_extension('data') do
-		# optional "per instance" field on Rake Task objects
-		attr_accessor :data
+		# note commented because RDoc does not parse this 
+		# attr_accessor :data
 	  end
+	  # optional "per instance" field on Rake Task objects
+	  attr_accessor :data
 
 	  # see Rake.Task as this overrides it's method
 	  # it flattens dependencies so they can be provided as
@@ -303,7 +307,7 @@ module Rake
 	  private :scopeExec
 
 	  rake_extension('setProjectScope') do
-		def setProjectScope(d)
+		def setProjectScope(d) # :nodoc:
 			return self if(@_p_)
 			instance_eval do
 				alias :_baseExec_ :execute
@@ -324,7 +328,9 @@ module Rake
 	  end
 	end
 	
-	# force all file tasks to reference the full path for file name
+	# Extension to force all file tasks to reference the full path for the file name.
+	# We want to make sure all File tasks are named after the full path
+	# so there is only one present for any given file.
 	class FileTask
 		class << self
 		    # Apply the scope to the task name according to the rules for this kind

@@ -50,7 +50,7 @@ class Build
 		puts(ztime.strftime("Build complete in %H:%M:%S:%3N"))	
 	end
 	
-	def registerProject(p) # :nodoc: internal used by projects
+	def registerProject(p) # :nodoc: internal used by projects to register themselves wheninitialized
 		pname = p.moduleName;
 		if(@projectsByModule[pname]) 
 			raise("Error: project \"#{pname}\" already registered") 
@@ -150,14 +150,16 @@ class Project < BuildConfig
 		task gt;
 	end
 
-
-    # this task will execute all actions in the directory and namespace of this project
+protected
+	
+    # Create a task that will execute all it's actions in the directory and namespace of the
+	# creating project
     # it will only set the project scope ONCE upon the first call
 	def taskInScope(*args,&block)
 	    Rake::Task.define_task(*args, &block).setProjectScope(self);
 	end
 
-    # this task will execute all actions in the directory of this project
+    # Create a FileTask which will execute all actions in the directory and namespace of this project
     # it will only set the project scope ONCE upon the first call
     def fileInDir(*args, &block)
         Rake::FileTask.define_task(*args, &block).setProjectScope(self);
@@ -202,6 +204,13 @@ class Project < BuildConfig
 		return(exported);
 	end
 
+    # Called before user supplied initializer block is executed
+    # in the project's directory and namespace
+    def initProject(args) #
+    end
+
+public
+	
 	task :default		=> [ :build ];
 	task :rebuild 		=> [ :cleandepends, :depends, :clean, :build ];
 
@@ -219,28 +228,29 @@ class Project < BuildConfig
 	attr_reader :myPackage
 	# UUID of this project
 	attr_reader :projectId
-	# list of projects specified that this is dependent on ( not recursive )
+	# list of projects specified that this is dependent on ( not recursive - only direct dependencies )
 	attr_reader :dependencies
 
-	# output directory for this module common to all configurations
+	# Get intermediate output directory for this module common to all configurations
 	def nativeObjDir
 		@nativeObjDir||="#{getInherited(:nativeObjDir)}/#{moduleName()}";
 	end
 
-	# directory containing the file for this project
+	# Get directory containing the file for this project
 	attr_property :projectObjectPath
 
-	# configuration specific intermediate output directory
+	# Get configuration specific intermediate output directory
 	def nativeObjectPath
 		@nativeObjectPath||="#{nativeObjDir()}/#{nativeConfigName()}";
 	end
 
+	# return self for inheriting PropertyBag configurations
 	def project
 		self
 	end
 
-    def addProjectDependencies(*args)
-    	# NOTE: for some unknown reason when this is called from initialize excepton handling is
+    def addProjectDependencies(*args) # :nodoc:  not used anywhere at present
+    	# NOTE: for some unknown reason when this is called from initialize exception handling is
     	# somehow screwed up so we don't call it from there.
 		begin
 			projs = @build.loadProjects(*args);
@@ -255,7 +265,8 @@ class Project < BuildConfig
 		end
     end
 
-	# add file or files to be deleted in the :clean task
+	# Add file or files to be deleted in the :clean task
+	# used by task builder modules included in a project
 	def addCleanFiles(*args)
 		unless(@cleanFiles_)
 		@cleanFiles_ = FileSet.new(*args);
@@ -267,7 +278,8 @@ class Project < BuildConfig
 		end
 	end
 
-	# add a directory to be removed upon ":clean"
+	# Add a directory to be removed upon ":clean"
+	# used by task builder modules included in a project
 	def addCleanDir(name)
         name = File.expand_path(name);
         task :clean do |t|
@@ -363,29 +375,25 @@ class Project < BuildConfig
 				
 			end
 
-            # register after the initialization has loaded all the other dependencies for proper dependency initialization order
+            # register this project after the initialization has loaded all 
+			# the other dependencies for proper dependency initialization order
             @build.registerProject(self);
 		end
 	end
 
-    # called before user supplied initializer block is executed
-    # in the project's directory and namespace
-    def initProject(args)
-    end
-
 	# link global tasks to this project's tasks if they are defined and set as exported
-	def resolveExports
+	def resolveExports # :nodoc:
 		targets = @exported_ || Set.new;
 		targets.merge(@@globalTargets);
 
 		targets.each do |gt|
 			tname = "rake:#{@myNamespace}:#{gt}"
 			tsk = Rake.application.lookup(tname);
-			# overide invoke_with_call_chain to print the tasks as they are invoked
+			# overide invoke_with_call_chain to print the exportend tasks as they are invoked
 			if(tsk)
 				tsk.instance_eval do
 					alias :_o_iwcc_ :invoke_with_call_chain
-					def invoke_with_call_chain(task_args, invocation_chain)
+					def invoke_with_call_chain(task_args, invocation_chain)  # :nodoc:
 						unless @already_invoked
 							log.info("---- #{name()}")
 						end
@@ -398,6 +406,7 @@ class Project < BuildConfig
 	end
 
 	# execute block inside this projects Rake namespace
+	# for use in tasks 
 	def inMyNamespace(&block)
 		namespace(":#{@myNamespace}",&block)
 	end
@@ -405,7 +414,7 @@ class Project < BuildConfig
 	
 	# called after initializers on all projects and before rake
 	# starts executing tasks
-	def preBuild
+	def preBuild # :nodoc:
 		cd @projectDir, :verbose=>verbose? do
 			tname = "#{@myNamespace}:preBuild"
 			ns = Rake.application.in_namespace(@myNamespace) do
@@ -417,13 +426,14 @@ class Project < BuildConfig
 		end
 	end
 
+	# show projects scope for debuggin purposes.
 	def showScope(here='') # :nodoc:
 		log.info("#{here}  #{@myNamespace} ns = :#{currentNamespace}");
 	end
 
 end
 
-@@projectClassesByIncluded_ = {};
+@@projectClassesByIncluded_ = {}; # :nodoc:
 
 # create a new Rakish::Project of the base type in
 # in :extends including the modules in :includes
@@ -432,7 +442,7 @@ end
 # declaration system without having to explicitly create new classes with
 # explicit names everywhere. I did learn something about Ruby however :)
 
-def self.GetProjectClass(opts={})
+def self.GetProjectClass(opts={}) # :nodoc:
 
     # get the base project type to extend the class from
     # and get list of explicit modules to include
