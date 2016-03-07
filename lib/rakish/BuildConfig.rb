@@ -19,7 +19,7 @@ module BuildConfigModule
  	#	log.debug("initializing BuildConfig #{pnt}")
  		enableNewFields do |cfg|
 			if(pnt)
- 				cfg.nativeConfigName = getInherited(:nativeConfigName);
+ 				cfg.nativeConfigName = getAnyAbove(:nativeConfigName);
  			end
  		end
  	end
@@ -91,26 +91,26 @@ module BuildConfigModule
 
     # root folder for buuild output files
 	def buildDir
-		@buildDir||=getInherited(:buildDir);
+		@buildDir||=getAnyAbove(:buildDir);
 	end
 
     # folder to output native executable and dll files to.
     # defaults to (buildDir)/bin
 	def binDir
-        @binDir||=getInherited(:binDir)||"#{buildDir()}/bin";
+        @binDir||=getAnyAbove(:binDir)||"#{buildDir()}/bin";
 	end
 
     # folder to output native library files and link references to.
     # defaults to (buildDir)/lib
 	def nativeLibDir
-		@nativeLibDir||=getInherited(:nativeLibDir)||"#{buildDir()}/lib";
+		@nativeLibDir||=getAnyAbove(:nativeLibDir)||"#{buildDir()}/lib";
 	end
 
     # folder to output native intermedite and object files to.
     # config defaults to (buildDir)/obj
     # in a project module defaults to the value set in th (configValue)/(moduleName)
 	def nativeObjDir
-		@nativeObjDir||=getInherited(:nativeObjDir)||"#{buildDir()}/obj";
+		@nativeObjDir||=getAnyAbove(:nativeObjDir)||"#{buildDir()}/obj";
 	end
 
     # suffix to add to native output files
@@ -122,7 +122,7 @@ module BuildConfigModule
 	attr_accessor 	:verbose
 
 	def verbose?
-		@verbose ||= getInherited(:verbose);
+		@verbose ||= getAnyAbove(:verbose);
 	end
 end
 

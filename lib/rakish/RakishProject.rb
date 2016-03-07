@@ -233,7 +233,7 @@ public
 
 	# Get intermediate output directory for this module common to all configurations
 	def nativeObjDir
-		@nativeObjDir||="#{getInherited(:nativeObjDir)}/#{moduleName()}";
+		@nativeObjDir||="#{getAnyAbove(:nativeObjDir)}/#{moduleName()}";
 	end
 
 	# Get directory containing the file for this project

@@ -14,7 +14,7 @@ module JavaProjectConfig
     end
 
     def javaClassPaths
-        @javaClassPaths_||=(getInherited(:javaClassPaths)||FileSet.new);
+        @javaClassPaths_||=(getAnyAbove(:javaClassPaths)||FileSet.new);
     end
 
     def addJavaClassPaths(*paths)
@@ -167,7 +167,7 @@ protected
 
     addInitBlock do |pnt,opts|
         enableNewFields do |my|
-            my.java_home = my.getInherited(:java_home) || File.expand_path(ENV['JAVA_HOME']);
+            my.java_home = my.getAnyAbove(:java_home) || File.expand_path(ENV['JAVA_HOME']);
         end
     end
 
@@ -183,10 +183,10 @@ public
 
     def javaClassPaths
         # todo: DON'T ALLOCATE COPY UNTIL THINGS ARE ADDED NEED FLAG :)
-        @javaClassPaths_||=FileSet.new(getInherited(:javaClassPaths));
+        @javaClassPaths_||=FileSet.new(getAnyAbove(:javaClassPaths));
     end
     def addJavaClassPaths(*paths)
-        @javaClassPaths_||= FileSet.new(getInherited(:javaClassPaths));
+        @javaClassPaths_||= FileSet.new(getAnyAbove(:javaClassPaths));
         @javaClassPaths_.include(paths);
     end
 
@@ -419,7 +419,7 @@ public
 
 end
 
-
+# Frozen class definition for java projects 
 JavaProject = GetProjectClass( :includes=>[JavaProjectModule] );
 
 end # Rakish

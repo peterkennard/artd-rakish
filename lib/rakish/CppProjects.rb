@@ -246,17 +246,17 @@ module CppProjectConfig
  	end
 
 	def INCDIR
-		@INCDIR||=getInherited(:INCDIR)||"#{buildDir()}/include";
+		@INCDIR||=getAnyAbove(:INCDIR)||"#{buildDir()}/include";
 	end
 	def binDir
-		@binDir||=getInherited(:binDir)||"#{buildDir()}/bin";
+		@binDir||=getAnyAbove(:binDir)||"#{buildDir()}/bin";
 	end
 	def nativeLibDir
-		@nativeLibDir||=getInherited(:nativeLibDir)||"#{buildDir()}/lib";
+		@nativeLibDir||=getAnyAbove(:nativeLibDir)||"#{buildDir()}/lib";
 	end
 
 	def vcprojDir
-		@vcprojDir||=getInherited(:vcprojDir)||"#{buildDir()}/vcproj";
+		@vcprojDir||=getAnyAbove(:vcprojDir)||"#{buildDir()}/vcproj";
 	end
 
     # add include paths in order to the current list of include paths.

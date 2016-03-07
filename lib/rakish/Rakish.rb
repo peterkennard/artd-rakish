@@ -197,10 +197,8 @@ end
 # Rake extensions
 module Rake
 
-    #--
-	module DSL  # so if a version doesn't have it it works
+	module DSL  # :nodoc: so if a version doesn't have it it works
 	end
-	#++
 
 	class << self
 		def get_unique_name
@@ -288,7 +286,7 @@ module Rake
 	  attr_accessor :data
 
 	  # see Rake.Task as this overrides it's method
-	  # it flattens dependencies so they can be provided as
+	  # to flatten dependencies so they can be provided as
 	  # nested arrays or arguments
 	  def enhance(args,&b)
 		# instead of |=
@@ -297,12 +295,12 @@ module Rake
 		self
 	  end
 	  
-	  def scopeExec(args=nil)
-		  @application.in_namespace_scope(@scope) do
-			  FileUtils.cd @_p_.projectDir do
-				  _baseExec_(args);
-			  end
-		  end
+	  def scopeExec(args=nil) # :nodoc:
+		@application.in_namespace_scope(@scope) do
+			FileUtils.cd @_p_.projectDir do
+				_baseExec_(args);
+			end
+		end
 	  end
 	  private :scopeExec
 
@@ -320,7 +318,8 @@ module Rake
 
 	  class << self
 		# define a task with a unique anonymous name
-		# TODO: doesn't handle :name=>[] hash dependencies
+		# does not handle :name=>[] dependencies because the generated name is
+		# not known at the time of this declaratation
 		def define_unique_task(*args,&b)
 			args.unshift(Rake.get_unique_name)
 			Rake.application.define_task(self,*args,&b);
@@ -344,25 +343,27 @@ module Rake
 	module TaskManager
 
 		if(RUBY_VERSION =~ /^2./)
-			def _trc
+			def _trc  # :nodoc:
 				puts("** namespace \":#{@scope.path}\"");
 			end
 		else # ruby 1.9.X
-			def _trc
+			def _trc # :nodoc:
 				puts("** namespace \":#{@scope.join(':')}\"");
 			end
 		end
 		private :_trc
 
-		# directory tasks are always in root list so this should be a bit faster
+		# Directory tasks are always in root list so this should be a bit faster
 		rake_extension('directory_task_defined?') do
+			# Return true if a directory creation task for the diven path is defined.
 			def directory_task_defined?(path)
 				@tasks.has_key?(path)
 			end
 		end
 
-		# this allows for explicitly setting an "absolute" namespace
 		rake_extension('in_namespace_scope') do
+		    # Allows for explicitly setting an "absolute" namespace
+			# Executes the block in the provided scope.
 			def in_namespace_scope(scope)
 				prior = @scope;
 				@scope = scope;
@@ -774,7 +775,7 @@ module Rakish
 			end
 		end
 		
-		# "pre-process" input lines using the ruby escape sequence
+		# This will "pre-process" input lines using the ruby escape sequence
 		# '#{}' for substitutions
 		#  in the binding
 		#     linePrefix is an optional prefix to prepend to each line.
@@ -814,7 +815,7 @@ module Rakish
 			end
 		end
 
-		# "preprocess" a file using the ruby escape sequence 
+		# This will "preprocess" an entire file using the ruby escape sequence 
 		# '#{}' for substitutions 
 		#
 		#   ffrom = input file path
@@ -834,7 +835,7 @@ module Rakish
 			end
 		end
 
-		# create relative path between path and relto
+		# Get relative path between path and relto
 		# returns absolute path of path if the roots 
 		# are different.
 		def getRelativePath(path,relto=nil)
@@ -877,6 +878,8 @@ module Rakish
 			op.join('/')
 		end
 
+		# Same as getRelativePath except the returned path uses '\\' instead of '/'
+		# as a path separator
 		def getWindowsRelativePath(path,relto=nil)
 			getRelativePath(path,relto).gsub('/','\\');
 		end
@@ -953,6 +956,8 @@ module Rakish
 			end
 		end
 			
+		# Returns hash containing the difference between a "parent" hash
+        # and an overriding "child" hash		
 		def hashDiff(parent,child)
 			dif={}
 			child.defines.each do |k,v|
@@ -962,7 +967,7 @@ module Rakish
 			dif
 		end
 
-		# prepends a parent path to an array of file names
+		# Prepends a parent path to an array of file names
 		# 
 		# returns a FileList containing the joined paths
 		def addPathParent(prefix,files)
@@ -981,10 +986,10 @@ module Rakish
 			return(a)
 		end
 		
-		# create a single simple file task to process source to dest
+		# Create a single simple file task to process source to dest
 		#
 		# if &block is not given, then a simple copy action
-		#    do |t| { cp(t.source, t.name) } 
+		#    do |t| { FileUtils::cp(t.source, t.name) } 
 		# is used
 		#
 		# <b>named arguments:</b>
@@ -1005,13 +1010,13 @@ module Rakish
 			task
 		end
 
-		# look up a task in the task table using a leading ':' as
+		# Look up a task in the task table using a leading ':' as
 		# the indicator of an absolute 'path' like 'rake:'
 		def lookupTask(tname)
 			Rake.application.lookup((tname=~/^:/)?"rake#{tname}":tname);
 		end
 		
-		# create a single simple "copy" task to process source file 
+		# Create a single simple "copy" task to process source file 
 		# file of same name in destination directory
 		#
 		# if &block is not given, then a simple copy action
@@ -1028,7 +1033,7 @@ module Rakish
 		end
 		
 		
-		# for all files in files create a file task to process the file from the
+		# For all files in files create a file task to process the file from the
 		# source file files[n] to destdir/basename(files[n])
 		# 
 		# if &block is not given, then a simple copy task
@@ -1103,7 +1108,7 @@ module Rakish
 		end				
 	end
 
-	# yes including your own internal module
+	# yes including our own module
 	include Rakish::Util
 	
 private
@@ -1137,22 +1142,34 @@ public
 	module PropertyBagMod
 
 		# constructor for PropertyBagMod to be called by including classes
-		# TODO: have this take an array of parents like a path first hit wins.
+		# This will take an array of parents scanned like a like a path, first hit wins.
+		# by default parents o level above are split into heritable and non-heritable parents
+		# the first parent i  the list is considered heritable subsequent parents are in the
+        # search path but are not considerd "heritable" so they will not be fround from 
+        # inhering childern.		
 		def init_PropertyBag(*args)
 			@h_ = (Hash === args.last) ? args.pop : {}
-			if(args.length > 0)
-				@parent_=args[0];
-		    end
-		    # make parents array the array in the of order of encounter all all unique parents.
 		    allP = [];
-			args.each do |p|
-            	if(p)
-					allP << p;
-					allP << p.parents;
-            	end
+			@parents_ = allP;
+			
+			if(args.length > 0)
+				hp = nil;
+				# make parents array the array in the of order of encounter of all unique parents.
+				args.each do |p|
+					if(p)
+						allP << p;
+						php = p.heritableParents
+						hp||=[p,php].flatten;
+						allP << php;
+					else
+						hp||=[]
+					end
+				end
+				@parents_ = allP.flatten.uniq;
+				if( hp.length != @parents_.length) 
+					@_hpc_ = hp.length;
+				end
 			end
-			@parents_ = allP.flatten.uniq;
-
 			# log.debug("****** parents #{@parents_} allP #{allP}")
   		end
 
@@ -1165,8 +1182,16 @@ public
 		def parents
 			@parents_
 		end
+		# This will supply inheritable parents to children. 
+		# 
+		# By default only parents[0] and it's hetitableParents are inheritable by children
+		# added parents resolve in the search only.
+		def heritableParents
+			return @parents_ unless @_hpc_;
+			@parents_.take(@_hpc_)
+		end
 
-		# enable creation of new fields in a property bag within the supplied block.
+		# Enable creation of new fields in a property bag within the supplied block.
 		# may be called recursively
 		
 		def enableNewFields(&b)
@@ -1205,11 +1230,12 @@ public
 			@h_[k]=v
 		end
 
-		# Get inherited value value for property, traverse up parent tree via flattened
+		# Get non-nil value for property 0n any level above, traverse up parent tree via flattened
 		# ancestor list to get first inherited value or nil if not found.
 		# opts - none define at present
-		def getInherited(sym, opts={})
+		def getAnyAbove(sym)
 			if(@parents_)
+
 				@parents_.each do |p|
 					val = p.getMy(sym);
 					return(val) if val;
@@ -1218,6 +1244,23 @@ public
 			nil
 		end
 
+		# Get non-nil value for property from any heritable parent on any level above, 
+		# traverse up parent tree via flattened
+		# ancestor list to get first inherited value or nil if not found.
+		# opts - none define at present
+		def getInherited(sym)
+			return(getAnyAbove() unless @_hpc_);
+			pc = @_hpc_;
+			@parents_.each do |p|
+				break if(pc < 1)
+				val = p.getMy(sym);
+				return(val) if val;
+				pc=pc-1;
+			end
+			nil
+		end
+		
+		
 		# get value for property, traverse up parent tree to get first inherited
 		# value if not present on this node, returns nil if property not found or
 		# it's value is nil
@@ -1312,8 +1355,8 @@ public
 							raise PropertyBagMod::cantOverrideX_(sym)
 						end
 						return(@h_[sym]=args[0]) # assign value to property
-					elsif @parents_ # recurse to parents
-					    # we don't recurse here but check the flattened parent list in order
+					elsif @parents_ # "recurse" to parents
+					    # we don't actually recurse here but check the flattened parent list in order
 						@parents_.each do |p|
 			               return(p.send(sym)) if(p.class.method_defined? sym);
 						   v = p.h_[sym];
@@ -1340,13 +1383,14 @@ public
 		end
 	end
 		
-	# case independent set for file paths
+	# A case independent set for file paths
 	# intended to act like a Ruby class Set for File path names
 	class FileSet < Module
 		
-		# create a FileSet containing an initial set of files
+		# Create a FileSet containing an initial set of files
 		# contained in 'files'.  It will acccept 'wildcard' 
-		# entries which are expanded relative to the current directory.
+		# entries as defined for a Rake::FileList which are expanded 
+		# relative to the current directory.
 
 		def initialize(*files)
 			@h={}
@@ -1437,14 +1481,14 @@ public
 		def empty?
 			@h.empty?
 		end
-		# iterates over each path (key) in the set
+		# Iterates over each path (key) in the set
 		def each(&b) # :yields: path
 			@h.each do |k,v|
 				yield(k.to_s)
 			end
 		end
 
-		# like array.join
+		# Like array.join
 		def join(separator)
 			out = nil;
 			each do |p|
@@ -1458,18 +1502,18 @@ public
 			out||'';
 		end
 
-		# returns then number of entries in this set
+		# Returns then number of entries in this set
 		def size
 			@h.size
 		end
-		# returns an array of all path entries in this set
+		# Returns an array of all path entries in this set
 		def to_ary
 			@h.keys
 		end
 	end
 
 	class OrderedFileSet < FileSet
-		def initaliaze
+		def initialize
 			super
 			@ordered=[]
 		end
@@ -1498,7 +1542,7 @@ public
 	end
 	
 	
-	# case independent "path" hash
+	# Case independent "path" hash
 	class FileHash < FileSet
 		def initialize()
 			super
@@ -1537,7 +1581,7 @@ public
 		end
 	public
 	
-		# create new FileCopySet with optional argument to initialize this set as a 
+		# Create new FileCopySet with optional argument to initialize this set as a 
 		# deep copy of another FileCopySet
 		def initialize(cloneFrom=nil)
 			@byDir_=FileHash.new
@@ -1588,7 +1632,7 @@ public
 			end		
 		end
 	public
-		# add a directory with no source files to this set, if not already there.
+		# Add a directory with no source files to this set, if not already there.
 		def addDir(dir)
 #			if(dir =~ /^\//)
 #				dir = $'           # truncate leading '/' ???
@@ -1632,7 +1676,7 @@ public
 					elsif(destdir.length > 0)
 						dir = "#{destdir}/#{dir}"
 					end
-					(@byDir_[dir]||=[]) << Entry.new(f,data)
+						(@byDir_[dir]||=[]) << Entry.new(f,data)
 				end
 			end		
 		end
@@ -1732,7 +1776,7 @@ public
 		
 	end
 	
-	
+	# not used yet intending to use it for MultiTask queueing
 	class CountingSemaphore
 	  def initialize(initvalue = 0)
 		@counter = initvalue
