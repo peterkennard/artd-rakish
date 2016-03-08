@@ -435,14 +435,18 @@ end
 
 @@projectClassesByIncluded_ = {}; # :nodoc:
 
-# create a new Rakish::Project of the base type in
-# in :extends including the modules in :includes
-# find an exiting one if there is one.
-# maybe its senseless optimization but we want a freer dynamic project
+# Dynamically create a new Rakish::Project class or get one from the cache
+# of the base type in :extends including the modules in :includes
+# this will find an exiting class definition in a cache for the specification if
+# there is one.
+#
+# Maybe its senseless optimization but I wanted a freer dynamic project
 # declaration system without having to explicitly create new classes with
 # explicit names everywhere. I did learn something about Ruby however :)
+# the "opts" are the same ones that would be used for
+# Rakish::Project.new
 
-def self.GetProjectClass(opts={}) # :nodoc:
+def self.GetProjectClass(opts={})
 
     # get the base project type to extend the class from
     # and get list of explicit modules to include

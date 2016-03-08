@@ -14,15 +14,15 @@ module Rakish
         # :baseDir - base directory of file list as "source root dir" to be truncated from resolved paths
         # :destDir - destination folder in jar file to have truncated files paths added to in jar file.
         # :cacheList - cache the file list and auto-add dependencies only defined if true
+        # requres that utility 'unzip' is in the path
 
         attr_reader :archiveContents_ # :nodoc:
-
 
         addInitBlock do |pnt,opts|
             @archiveContents_ = [];
 
-            if(BASEHOSTTYPE =~ /Windows/)
-                @@unzipPath_ ||= "#{thirdPartyPath}/tools/msysgit/bin/unzip.exe";
+            if(BASEHOSTTYPE =~ /Windows/) # seems execLogged doesn't search path in windows ruby
+                @@unzipPath_ ||= Rakish::Util.findInBinPath('unzip');
             else
                 @@unzipPath_ ||= 'unzip'; # let path search find it
             end

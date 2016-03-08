@@ -77,9 +77,6 @@ module BuildConfigModule
     # folder to output native binary dll and so files to
 	attr_property 	:binDir
 
-    # path to third party unix like utilities on windows machines
- 	attr_property	:thirdPartyPath
-
  	# parsable native configuration name as configuration and
  	# used as a reference to which librarys to link with for a particular
  	# compiler and processor configuration
@@ -124,6 +121,7 @@ module BuildConfigModule
 	def verbose?
 		@verbose ||= getAnyAbove(:verbose);
 	end
+
 end
 
 
@@ -187,9 +185,6 @@ class GlobalConfig < BuildConfig
 			enableNewFields(&b);
 
 			enableNewFields(&@initGlobalPaths) if @initGlobalPaths;
-
-			cfg.thirdPartyPath ||= File.join(ENV['ARTD_TOOLS'],'../.');
-			cfg.thirdPartyPath = File.expand_path(cfg.thirdPartyPath);
 
 			@buildDir ||= ENV['RakishBuildRoot']||"#{Rake.original_dir}/build";
 			@buildDir = File.expand_path(@buildDir);

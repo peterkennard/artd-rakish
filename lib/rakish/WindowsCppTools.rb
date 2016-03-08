@@ -5,19 +5,21 @@ LoadableModule.onLoaded(Module.new do
 
 	include Logger;
 
+    # :nodoc:
 	VALID_DEBUGTYPES = { 
 		'Debug'=>true,
 		'Release'=>true,
 #		'Checked'=>true
 	};
-
+    # :nodoc:
 	VALID_LINKTYPES = { 
 		'MT'=>true,
 		'MTd'=>true,
 		'MD'=>true,
 		'MDd'=>true
 	};
-				
+			
+	# :nodoc:
 	VALID_COMPILERS = { 
 #		'VC5'=>true,
 #		'VC6'=>true,
@@ -27,8 +29,11 @@ LoadableModule.onLoaded(Module.new do
 		'VC10'=>true,
 #		'ICL'=>true
 	};
-	
-	class Win32Tools 
+
+	# C++ build tools
+    # Not really part of public distributioin - too littered with local stuff
+    # specific to my main builds  This needs to be converted to work in a more configurable way
+	class Win32Tools
 		include CTools
 
 		# platform specific file extensions

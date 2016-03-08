@@ -468,9 +468,7 @@ end
 
 module Rakish
 
-	MAKEDIR = File.dirname(File.expand_path(__FILE__)); # :nodoc:
-
-	# Extensons to root level Module 
+	# Extensons to root level Module
 	
 	class ::Module
 		
@@ -999,7 +997,54 @@ module Rakish
 			end
 			return(a)
 		end
-		
+
+
+		if( HostIsWindows_ )
+            # Find executable in the "bin" search path
+            # return nil if not found.
+            #
+            # currently the search path is set to the value of ENV['PATH']
+            #
+            def self.findInBinPath(name)
+                @@binpath ||= ENV['PATH'].split(';');
+                found = nil;
+                @@binpath.each do |path|
+                    path = File.absolute_path(path);
+                    path = "#{path}/#{name}";
+                    fpath="#{path}.exe";
+                    if(File.exists?(fpath))
+                        found = fpath;
+                        break;
+                    end
+                    fpath="#{path}.bat";
+                    if(File.exists?(fpath))
+                        found=fpath;
+                        break;
+                    end
+                end
+                found;
+            end
+        else
+            # Find executable in the "bin" search path
+            # return nil if not found.
+            #
+            # currently the search path is set to the value of ENV['PATH']
+            #
+            def self.findInBinPath(name)
+                @@binpath ||= ENV['PATH'].split(':');
+                found = nil;
+                @@binpath.each do |path|
+                    path = File.absolute_path(path);
+                    fpath = "#{path}/#{name}";
+                    if(File.exists?(fpath))
+                        found = fpath;
+                        break;
+                    end
+                end
+                found;
+            end
+        end
+
 		# Create a single simple file task to process source to dest
 		#
 		# if &block is not given, then a simple copy action
@@ -1846,6 +1891,7 @@ module Rakish
 
 	end
 
-	Semaphore = CountingSemaphore
+    # :nodoc: not used curently
+	# Semaphore = CountingSemaphore
 
 end

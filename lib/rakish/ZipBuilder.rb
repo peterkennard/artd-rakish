@@ -7,11 +7,13 @@ module Rakish
 module ZipBuilderModule
 
     # Subclass of Rakish::ArchiveBuilder for creating zip files.
+    # requres that utility 'unzip' and 'zip' are in the path
+
     class ZipBuilder < ArchiveBuilder
 
         addInitBlock do |pnt,opts|
 			if(BASEHOSTTYPE =~ /Windows/)
-                @@zipPath_ ||= "#{thirdPartyPath}/tools/msysgit/bin/zip.exe";
+                @@zipPath_ ||= Rakish::Util.findInBinPath('zip');
             else
                 @@zipPath_ ||= 'zip'; # allow path to find it
             end

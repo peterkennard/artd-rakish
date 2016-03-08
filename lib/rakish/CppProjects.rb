@@ -3,7 +3,13 @@ require "#{myPath}/RakishProject.rb"
 
 module Rakish
 
+    # :nodoc: legacy only looked at in the
+	MAKEDIR = File.dirname(File.expand_path(__FILE__)); # :nodoc:
 
+	# C++ build module
+    # Not really part of public distributioin - too littered with local stuff
+    # specific to my main builds  This needs to be converted to work in a more configurable way
+    # for multiple platforms
 module CTools
 	include Rakish::Logger
 	include Rakish::Util
