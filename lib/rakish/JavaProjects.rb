@@ -11,7 +11,7 @@ module JavaProjectConfig
 
     class JavaConfig < PropertyBag
 
-        def initialize(parent,projConfig)
+        def initialize(parent,projConfig) # :nodoc:
             super(parent,projConfig);
             # self.class.initializeIncluded(self,parent);
             yield self if block_given?
@@ -34,6 +34,7 @@ module JavaProjectConfig
         end
     end
 
+    # Get instance of JavaConfig for this configuration
     def java
        @javaConfig_||=JavaConfig.new(getAnyAbove(:java),parent);
     end
@@ -181,6 +182,7 @@ module JavaProjectModule
     include JavaProjectConfig
 
     # Overrides java in JavaProjectConfig
+    # Get instance of JavaBuilder < JavaConfig for this project
     def java
         @javaConfig_||=JavaBuilder.new(self);
     end
@@ -250,12 +252,7 @@ protected
             @outputClasspath||="#{buildDir()}/production/#{moduleName()}";
         end
 
-        # Are there any tasks with an earlier time than the given time stamp?
-        def any_task_earlier?(tasks,time)
-            tasks.any? { |n| n.timestamp < time }
-        end
-
-        def doCompileJava(t)
+        def doCompileJava(t) # :nodoc:
 
             config = t.config;
 
@@ -366,7 +363,7 @@ protected
         # Adds and exports simple configured targets for building classes, creating jar file, src.zip file
         # and exports :compile (classes), :libs (jar files), and :dist (jar file, -src.zip, and -doc.zip file
         # requires that source roots and compile classpaths have been set in this builder.
-        def addLibraryTargets()
+        def addLibraryTargets(opts={})
 
             export task :resources;
 
@@ -376,10 +373,18 @@ protected
 
             export (task :compile => javac);
 
-            jarTask = createJarFileTask();
+            jarBuilder = createJarBuilder();
+            jarBuilder.addDirectory(java.outputClasspath());
+
+            jarPath = opts[:name]||"#{binDir()}/#{moduleName}.jar";
+            jarPath = jarPath.pathmap("%X.jar");
+
+            jarTask = jarBuilder.jarTask(jarPath);
             jarTask.enhance(:compile);
 
-            jarTask.addDirectoryContents(java.outputClasspath());
+#            jarTask = proj.createJarFileTask();
+#            jarTask.enhance(:compile);
+#            jarTask.addDirectoryContents();
 
 
             zipBuilder = proj.createZipBuilder();
@@ -406,47 +411,50 @@ protected
         end
     end
 
-protected
 
-    class JarFileTask < Rake::FileTask
+if(false) # dead code
+    protected
 
-        def jarContents
-            @contents_||=[]
-        end
+        class JarFileTask < Rake::FileTask # :nodoc:
 
-        def addDirectoryContents(dir)
-            jarContents << dir;
-        end
-   end
-
-public
-
-    def createJarFileTask(opts={})
-
-        jarPath = opts[:name]||"#{binDir()}/#{moduleName}.jar";
-        jarPath = jarPath.pathmap("%X.jar");
-
-        tsk = JarFileTask.define_task jarPath do |t|
-
-            config = t.config;
-
-            FileUtils.mkdir_p(getRelativePath(t.name).pathmap('%d'));
-
-            cmdOpts = 'cvMf';
-            unless config.verbose?
-                cmdOpts = cmdOpts.gsub('v','');
+            def jarContents
+                @contents_||=[]
             end
 
-            cmdline = "\"#{config.java_home}/bin/jar\" #{cmdOpts} \"#{getRelativePath(t.name)}\"";
-
-            t.jarContents.each do |path|
-                cmdline += " -C \"#{getRelativePath(path)}\" .";
+            def addDirectoryContents(dir)
+                jarContents << dir;
             end
+       end
 
-            execLogged(cmdline, :verbose=>config.verbose?);
+    public
+
+        def createJarFileTask(opts={}) # :nodoc:
+
+            jarPath = opts[:name]||"#{binDir()}/#{moduleName}.jar";
+            jarPath = jarPath.pathmap("%X.jar");
+
+            tsk = JarFileTask.define_task jarPath do |t|
+
+                config = t.config;
+
+                FileUtils.mkdir_p(getRelativePath(t.name).pathmap('%d'));
+
+                cmdOpts = 'cvMf';
+                unless config.verbose?
+                    cmdOpts = cmdOpts.gsub('v','');
+                end
+
+                cmdline = "\"#{config.java_home}/bin/jar\" #{cmdOpts} \"#{getRelativePath(t.name)}\"";
+
+                t.jarContents.each do |path|
+                    cmdline += " -C \"#{getRelativePath(path)}\" .";
+                end
+
+                execLogged(cmdline, :verbose=>config.verbose?);
+            end
+            tsk.config = self;
+            tsk
         end
-        tsk.config = self;
-        tsk
     end
 
 end

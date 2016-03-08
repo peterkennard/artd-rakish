@@ -666,15 +666,15 @@ module Rakish
 			Rake.application.in_namespace_path(name, &block)
 		end
 
-		# get time stamp of file or directory 
+		# Get time stamp of file or directory
 		def filetime(name)
 			File.exists?(name) ? File.mtime(name.to_s) : Rake::EARLY
 		end
 
         # Are there any tasks in the iterable 'tasks' list with an earlier 'time' than the given time stamp?
-   #     def any_task_earlier?(tasks,time)
-   #         tasks.any? { |n| n.timestamp < time }
-   #     end
+        def any_task_earlier?(tasks,time)
+            tasks.any? { |n| n.timestamp < time }
+        end
 
 		# Get simple task action block (lambda) to copy from t.source to t.name
 		#   do |t|
