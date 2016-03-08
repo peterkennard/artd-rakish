@@ -20,13 +20,7 @@ module Rakish
 
         addInitBlock do |pnt,opts|
             @archiveContents_ = [];
-
-            if(BASEHOSTTYPE =~ /Windows/) # seems execLogged doesn't search path in windows ruby
-                @@unzipPath_ ||= Rakish::Util.findInBinPath('unzip');
-            else
-                @@unzipPath_ ||= 'unzip'; # let path search find it
-            end
-
+            @@unzipPath_ ||= Rakish::Util.findInBinPath('unzip');
         end
 
         # note not resolved until configured task is invoked

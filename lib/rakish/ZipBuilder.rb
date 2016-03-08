@@ -12,11 +12,7 @@ module ZipBuilderModule
     class ZipBuilder < ArchiveBuilder
 
         addInitBlock do |pnt,opts|
-			if(BASEHOSTTYPE =~ /Windows/)
-                @@zipPath_ ||= Rakish::Util.findInBinPath('zip');
-            else
-                @@zipPath_ ||= 'zip'; # allow path to find it
-            end
+            @@zipPath_ ||= Rakish::Util.findInBinPath('zip');
         end
 
     public
