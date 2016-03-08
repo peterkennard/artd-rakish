@@ -14,8 +14,8 @@ Gem::Specification.new do |s|
   s.extra_rdoc_files = [
       'doc/UserGuide'
   ];
-  s.add_runtime_dependency 'rake',
-  [ '>= 0.9.0.0']
+  # s.add_runtime_dependency 'rake',
+  # [ '>= 0.9.0.0']
 				   
   s.homepage    = ''
   s.license     = 'BSD'
