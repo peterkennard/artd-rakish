@@ -4,25 +4,44 @@ require "#{myPath}/ZipBuilder.rb"
 module Rakish
 
 
+# mixin to add java configuration to a configuration or project
+# adds accessors for javaConfig and java_home
 module JavaProjectConfig
     include BuildConfigModule
 
-    attr_reader :javaOutputClasspath
+    class JavaConfig < PropertyBag
 
-    def classpathSeparator
-       @@classpathSeparator_||= ( BASEHOSTTYPE =~ /Windows/ ? ';' : ':');
+        def initialize(parent,projConfig)
+            super(parent,projConfig);
+            # self.class.initializeIncluded(self,parent);
+            yield self if block_given?
+        end
+
+        def classpathSeparator
+           @@classpathSeparator_||= ( BuildConfig::BASEHOSTTYPE =~ /Windows/ ? ';' : ':');
+        end
+
+        def classPaths
+            @classPaths_||=(getInherited(:classPaths)||FileSet.new);
+        end
+
+        def addClassPaths(*paths)
+            unless(@_cpWritable_)
+                @classPaths_=FileSet.new(classPaths);
+                @_cpWritable_ = true;
+            end
+            classPaths.include(paths);
+        end
     end
 
-    def javaClassPaths
-        @javaClassPaths_||=(getAnyAbove(:javaClassPaths)||FileSet.new);
+    def java
+       @javaConfig_||=JavaConfig.new(getAnyAbove(:java),parent);
     end
 
-    def addJavaClassPaths(*paths)
-        # TODO: needs to not clobber the ancestor's classpath
-		@javaClassPaths_||= FileSet.new;
-        @javaClassPaths_.include(paths);
-    end
 end
+
+
+
 
 module JarBuilderModule
 
@@ -113,20 +132,21 @@ module JavadocBuilderModule
         def doBuildJavadoc(t)
 
             cfg = t.config;
+            java = cfg.java;
 
             # log.debug("doc output path is [#{cfg.docOutputDir}]");
 
             FileUtils.mkdir_p(cfg.docOutputDir);
-            separator = cfg.classpathSeparator;
+            separator = cfg.java.classpathSeparator;
 
             cmdline = "\"#{cfg.java_home}/bin/javadoc\" -d \"#{cfg.docOutputDir}\"";
             cmdline += " -quiet";
-            unless(cfg.javaClassPaths.empty?)
-                classpath = cfg.javaClassPaths.join(separator);
+            unless(java.classPaths.empty?)
+                classpath = java.classPaths.join(separator);
                 cmdline += " -classpath \"#{classpath}\"";
             end
 
-            sourcepath = cfg.javaSourceRoots.join(';');
+            sourcepath = java.sourceRoots.join(';');
             cmdline += " -sourcepath \"#{sourcepath}\"";
             cmdline += " -subpackages \"com\"";
 
@@ -159,6 +179,12 @@ end
 
 module JavaProjectModule
     include JavaProjectConfig
+
+    # Overrides java in JavaProjectConfig
+    def java
+        @javaConfig_||=JavaBuilder.new(self);
+    end
+
     include JarBuilderModule
     include ZipBuilderModule
     include JavadocBuilderModule
@@ -171,166 +197,159 @@ protected
         end
     end
 
-    CompileJavaAction = ->(t) do
-        t.config.doCompileJava(t);
-    end
+    class JavaBuilder < JavaConfig
+        include Rakish::Util
 
-public
-
-    def getDelimitedClasspath
-        javaClassPaths.join(classpathSeparator);
-    end
-
-    def javaClassPaths
-        # todo: DON'T ALLOCATE COPY UNTIL THINGS ARE ADDED NEED FLAG :)
-        @javaClassPaths_||=FileSet.new(getAnyAbove(:javaClassPaths));
-    end
-    def addJavaClassPaths(*paths)
-        @javaClassPaths_||= FileSet.new(getAnyAbove(:javaClassPaths));
-        @javaClassPaths_.include(paths);
-    end
-
-    def doCompileJava(t)
-
-        config = t.config;
-
-        FileUtils::mkdir_p(config.javaOutputClasspath);
-
-        outClasspath = getRelativePath(config.javaOutputClasspath);
-
-        cmdline = "\"#{config.java_home}/bin/javac\"";
-        cmdline << " -g -d \"#{outClasspath}\""
-
-        separator = config.classpathSeparator;
-        paths = config.javaClassPaths
-
-        unless(paths.empty?)
-            cmdline << " -classpath \"#{outClasspath}";
-            paths.each do |path|
-                cmdline << "#{separator}#{getRelativePath(path)}"
-            end
-            cmdline << "\"";
+        def initialize(proj)
+            super(proj.getAnyAbove(:java),proj);
         end
 
-        paths = config.javaSourceRoots
-        javaSrc = FileList.new;
+        # Add source root dirertory to the list of source roots for thie compile.
+        # options:
+        # :generated - part or all of this directory or it's contents will not exists until after
+        # a dependency target to the compile task has built it's contents.
+        def addSourceRoot(*roots)
+            opts = (roots.last.is_a?(Hash) ? roots.pop : {})
+            (@javaSourceDirs_||=FileSet.new).include(roots);
+        end
 
-        unless(paths.empty?)
-
-            prepend = " -sourcepath \"";
-            paths.each do |path|
-
-                javaSrc.include("#{path}/**/*.java");
-
-                cmdline << "#{prepend}#{getRelativePath(path)}"
-                prepend = separator;
-            end
-            cmdline << "\"";
+        # retrieve added source roots, default to [projectDir]/src if not set
+        def sourceRoots
+            @javaSourceDirs_||=[File.join(projectDir,'src')];
         end
 
 
-#        javaSourceRoots.each do |root|
-#            srcFiles.addFileTree(javaOutputClasspath, root, files );
-#            files = FileList.new
-#            files.include("#{root}/**/*");
-#            files.exclude("#{root}/**/*.java");
-#            copyFiles.addFileTree(javaOutputClasspath, root, files);
-#        end
-
-      # we collect the sources above as geenrated code may not be present when the task is created
-       javaSrc.each do |src|
- #       t.sources.each do |src|
-            cmdline << " \"#{getRelativePath(src)}\"";
-        end
-
-        ret = execLogged(cmdline, :verbose=>verbose?);
-        raise "Java compile failure" if(ret.exitstatus != 0);
-    end
-
-    class JavaCTask < Rake::Task
-        def needed?
-            !sources.empty?
-        end
-    end
-
-    # Are there any tasks with an earlier time than the given time stamp?
-    def any_task_earlier?(tasks,time)
-        tasks.any? { |n| n.timestamp < time }
-    end
-
-
-    def addProjectOutputClasspaths(*moduleNames)
-        names = moduleNames.flatten;
-        names.each do |name|
-            proj = nil;
-            begin
-                proj = Rakish.projectByName(name);
-                addJavaClassPaths(proj.javaOutputClasspath);
-            rescue => e
-                log.error { "#{moduleName} - failure loading classpath for #{name}" }
-                log.error { e } if(proj);
+        # Adds output classpaths from other java project modules to the classpath set for
+        # this build configuration
+        def addProjectOutputClasspaths(*moduleNames)
+            names = moduleNames.flatten;
+            names.each do |name|
+                proj = nil;
+                begin
+                    proj = Rakish.projectByName(name);
+                    addClassPaths(proj.java.outputClasspath);
+                rescue => e
+                    log.error { "#{moduleName} - failure loading classpath for #{name}" }
+                    log.error { e } if(proj);
+                end
             end
         end
-    end
 
-    def javacTask(deps=[])
-
-        srcFiles = FileCopySet.new;
-        copyFiles = FileCopySet.new;
-
-        javaSourceRoots.each do |root|
-            files = FileList.new
-            files.include("#{root}/**/*.java");
-            srcFiles.addFileTree(javaOutputClasspath, root, files );
-            files = FileList.new
-            files.include("#{root}/**/*");
-            files.exclude("#{root}/**/*.java");
-            copyFiles.addFileTree(javaOutputClasspath, root, files);
+        def outputClasspath
+            @outputClasspath||="#{buildDir()}/production/#{moduleName()}";
         end
 
-        tsk = JavaCTask.define_unique_task &CompileJavaAction
-        task :compile=>[tsk]
-
-        # add sources we know about
-        tasks = srcFiles.generateFileTasks( :config=>tsk, :suffixMap=>{ '.java'=>'.class' }) do |t|  # , &DoNothingAction_);
-            # add this source prerequisite file to the compile task if it is needed.
-            t.config.sources << t.source
+        # Are there any tasks with an earlier time than the given time stamp?
+        def any_task_earlier?(tasks,time)
+            tasks.any? { |n| n.timestamp < time }
         end
 
-#        if(any_task_earlier?(tasks,File.mtime(File.expand_path(__FILE__))))
-#            puts("project is altered");
-#        end
+        def doCompileJava(t)
 
-        tsk.enhance(deps);
-        tsk.enhance(tasks);
-        tsk.config = self;
+            config = t.config;
 
-        tasks = copyFiles.generateFileTasks();
-        tsk.enhance(tasks);
+            FileUtils::mkdir_p(outputClasspath);
 
-        task :clean do
-            addCleanFiles(tasks);
+            outClasspath = getRelativePath(outputClasspath);
+
+            cmdline = "\"#{config.java_home}/bin/javac\"";
+            cmdline << " -g -d \"#{outClasspath}\""
+
+            separator = config.classpathSeparator;
+            paths = config.classPaths
+
+            unless(paths.empty?)
+                cmdline << " -classpath \"#{outClasspath}";
+                paths.each do |path|
+                    cmdline << "#{separator}#{getRelativePath(path)}"
+                end
+                cmdline << "\"";
+            end
+
+            paths = sourceRoots
+            javaSrc = FileList.new;
+
+            unless(paths.empty?)
+
+                prepend = " -sourcepath \"";
+                paths.each do |path|
+                    javaSrc.include("#{path}/**/*.java");
+                    cmdline << "#{prepend}#{getRelativePath(path)}"
+                    prepend = separator;
+                end
+                cmdline << "\"";
+            end
+
+
+    #        sourceRoots.each do |root|
+    #            srcFiles.addFileTree(javaOutputClasspath, root, files );
+    #            files = FileList.new
+    #            files.include("#{root}/**/*");
+    #            files.exclude("#{root}/**/*.java");
+    #            copyFiles.addFileTree(javaOutputClasspath, root, files);
+    #        end
+
+          # we collect the sources above as geenrated code may not be present when the task is created
+           javaSrc.each do |src|
+     #       t.sources.each do |src|
+                cmdline << " \"#{getRelativePath(src)}\"";
+            end
+
+            ret = execLogged(cmdline, :verbose=>verbose?);
+            raise "Java compile failure" if(ret.exitstatus != 0);
         end
 
-        tsk;
-    end
+        class JavaCTask < Rake::Task
+            def needed?
+                !sources.empty?
+            end
+        end
 
-    # add source rot dirertory to the list of source roots for thie compile.
-    # options:
-    # :generated - part or all of this directory or it's contents will not exists until after
-    # a dependency target to the compile task has built it's contents.
-    def addJavaSourceRoot(*roots)
-        opts = (roots.last.is_a?(Hash) ? roots.pop : {})
-        (@javaSourceDirs_||=FileSet.new).include(roots);
-    end
+        CompileJavaAction = ->(t) do
+            t.config.doCompileJava(t);
+        end
 
-    def javaSourceRoots
-        @javaSourceDirs_||=[File.join(projectDir,'src')];
-    end
+        def javacTask(deps=[])
 
-    # output directory common to all configurations
-    def javaOutputClasspath
-        @javaOutputClasspath||="#{buildDir()}/production/#{moduleName()}";
+            srcFiles = FileCopySet.new;
+            copyFiles = FileCopySet.new;
+
+            sourceRoots.each do |root|
+                files = FileList.new
+                files.include("#{root}/**/*.java");
+                srcFiles.addFileTree(outputClasspath, root, files );
+                files = FileList.new
+                files.include("#{root}/**/*");
+                files.exclude("#{root}/**/*.java");
+                copyFiles.addFileTree(outputClasspath, root, files);
+            end
+
+            tsk = JavaCTask.define_unique_task &CompileJavaAction
+            task :compile=>[tsk]
+
+            # add sources we know about
+            tasks = srcFiles.generateFileTasks( :config=>tsk, :suffixMap=>{ '.java'=>'.class' }) do |t|  # , &DoNothingAction_);
+                # add this source prerequisite file to the compile task if it is needed.
+                t.config.sources << t.source
+            end
+
+    #        if(any_task_earlier?(tasks,File.mtime(File.expand_path(__FILE__))))
+    #            puts("project is altered");
+    #        end
+
+            tsk.enhance(deps);
+            tsk.enhance(tasks);
+            tsk.config = self;
+
+            tasks = copyFiles.generateFileTasks();
+            tsk.enhance(tasks);
+
+            task :clean do
+                addCleanFiles(tasks);
+            end
+
+            tsk;
+        end
     end
 
 protected
@@ -383,18 +402,18 @@ public
 
         export task :resources;
 
-        javac = javacTask
+        javac = java.javacTask
 
         export (task :compile => javac);
 
         jarTask = createJarFileTask();
         jarTask.enhance(:compile);
 
-        jarTask.addDirectoryContents(javaOutputClasspath());
+        jarTask.addDirectoryContents(java.outputClasspath());
 
 
         zipBuilder = createZipBuilder();
-        javaSourceRoots.each do |dir|
+        java.sourceRoots.each do |dir|
             zipBuilder.addDirectory(dir, "**/*.java");
         end
         srcZip = zipBuilder.zipTask(jarTask.name.pathmap('%X-src.zip'));
@@ -419,7 +438,7 @@ public
 
 end
 
-# Frozen class definition for java projects 
+# Frozen class definition for java projects
 JavaProject = GetProjectClass( :includes=>[JavaProjectModule] );
 
 end # Rakish

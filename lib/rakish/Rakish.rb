@@ -248,6 +248,11 @@ module Rake
 
     		lineNum = 0;
     		useLine = 0;
+
+            if(ex.message =~ /wrong number of arguments/)
+                useLine = 1;
+            end
+
     		backtrace.each do |line|
                 lineNum = lineNum + 1;
 			    sp = line.split(':in `',2);
@@ -260,7 +265,7 @@ module Rake
     		end
 
 			$stderr.puts(Rakish::Logger.formatBacktraceLine(backtrace[useLine]));
-			$stderr.puts(rakefile_location(backtrace));
+			$stderr.puts(rakefile_location(backtrace)); # this seems to be broken !!
           end
 
 		  $stderr.puts "Tasks: #{ex.chain}" if has_chain?(ex)
@@ -1249,7 +1254,7 @@ public
 		# ancestor list to get first inherited value or nil if not found.
 		# opts - none define at present
 		def getInherited(sym)
-			return(getAnyAbove() unless @_hpc_);
+			return(getAnyAbove(sym)) unless @_hpc_;
 			pc = @_hpc_;
 			@parents_.each do |p|
 				break if(pc < 1)
