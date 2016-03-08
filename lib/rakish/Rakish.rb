@@ -1148,7 +1148,7 @@ public
         # search path but are not considerd "heritable" so they will not be fround from 
         # inhering childern.		
 		def init_PropertyBag(*args)
-			@h_ = (Hash === args.last) ? args.pop : {}
+			@_h_ = (Hash === args.last) ? args.pop : {}
 		    allP = [];
 			@parents_ = allP;
 			
@@ -1211,12 +1211,12 @@ public
 		
 		# item from "Module" we want overidable
 		def name # :nodoc:
-			@h_[:name]
+			@_h_[:name]
 		end
 		
 		# item from "Module" we want overidable
 		def name=(v) # :nodoc:
-			@h_[:name]=v		
+			@_h_[:name]=v
 		end
 		
 		def self.included(by) # :nodoc:
@@ -1227,7 +1227,7 @@ public
 			if self.class.method_defined? k
 				raise PropertyBagMod::cantOverrideX_(k)
 			end
-			@h_[k]=v
+			@_h_[k]=v
 		end
 
 		# Get non-nil value for property 0n any level above, traverse up parent tree via flattened
@@ -1265,8 +1265,8 @@ public
 		# value if not present on this node, returns nil if property not found or
 		# it's value is nil
 		def get(sym)
-			if((v=@h_[sym]).nil?)
-				unless @h_.has_key?(sym)
+			if((v=@_h_[sym]).nil?)
+				unless @_h_.has_key?(sym)
 					if(self.class.method_defined? sym)
 						v=__send__(sym)
 					else
@@ -1295,8 +1295,8 @@ public
 			false
 		end
 
-		def h_ # :nodoc:
-		   @h_
+		def _h_ # :nodoc:
+		   @_h_
 		end
 
 		def raiseUndef_(sym) # :nodoc:
@@ -1315,12 +1315,12 @@ public
 		# Does *not* traverse up tree, gets local value only.
 		# returns nil if value is either nil or not present
 		def getMy(s)
-			(self.class.method_defined? s) ? self.send(s) : @h_[s]
+			(self.class.method_defined? s) ? self.send(s) : @_h_[s]
 		end
 
 		# true if property is set in hash on this object
 		def has_key?(k) # :nodoc: 
-			@h_.has_key?(k)
+			@_h_.has_key?(k)
 		end
 
 
@@ -1341,8 +1341,8 @@ public
 		#
 		def method_missing(sym, *args, &block) # :nodoc:
 
-			if((v=@h_[sym]).nil?)
-				unless @h_.has_key?(sym) # if property exists nil is a valid value
+			if((v=@_h_[sym]).nil?)
+				unless @_h_.has_key?(sym) # if property exists nil is a valid value
 					if sym.to_s =~ /=$/ # it's an attempted asignment ie: ':sym='
 						sym = $`.to_sym  # $` has symbol with '=' chopped off
 						unless @ul_ # if not locked check if there is an inherited
@@ -1354,13 +1354,13 @@ public
 						if(self.class.method_defined? sym)
 							raise PropertyBagMod::cantOverrideX_(sym)
 						end
-						return(@h_[sym]=args[0]) # assign value to property
+						return(@_h_[sym]=args[0]) # assign value to property
 					elsif @parents_ # "recurse" to parents
 					    # we don't actually recurse here but check the flattened parent list in order
 						@parents_.each do |p|
 			               return(p.send(sym)) if(p.class.method_defined? sym);
 						   v = p.h_[sym];
-						   return(v) if v || p.h_.has_key?(sym);
+						   return(v) if v || p._h_.has_key?(sym);
 						end
 						raiseUndef_ sym;
 					else
