@@ -4,7 +4,7 @@ Gem::Specification.new do |s|
   s.name        = 'rakish'
   s.version     = '0.9.0'
   s.summary     = "Rakish build support gem"
-  s.description = "Rakish build support gem"
+  s.description = "Rakish Rake build system built on top of Rake for managing large scale projects with lots of modules."
   s.authors     = ["Peter Kennard"]
   s.email       = 'peterk@livingwork.com'
   s.files       =  FileList.new(["lib/rakish.rb",
@@ -15,7 +15,7 @@ Gem::Specification.new do |s|
       'doc/UserGuide'
   ];
   s.add_runtime_dependency 'rake',
-  '>= 0.9.0.0'
+  [ '>= 0.9.0.0']
 				   
   s.homepage    = ''
   s.license     = 'BSD'
