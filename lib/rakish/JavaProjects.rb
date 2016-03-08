@@ -197,18 +197,29 @@ protected
         end
     end
 
+    # Configuration/Builder API available as JavaProjectModule.java
+    # in projects including the JavaProjectModule
     class JavaBuilder < JavaConfig
         include Rakish::Util
 
-        def initialize(proj)
+        def initialize(proj) # :nodoc:
             super(proj.getAnyAbove(:java),proj);
+            @myProject = proj; # cache this
         end
 
-        # Add source root dirertory to the list of source roots for thie compile.
+        # the project this is attached to
+        attr_reader :myProject
+
+        def export(t,&b) # :nodoc:
+            @myProject.export(t,&b)
+        end
+
+        # Add source root directory(s) to the list of source roots for this compile.
+        #
         # options:
-        # :generated - part or all of this directory or it's contents will not exists until after
-        # a dependency target to the compile task has built it's contents.
-        def addSourceRoot(*roots)
+        #
+        # [:generated] if true, part or all of this directory or it's contents will not exist until after a prerequisite target to the :compile task has built it's contents.
+        def addSourceRoots(*roots)
             opts = (roots.last.is_a?(Hash) ? roots.pop : {})
             (@javaSourceDirs_||=FileSet.new).include(roots);
         end
@@ -305,6 +316,7 @@ protected
             end
         end
 
+        # :nodoc:
         CompileJavaAction = ->(t) do
             t.config.doCompileJava(t);
         end
@@ -350,6 +362,48 @@ protected
 
             tsk;
         end
+
+        # Adds and exports simple configured targets for building classes, creating jar file, src.zip file
+        # and exports :compile (classes), :libs (jar files), and :dist (jar file, -src.zip, and -doc.zip file
+        # requires that source roots and compile classpaths have been set in this builder.
+        def addLibraryTargets()
+
+            export task :resources;
+
+            proj = myProject();
+
+            javac = java.javacTask
+
+            export (task :compile => javac);
+
+            jarTask = createJarFileTask();
+            jarTask.enhance(:compile);
+
+            jarTask.addDirectoryContents(java.outputClasspath());
+
+
+            zipBuilder = proj.createZipBuilder();
+            java.sourceRoots.each do |dir|
+                zipBuilder.addDirectory(dir, "**/*.java");
+            end
+            srcZip = zipBuilder.zipTask(jarTask.name.pathmap('%X-src.zip'));
+
+            export (task :libs => [jarTask, srcZip ])
+
+            docBuilder = proj.createJavadocBuilder();
+            docTask = docBuilder.javadocTask;
+            docTask.enhance([:compile]);
+
+            zipBuilder = proj.createZipBuilder();
+            zipBuilder.addDirectory(docBuilder.docOutputDir "**/*");
+
+            docZip = zipBuilder.zipTask(jarTask.name.pathmap('%X-doc.zip'));
+            docZip.enhance(docTask);
+
+            export (task :javadoc => [ docZip ])
+            export (task :dist => [ :libs, :javadoc ])
+
+        end
     end
 
 protected
@@ -393,47 +447,6 @@ public
         end
         tsk.config = self;
         tsk
-    end
-
-    # adds and exports configured targets for building classes, creating jar file, src.zip file
-    # and exports :compile (classes), :libs (jar files), and :dist (tar file, src.zip file
-    # requires that source roots and compile classpaths are set in the project.
-    def addJavaLibraryTargets()
-
-        export task :resources;
-
-        javac = java.javacTask
-
-        export (task :compile => javac);
-
-        jarTask = createJarFileTask();
-        jarTask.enhance(:compile);
-
-        jarTask.addDirectoryContents(java.outputClasspath());
-
-
-        zipBuilder = createZipBuilder();
-        java.sourceRoots.each do |dir|
-            zipBuilder.addDirectory(dir, "**/*.java");
-        end
-        srcZip = zipBuilder.zipTask(jarTask.name.pathmap('%X-src.zip'));
-
-        export (task :libs => [jarTask, srcZip ])
-
-        docBuilder = createJavadocBuilder();
-        docTask = docBuilder.javadocTask;
-        docTask.enhance([:compile]);
-
-        zipBuilder = createZipBuilder();
-        zipBuilder.addDirectory(docBuilder.docOutputDir "**/*");
-
-        docZip = zipBuilder.zipTask(jarTask.name.pathmap('%X-doc.zip'));
-        docZip.enhance(docTask);
-
-	    export (task :javadoc => [ docZip ])
-
-	    export (task :dist => [ :libs, :javadoc ])
-
     end
 
 end

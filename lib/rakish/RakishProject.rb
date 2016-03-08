@@ -165,6 +165,13 @@ protected
         Rake::FileTask.define_task(*args, &block).setProjectScope(self);
     end
 
+    # Called before user supplied initializer block is executed
+    # in the project's directory and namespace
+    def initProject(args) #
+    end
+
+public
+
 	# When called from within a project, exports a namespace internal task to
 	# a global task by the same name as the task within the projects namespace.
 	# not safe if called on a task outside the project's namespace
@@ -177,7 +184,7 @@ protected
 
 		exported = name;
 	    if(name.is_a? Rake::Task)
-			if(block_given?) 
+			if(block_given?)
 				# this to cover for ruby argument parsing and precidence
 				# so you don't have to add parentheses around the task declaraton
 				# as in: export (task => [prereq] do |t| { blah blah });
@@ -204,13 +211,6 @@ protected
 		return(exported);
 	end
 
-    # Called before user supplied initializer block is executed
-    # in the project's directory and namespace
-    def initProject(args) #
-    end
-
-public
-	
 	task :default		=> [ :build ];
 	task :rebuild 		=> [ :cleandepends, :depends, :clean, :build ];
 

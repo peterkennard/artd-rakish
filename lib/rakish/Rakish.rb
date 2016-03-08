@@ -136,7 +136,7 @@ module Rakish
 		Rakish::Logger.log
 	end
 
-	# Execute shell command in sub process and pipe output to Logger
+	# Execute shell command in sub process and pipe output to Logger at info level
 	# cmdline - single string command line, or array of command and arguments
 	#  opts:
 	#     :verbose - if set to true (testable value is true) will print command when executing
@@ -626,9 +626,10 @@ module Rakish
         end
 
 		# Like each but checks for null and if object doesn't respond to each
-		# use like 
-		# eachof [1,2,3] do |v|
-		# end
+		#
+		#  use like
+		#    eachof [1,2,3] do |v|
+		#    end
 		#  
 		def eachof(v,&b)
 			v.each &b rescue yield v if v # TODO: should use a narrower exception type ?
@@ -644,12 +645,12 @@ module Rakish
 
 	public
 
-		# execute shell command and pipe output to Logger
+		# Execute shell command and pipe output to Logger
 		def execLogged(cmd, opts={})
 			Rakish.execLogged(cmd,opts)
 		end
 
-		# Get current nsmespace as a string.
+		# Get current namespace as a string.
 		def currentNamespace
 			":#{Rake.application.current_scope.join(':')}";
 		end
@@ -669,6 +670,11 @@ module Rakish
 		def filetime(name)
 			File.exists?(name) ? File.mtime(name.to_s) : Rake::EARLY
 		end
+
+        # Are there any tasks in the iterable 'tasks' list with an earlier 'time' than the given time stamp?
+   #     def any_task_earlier?(tasks,time)
+   #         tasks.any? { |n| n.timestamp < time }
+   #     end
 
 		# Get simple task action block (lambda) to copy from t.source to t.name
 		#   do |t|
@@ -700,11 +706,13 @@ module Rakish
 		# delete list of files (a single file or no files) similar to system("rm [list of files]")
 		# accepts Strings, FileList(s) and FileSet(s) and arrays of them
 		#
-		# <b>named options:</b> all [true|false]: 
-		#	:force   => default true
-		#	:noop    => just print (if verbose) don't do anything
-		#	:verbose => print "rm ..." for each file
-		#   :noglob  => do not interpret '*' or '?' as wildcard chars
+		#  named options: all [true|false]:
+		#
+		#    :force   => default true
+		#    :noop    => just print (if verbose) don't do anything
+		#    :verbose => print "rm ..." for each file
+		#    :noglob  => do not interpret '*' or '?' as wildcard chars
+		#
 		#
 		def deleteFiles(*files)
 			opts = (Hash === files.last) ? files.pop : {}			
@@ -782,6 +790,7 @@ module Rakish
 		
 		# This will "pre-process" input lines using the ruby escape sequence
 		# '#{}' for substitutions
+		#
 		#  in the binding
 		#     linePrefix is an optional prefix to prepend to each line.
 		#
@@ -1113,19 +1122,20 @@ module Rakish
 		end				
 	end
 
-	# yes including our own module
-	include Rakish::Util
-	
-private
-	class Utils < Module
-		include Util
-	end
-	@@utils = Utils.new
-
-public	
-	def self.utils
-		@@utils
-	end
+# nothing uses this now - bad idea probably
+#	# include in our own module ( not needed )
+#	# include Rakish::Util
+#
+# private
+#	class Utils < Module
+#		include Util
+#	end
+#	@@utils = Utils.new
+#
+# public
+#	def self.utils
+#		@@utils
+#	end
 
 	# Generic dynamic propety bag functionality module1
 	# allows 'dot' access to dynamicly set properties.
@@ -1208,7 +1218,7 @@ public
 			self # return self for convenience
 		end
 		
-		# returns false if outside an enableNewFields block the nesting count if
+		# Returns false if outside an enableNewFields block the nesting count if
 		# inside a enebleNewFields block if(newFieldsEnabled?)  will test true in this case.
 		def newFieldsEnabled?() 
 			@ul_ ? @ul_:false			
@@ -1249,10 +1259,10 @@ public
 			nil
 		end
 
-		# Get non-nil value for property from any heritable parent on any level above, 
-		# traverse up parent tree via flattened
+		# Get non-nil value for property from heritable parents on any level above,
+		# traverse up parent tree via
 		# ancestor list to get first inherited value or nil if not found.
-		# opts - none define at present
+		# opts - none defined at present
 		def getInherited(sym)
 			return(getAnyAbove(sym)) unless @_hpc_;
 			pc = @_hpc_;
@@ -1266,9 +1276,9 @@ public
 		end
 		
 		
-		# get value for property, traverse up parent tree to get first inherited
+		# Get value for property, traverse up parent tree to get first inherited
 		# value if not present on this node, returns nil if property not found or
-		# it's value is nil
+		# it's value is explicitly set to nil
 		def get(sym)
 			if((v=@_h[sym]).nil?)
 				unless @_h.has_key?(sym)
@@ -1292,7 +1302,7 @@ public
 			"can't overide method \"#{k}\" with a property"
 		end
 	
-		# returns true if any ancestor has a ke defined in the hashtable
+		# returns true if any ancestor has a key defined in the hashtable
 		def hasAncestorKey(sym) # :nodoc:
 			@parents_.each do |p|
 				return(true) if p.has_key?(sym);
@@ -1300,7 +1310,7 @@ public
 			false
 		end
 
-		def _h # :nodoc:
+		def _h # :nodoc: _h accessor
 		   @_h
 		end
 
@@ -1316,14 +1326,15 @@ public
 		end
 				
 	public
-		# Get value for property. 
+		# Get value for property.
 		# Does *not* traverse up tree, gets local value only.
 		# returns nil if value is either nil or not present
 		def getMy(s)
 			(self.class.method_defined? s) ? self.send(s) : @_h[s]
 		end
 
-		# true if property is set in hash on this object
+		# true if a property is set in hash on this object
+		# does not detect methods
 		def has_key?(k) # :nodoc: 
 			@_h.has_key?(k)
 		end
@@ -1402,9 +1413,9 @@ public
 			add_ary(files) unless(files.empty?)
 		end			
 		
-		# case independent string key. WARNING does not clone and intern keys
+		# Case independent string key. WARNING does not clone and intern keys
 		# so the source strings must not be changed after being set.
-		class Key
+		class Key  # :nodoc:
 			def initialize(str)
 				@s=str.to_s
 				@h=@s.downcase.hash
@@ -1439,7 +1450,7 @@ public
 				end
 			end
 		end
-		def delete_a(f) # ;nodoc: 
+		def delete_a(f) # :nodoc:
 			if(f.respond_to?(:to_ary))
 				f.each do |x| delete_a(x) end
 			else
@@ -1454,7 +1465,7 @@ public
 			add_ary(files)
 		end
 		
-		# add a single file path to this set if it is not present.
+		# Add a single file path to this set if it is not present.
 		#
 		# returns true if the path was not previously in the set, false otherwise
 		def add?(f)
@@ -1464,7 +1475,7 @@ public
 			@h[f]=nil
 			true
 		end
-		# add a single file path to this set
+		# Add a single file path to this set
 		def add(f)
 			@h[Key.new(f)]=nil
 		end
@@ -1476,24 +1487,25 @@ public
 			delete_a(args)
 		end
 
-		# returns true if the path is in this set
+		# Returns true if the path is in this set
 		# false otherwise.
 		def include?(f)
 			@h.has_key?(Key.new(f))
 		end
 		
-		# returns true if this set is empty
+		# Returns true if this set is empty
 		def empty?
 			@h.empty?
 		end
-		# Iterates over each path (key) in the set
+
+		# Iterates over each path in the set
 		def each(&b) # :yields: path
 			@h.each do |k,v|
 				yield(k.to_s)
 			end
 		end
 
-		# Like array.join
+		# Like array.join, joins all paths with separator
 		def join(separator)
 			out = nil;
 			each do |p|
@@ -1517,6 +1529,7 @@ public
 		end
 	end
 
+    # A FileSet where the order entries are installed is preserved
 	class OrderedFileSet < FileSet
 		def initialize
 			super
@@ -1525,22 +1538,24 @@ public
 		alias :add :add?
 		alias :<< :add?
 
-		# iterates over each path (key) in the set
+		# Iterates over each path (key) in the set
+		# in the order added
 		def each(&b) # :yields: path
 			@ordered.each do |k|
 				yield(k.to_s) unless k.nil?
 			end
 		end
-		# returns then number of entries in this set
+		# Returns then number of entries in this set
 		def size
 			@h.size
 		end
-		# returns an array of all path entries in this set
+		# Returns an array of all path entries in this set
+		# in the order added
 		def to_ary
 			@ordered
 		end
 
-		def join
+		def join # :nodoc:
 			@ordered.join
 		end
 		
@@ -1564,7 +1579,7 @@ public
 				yield k,v
 			end
 		end
-		# returns array of all values in the hash
+		# Returns array of all values in the hash
 		def values
 			@h.values
 		end
@@ -1688,7 +1703,7 @@ public
 	
 	public
 	
-		# add a tree of files all of which are to be assigned 
+		# Add a tree of files all of which are to be assigned
 		# to the supplied 'destdir' relative to 'destdir' as the source files are 
 		# relative to the supplied 'basedir'
 		#
@@ -1710,7 +1725,7 @@ public
 			add_filet_a(destdir,regx,files,opts[:data])
 		end
 	
-		# retrieve all source files by assigned output directory
+		# Retrieve all source files by assigned output directory
 		# one source file may be assigned to more than one output directory
 		#
 		def filesByDir(&block) # :yields: directory, iterable of files
@@ -1719,10 +1734,11 @@ public
 			end
 		end
 		
-		# return array of all source files in this set
-		# TODO: make this a true set and remove redundancies
+		# Return array of all source files in this set
 		def sources
-			@byDir_.values.flatten
+			v = @byDir_.values.flatten;
+			v.uniq!
+			v
 		end
 		
 		def prettyPrint
@@ -1737,7 +1753,7 @@ public
 			end
 		end
 		
-		# generate processing tasks for all files in this copy set
+		# Generate processing tasks for all files in this copy set
 		# using the task action provided or a simple copy if not
 		# hash args
 		#     :suffixMap - map from source suffi to destination suffi
