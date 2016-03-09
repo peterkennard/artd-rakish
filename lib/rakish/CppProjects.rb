@@ -602,7 +602,7 @@ end
 #
 #   :name        => name of this project, defaults to parent directory name
 #   :package     => package name for this project defaults to nothing
-#   :config      => explicit parent configuration, defaults to the GlobalConfig
+#   :config      => explicit parent configuration, defaults to 'root'
 #   :dependsUpon => array of project directories or specific rakefile paths this project
 #                   depends upon
 #   :id          => uuid to assign to project in "uuid string format"

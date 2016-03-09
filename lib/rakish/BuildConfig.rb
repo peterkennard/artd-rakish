@@ -86,7 +86,7 @@ module BuildConfigModule
     # defaults to the nativeConfigName
 	attr_property   :nativeOutputSuffix
 
-    # root folder for buuild output files
+    # root folder for build output files
 	def buildDir
 		@buildDir||=getAnyAbove(:buildDir);
 	end
@@ -141,6 +141,7 @@ class BuildConfig
 
 end
 
+protected
 
 # global singleton default Rakish.Project configuration
 class GlobalConfig < BuildConfig
@@ -224,16 +225,30 @@ class GlobalConfig < BuildConfig
 	end
 end
 
+public
+
+# Declare (create) a new named configuration
+#
+#  named arguments:
+#     :name         => Name for this configuration. This must be unique for all loaded projects,
+#                      defaults to 'root'.
+#     :include      => [ Array of configuration modules to include ]
+#     :inheritsFrom => Parent configuration's name.
+#                      Defaults to 'root' if name != 'root'
+
+def self.Configuration(opts={},&block)
+    name = opts[:name]||='root'
+    me = nil;
+    if(name == 'root')
+        me = GlobalConfig.new(opts,&block);
+    else
+        return(nil); # for now.
+    end
+    me.name=name;
+    build.registerConfiguration(me);
+    me
+end
+
 
 end # module Rakish
 
-# Convenience method for Rakish::GlobalConfig.initInstance(&block)
-def InitBuildConfig(opts={},&block)
-	Rakish::GlobalConfig.new(opts,&block)
-end
-
-
-# Convenience method for Rakish::ProjectConfig.new(&block)
-def ProjectConfig(&block)
-#	Rakish::ProjectConfig.new(&block)
-end

@@ -14,6 +14,8 @@ class Build
 		@projects=[]
 		@projectsByModule={}
 		@projectsByFile={}  # each entry is an array of one or more projects
+		@configurationsByName={}
+
 		
 		task :resolve do |t|
 		    if(defined? Rakish::GlobalConfig.instance.nativeConfigName)
@@ -52,13 +54,26 @@ class Build
 	
 	def registerProject(p) # :nodoc: internal used by projects to register themselves wheninitialized
 		pname = p.moduleName;
-		if(@projectsByModule[pname]) 
-			raise("Error: project \"#{pname}\" already registered") 
+		if(@projectsByModule[pname])
+			raise("Error: project \"#{pname}\" already registered")
 		end
 		@projects << p;
 		@projectsByModule[pname]=p;
 		(@projectsByFile[p.projectFile]||=[]).push(p);
 	end
+
+	def registerConfiguration(c) # :nodoc: internal used by configurations to register themselves when initialized
+		if(@configurationsByName[c.name])
+			raise("Error: configuration \"#{c.name}\" already registered");
+		end
+		@configurationsByName[c.name]=c;
+    end
+
+    # Retrieve an initialized Rakish.Configuration by name.
+    # If name is nil retrieves the 'root' configuration
+    def configurationByName(name)
+        @configurationsByName[name||'root']
+    end
 
 	# Retrieve a Rakish::Project by the project name, nil if not found.
 	def projectByName(name)
@@ -329,9 +344,7 @@ public
 
 		fileDependencies = args[:dependsUpon] || Array.new;
 
-		parent = args[:config]
-		parent ||= GlobalConfig.instance
-
+		parent = @build.configurationByName(args[:config]);
 
 		@projectFile = myFile
 		@projectDir  = File.dirname(myFile)
@@ -490,7 +503,7 @@ end
 #
 #   :name        => name of this project, defaults to parent directory name
 #   :package     => package name for this project defaults to nothing
-#   :config      => explicit parent configuration, defaults to the GlobalConfig
+#   :config      => explicit parent configuration name, defaults to 'root'
 #   :dependsUpon => array of project directories or specific rakefile paths this project
 #                   depends upon
 #   :id          => uuid to assign to project in "uuid string format"

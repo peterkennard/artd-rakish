@@ -1273,11 +1273,13 @@ module Rakish
 		end
 		
 		# item from "Module" we want overidable
+		# note name does NOT inherit from parents
 		def name # :nodoc:
 			@_h[:name]
 		end
 		
 		# item from "Module" we want overidable
+		# note name does NOT inherit from parents
 		def name=(v) # :nodoc:
 			@_h[:name]=v
 		end
