@@ -611,7 +611,7 @@ end
 # &block is always yielded to in the directory of the projects file, and the
 # Rake namespace of the new project, and called in this instance's context
 
-CppProject = GetProjectClass( :includes=>[CppProjectModule] )
+CppProject = getProjectClass( :includes=>[CppProjectModule] )
 
 end # Rakish
 

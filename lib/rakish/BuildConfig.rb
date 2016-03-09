@@ -3,7 +3,7 @@ require "#{myDir}/Rakish.rb"
 
 module Rakish
 
-class InvalidConfigError < Exception
+class InvalidConfigError < Exception # :nodoc:
 	def initialize(cfg, msg)
 		super("Invalid Configuration \"#{cfg}\": #{msg}.");
 	end

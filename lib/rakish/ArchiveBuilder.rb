@@ -20,10 +20,13 @@ module Rakish
 
         addInitBlock do |pnt,opts|
             @archiveContents_ = [];
+        end
+
+        def unzipPath # :nodoc:
             @@unzipPath_ ||= Rakish::Util.findInBinPath('unzip');
         end
 
-        # note not resolved until configured task is invoked
+        # Note: file list not resolved until configured task is invoked
         def addFileTree(destdir, basedir, *files) # :nodoc:
             entry = {};
             entry[:destDir]=(destdir);
@@ -97,7 +100,7 @@ module Rakish
                     #           "??*/*" matches "ab/foo" and "abc/foo"
                     #                   but not "a/foo" or "a/b/foo"
 
-                    cmd = "\"#{@@unzipPath_}\" -q \"#{spl[0]}\" \"#{entry[:files].join("\" \"")}\" -x \"META-INF/*\" -d \"#{dir}\"";
+                    cmd = "\"#{unzipPath}\" -q \"#{spl[0]}\" \"#{entry[:files].join("\" \"")}\" -x \"META-INF/*\" -d \"#{dir}\"";
 
                     execLogged(cmd, :verbose=>verbose?);
 
@@ -122,9 +125,14 @@ module Rakish
 
         class ArchiveTask < Rake::FileTask
 
-            # I wonder if there is a better way in rake to auto generate prerequisites when
+            # I wonder if there is a better way in rake.
+            # This will auto generate source prerequisites
+            # from the specified FileSets when
             # they are demanded
-            def resolvePrerequisites # :nodoc:
+
+        protected
+
+            def resolvePrerequisites
                 unless defined? @filesResolved_
                     @filesResolved_ = true;
                     contents = config.archiveContents_;
@@ -146,18 +154,19 @@ module Rakish
                 end
             end
 
-            # List of prerequisite tasks
-            def prerequisite_tasks # :nodoc:
+        public
+
+            # Override of Rake::Task::prerequisite_tasks to return list of prerequisite tasks,
+            # generated and cached upon first access.
+            def prerequisite_tasks
                 resolvePrerequisites unless defined? @filesResolved_
                 prerequisites.collect { |pre| lookup_prerequisite(pre) }
             end
 
-            # Is this file task needed?  Yes if it doesn't exist, or if its time stamp
-            # is out of date.
-            # extension - redo of needed? method which resolves all the specified file lists
-            # and adds them all as prerequisites to the task which the purporse is to copy the sources into
-            # a destination archive
-            def needed? # :nodoc:
+            # Override of Rake::FileTask::needed? this resolves all the specified source file lists
+            # and adds them all as prerequisites to the task for which the purpose is to copy the sources into
+            # a destination archive.
+            def needed?
                 resolvePrerequisites unless defined? @filesResolved_
                 !File.exist?(name) || out_of_date?(timestamp);
             end

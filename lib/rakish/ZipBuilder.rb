@@ -12,6 +12,9 @@ module ZipBuilderModule
     class ZipBuilder < ArchiveBuilder
 
         addInitBlock do |pnt,opts|
+        end
+
+        def zipPath # :nodoc:
             @@zipPath_ ||= Rakish::Util.findInBinPath('zip');
         end
 
@@ -48,7 +51,7 @@ module ZipBuilderModule
                         cmdOpts = cmdOpts.gsub('q','v');
                     end
 
-                    cmdline = "\"#{@@zipPath_}\" #{cmdOpts} \'#{t.name}\' .";
+                    cmdline = "\"#{zipPath}\" #{cmdOpts} \'#{t.name}\' .";
                     execLogged(cmdline, :verbose=>cfg.verbose?);
                 end
              # ruby seems to do this ok on windows and screws

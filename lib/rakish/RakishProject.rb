@@ -450,18 +450,22 @@ end
 
 @@projectClassesByIncluded_ = {}; # :nodoc:
 
-# Dynamically create a new Rakish::Project class or get one from the cache
-# of the base type in :extends including the modules in :includes
-# this will find an exiting class definition in a cache for the specification if
-# there is one.
+protected
+
+# Dynamically create a new anonymous class < Rakish::ProjectBase or get one from
+# the cache withthe same base class and included module set if there is one.
 #
 # Maybe its senseless optimization but I wanted a freer dynamic project
 # declaration system without having to explicitly create new classes with
 # explicit names everywhere. I did learn something about Ruby however :)
-# the "opts" are the same ones that would be used for
-# Rakish::ProjectBase.new
+# the "opts" can be the same ones that would be used as args{} for
+# Rakish::ProjectBase.new and Rakish.Project[link:./Rakish.html#method-c-Project]
+#
+#   named opts:
+#     :extends  => Base class of the newly created class defaults to ProjectBase
+#     :includes => If provided, ProjectModules and other modules to "include" in this class.
 
-def self.GetProjectClass(opts={})
+def self.getProjectClass(opts={})
 
     # get the base project type to extend the class from
     # and get list of explicit modules to include
@@ -498,6 +502,8 @@ def self.GetProjectClass(opts={})
     projClass;
 end
 
+public
+
 # Declare and create a new empty Project that subclasses Rakish::ProjectBase
 #
 #  named args:
@@ -523,7 +529,7 @@ def self.Project(args={},&b)
         end
         args[:includes]=includes
     end
-    GetProjectClass(args).new(args,&b)
+    getProjectClass(args).new(args,&b)
 end
 
 # initialize the build application instance

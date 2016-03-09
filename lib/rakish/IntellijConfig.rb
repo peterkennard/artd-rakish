@@ -6,9 +6,11 @@ require 'rexml/streamlistener'
 
 module Rakish
 
+    # Module to include in a 'root' Rakish.Configuration[link:./Rakish.html#method-c-Configuration]
+    # to provide settings from an intellij idea invoked rakish build.
     module IntellijConfig
 
-        class XMLListener
+        class XMLListener # :nodoc:
             include Rakish::Util
             include REXML::StreamListener
 
@@ -35,15 +37,22 @@ module Rakish
             end
         end
 
+        # If non nil is a PropertyBag containing items parsed from the invoking intllij build.
+        # This Works in concert with the call-rake.xml and script if used as an intellij ant script.
+        #
+        #  fields assigned:
+        #     projectRoot - The path to the .idea folder of the invoking intellij project.
+        #     outputPath  - The "Project compiler Output" path specified in the intellij settings.
+        #
         def intellij
             @@intellij_;
         end
 
-        class Globals < PropertyBag
+        class Globals < PropertyBag # :nodoc:
         	attr_property   :outputPath
         end
 
-        def self.initGlobals
+        def self.initGlobals # :nodoc:
             @@intellij_ = nil;
 
             if(ENV['IDEA_PROJECT'])
@@ -62,6 +71,8 @@ module Rakish
 
                     parser = REXML::Parsers::StreamParser.new(File.new(xmlPath), listener)
                     parser.parse
+
+                    log.debug("####### intellij output path is #{@@intellij_.outputPath}");
                 end
 
             end
