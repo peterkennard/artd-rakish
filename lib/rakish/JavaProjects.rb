@@ -95,7 +95,7 @@ module JarBuilderModule
                     execLogged(cmdline, :verbose=>cfg.verbose?);
                 end
              # ruby seems to do this ok on windows and screws
-             # up if I do due to thread latency in spawning the command or something.
+             # up if I do due to thread latency in wating for the command to unlock the directory or something.
              #       FileUtils.rm_rf dir;
             end
         end

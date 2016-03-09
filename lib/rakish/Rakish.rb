@@ -61,6 +61,10 @@ end
 #
 module Rakish
 
+    HostIsCygwin_ = RUBY_PLATFORM =~ /(cygwin)/i # :nodoc:
+    # set to true if called on a windows host
+    HostIsWindows_ = (Rake::application.windows? || HostIsCygwin_ )
+
 	# Logger module
 	# To use this Logger initialization include it in a class or module
 	# enables log.debug { "message" } etc 
@@ -68,7 +72,7 @@ module Rakish
 	# Other than for INFO level output
 	# output messages are formatted to include the file and line number where 
 	# log.[level] was invoked.
-	
+
 	module Logger
 
 		@@_logger_ = ::Logger.new(STDOUT);
@@ -548,6 +552,79 @@ module Rakish
 		end
 	end
 
+    # Container for searchable path set for finding files in
+    class SearchPath
+
+        # Initialize a new SearchPath calls setPath(*paths)
+        def initialize(*paths)
+            setPath(*paths);
+        end
+
+		if( HostIsWindows_ )
+            @@osDelimiter_=';';
+        else
+            @@osDelimiter_=':';
+        end
+
+        # Clear and set path set and call adPath(*paths)
+        #
+        # If no paths are provided then this path set is left empty.
+        def setPath(*paths)
+            @path_=[];
+            addPath(*paths);
+        end
+
+        # Add a path or path list to this search path
+        #
+        #  Named opts:
+        #    :delimiter => path entry delimiter
+        #
+        def addPath(*paths)
+			opts = (Hash === paths.last) ? paths.pop : {}
+            delimiter = opts[:delimiter] ||@@osDelimiter_;
+            paths.flatten!
+            paths.each do |path|
+                pa = path.split(delimiter);
+                pa.each do |p|
+                    # TODO: should we keep relative paths here ??
+                    @path_ << File.absolute_path(p);
+                end
+            end
+            @path_.uniq!
+        end
+
+        # Find a file with the given name (or relative subpath) in this search set
+        #  named ops:
+        #    :suffi => If set search for file with suffix in order of suffi list
+        #              '' is a valid suffix in this case. suffi must have leading dot
+        #              as in '.exe'
+
+        def findFile(name,opts={})
+            found = nil;
+            suffi = opts[:suffi];
+            @path_.each do |path|
+                path = File.absolute_path(path);
+                path = "#{path}/#{name}";
+                unless suffi
+                    if(File.exists?(fpath))
+                        found=fpath;
+                        break;
+                    end
+                else
+                    suffi.each do |suff|
+                        fpath="#{path}.exe";
+                        if(File.exists?(fpath))
+                            found=fpath;
+                            break;
+                        end
+                    end
+                    break if(found)
+                end
+            end
+            found;
+        end
+    end
+
     # Intended to clean up things to minimize thread usage and queue up these so as to
     # keep avaiable processor cores saturated but without thread thrashing. Spawning lots of threads
     # does not help in the process spawning case and actually slows things down.
@@ -899,9 +976,6 @@ module Rakish
 			getRelativePath(path,relto).gsub('/','\\');
 		end
 
-		HostIsCygwin_ = RUBY_PLATFORM =~ /(cygwin)/i
-		HostIsWindows_ = (Rake::application.windows? || HostIsCygwin_ )
-		
 		# return true if host environment is windows or cygwin
 		def hostIsWindows?
 			HostIsWindows_
@@ -1001,51 +1075,20 @@ module Rakish
 			return(a)
 		end
 
-
 		if( HostIsWindows_ )
-            # Find executable in the "bin" search path
-            # return nil if not found.
-            #
-            # currently the search path is set to the value of ENV['PATH']
-            #
-            def self.findInBinPath(name)
-                @@binpath ||= ENV['PATH'].split(';');
-                found = nil;
-                @@binpath.each do |path|
-                    path = File.absolute_path(path);
-                    path = "#{path}/#{name}";
-                    fpath="#{path}.exe";
-                    if(File.exists?(fpath))
-                        found = fpath;
-                        break;
-                    end
-                    fpath="#{path}.bat";
-                    if(File.exists?(fpath))
-                        found=fpath;
-                        break;
-                    end
-                end
-                found;
-            end
+            @@binPathOpts_ = { :suffi => [ '.exe', '.bat' ] };
         else
-            # Find executable in the "bin" search path
-            # return nil if not found.
-            #
-            # currently the search path is set to the value of ENV['PATH']
-            #
-            def self.findInBinPath(name)
-                @@binpath ||= ENV['PATH'].split(':');
-                found = nil;
-                @@binpath.each do |path|
-                    path = File.absolute_path(path);
-                    fpath = "#{path}/#{name}";
-                    if(File.exists?(fpath))
-                        found = fpath;
-                        break;
-                    end
-                end
-                found;
-            end
+            @@binPathOpts_ = {};
+        end
+
+        # Find executable in the "bin" search path
+        # return nil if not found.
+        #
+        # currently the search path is set to the value of ENV['PATH']
+        #
+        def self.findInBinPath(name)
+            @@binpath||=SearchPath.new(ENV['PATH']);
+            @@binpath.findFile(name,@@binPathOpts_);
         end
 
 		# Create a single simple file task to process source to dest
