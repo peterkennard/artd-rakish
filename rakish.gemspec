@@ -14,6 +14,7 @@ Gem::Specification.new do |s|
   s.extra_rdoc_files = [
       'doc/UserGuide'
   ];
+  s.rdoc_options << '--tab_width=4'
   # s.add_runtime_dependency 'rake',
   # [ '>= 0.9.0.0']
 				   
