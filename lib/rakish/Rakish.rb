@@ -574,6 +574,16 @@ module Rakish
             addPath(*paths);
         end
 
+		# So we can pass this into SearchPath.new or SearchPath.addPath
+		def to_ary # :nodoc:
+		   	@path_
+		end
+
+		# Iterate over all paths in this SearchPath
+        def each(&b)
+            @path_.each(&b)
+        end
+
         # Add a path or path list to this search path
         #
         #  Named opts:
@@ -606,8 +616,8 @@ module Rakish
                 path = File.absolute_path(path);
                 path = "#{path}/#{name}";
                 unless suffi
-                    if(File.exists?(fpath))
-                        found=fpath;
+                    if(File.exists?(path))
+                        found=path;
                         break;
                     end
                 else
