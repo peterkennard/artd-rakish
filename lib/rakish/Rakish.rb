@@ -552,6 +552,17 @@ module Rakish
 		end
 	end
 
+    if(HostIsWindows_)
+        def self.path_is_absolute?(path)
+            f0 = path[0]
+            f0 == '/' or f0 == '\\' or path[1] == ':'
+        end
+    else
+        def self.path_is_absolute?(path)
+            filename[0] == '/'
+        end
+    end
+
     # Container for searchable path set for finding files in
     class SearchPath
 
@@ -585,6 +596,8 @@ module Rakish
         end
 
         # Add a path or path list to this search path
+        # If a path entry begins with a '.' is will be left in the search path
+        # as a relative path, otherwise it will be expanded to an absolute path when added.
         #
         #  Named opts:
         #    :delimiter => path entry delimiter
@@ -596,35 +609,36 @@ module Rakish
             paths.each do |path|
                 pa = path.split(delimiter);
                 pa.each do |p|
-                    # TODO: should we keep relative paths here ??
-                    @path_ << File.absolute_path(p);
+                    p=File.absolute_path(p) unless p[0]=='.'
+                    @path_ << p;
                 end
             end
             @path_.uniq!
         end
 
         # Find a file with the given name (or relative subpath) in this search set
+        # If the input name is an absolute path it is simply returned.
         #  named ops:
         #    :suffi => If set search for file with suffix in order of suffi list
         #              '' is a valid suffix in this case. suffi must have leading dot
         #              as in '.exe'
 
         def findFile(name,opts={})
+            return(name) if(Rakish.path_is_absolute?(name))
             found = nil;
             suffi = opts[:suffi];
             @path_.each do |path|
-                path = File.absolute_path(path);
                 path = "#{path}/#{name}";
                 unless suffi
                     if(File.exists?(path))
-                        found=path;
+                        found=File.absolute_path(path);
                         break;
                     end
                 else
                     suffi.each do |suff|
                         fpath="#{path}.exe";
                         if(File.exists?(fpath))
-                            found=fpath;
+                            found=File.absolute_path(fpath);
                             break;
                         end
                     end
@@ -1094,7 +1108,7 @@ module Rakish
         # Find executable in the "bin" search path
         # return nil if not found.
         #
-        # currently the search path is set to the value of ENV['PATH']
+        #   currently the search path is set to the value of ENV['PATH']
         #
         def self.findInBinPath(name)
             @@binpath||=SearchPath.new(ENV['PATH']);

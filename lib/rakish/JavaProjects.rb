@@ -17,20 +17,47 @@ module JavaProjectConfig
             yield self if block_given?
         end
 
+        # Get java class path separator-delimiter
         def classpathSeparator
-           @@classpathSeparator_||= ( BuildConfig::BASEHOSTTYPE =~ /Windows/ ? ';' : ':');
+           @@classpathSeparator_||= ( HostIsWindows_ ? ';' : ':');
         end
 
+        # Get classpath setting
         def classPaths
             @classPaths_||=(getInherited(:classPaths)||FileSet.new);
         end
 
+        # Add a path or paths to the compile time class path.
+        # jar files with .jar suffix if not specified as an absolte path
+        # will be searched for
+        # in the jarSearchPath
         def addClassPaths(*paths)
+            paths.flatten!
+            paths.map! do |path|
+                path=jarSearchPath.findFile(path) if (path =~ /\.jar$/)
+                path
+            end
             unless(@_cpWritable_)
-                @classPaths_=FileSet.new(classPaths);
                 @_cpWritable_ = true;
+                @classPaths_=FileSet.new(classPaths);
             end
             classPaths.include(paths);
+        end
+
+        # Retrieve jar file library search path
+        def jarSearchPath
+            @jarSearchPaths_||=(getInherited(:jarSearchPath)||SearchPath.new);
+        end
+
+        # Add a jar file library search path for finding jar files
+        # reltive paths will be searched relative to the current directory
+        # when the search is done.
+        def addJarSearchPath(*paths)
+            unless(@_jspWritable_)
+                @jarSearchPaths_=SearchPath.new(jarSearchPath)
+                @_jspWritable_=true;
+            end
+            @jarSearchPaths_.addPath(*paths)
         end
     end
 
