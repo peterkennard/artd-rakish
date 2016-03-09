@@ -4,7 +4,8 @@ require "#{myPath}/BuildConfig.rb"
 
 module Rakish
 
-# Mostly internal singleton for ::Rakish::Project loading, configuration and management 
+# Mostly internal singleton for Rakish.Project[link:./Rakish.html#method-c-Project] and
+# Rakish.Configuration[link:./Rakish.html#method-c-Configuration] loading and management
 class Build
 	include Rakish::Util
 	
@@ -44,8 +45,8 @@ class Build
 		true
 	end
 	
-	# Called when the rake invocation of thie Rakish::Build is complete
-	# prints a log.info message of the time taken to execute this invocation of 'rake'.
+	# Called when the rake invocation of thie Rakish::Build is complete.
+	# Prints a log.info message of the time taken to execute this invocation of 'rake'.
 	def onComplete 
 		dtime = Time.new.to_f - @startTime.to_f;		
 		ztime = (Time.at(0).utc) + dtime;
@@ -69,13 +70,13 @@ class Build
 		@configurationsByName[c.name]=c;
     end
 
-    # Retrieve an initialized Rakish.Configuration by name.
+    # Retrieve an initialized Rakish.Configuration[link:./Rakish.html#method-c-Configuration] by name.
     # If name is nil retrieves the 'root' configuration
     def configurationByName(name)
         @configurationsByName[name||'root']
     end
 
-	# Retrieve a Rakish::Project by the project name, nil if not found.
+	# Retrieve a Rakish.Project[link:./Rakish.html#method-c-Project] by the project name, nil if not found.
 	def projectByName(name)
 		@projectsByModule[name];
 	end

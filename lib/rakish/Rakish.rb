@@ -53,7 +53,7 @@ task "" do
 end
 
 # Module containg the package Rakish
-# includes the modules ::Rakish::Util, and ::Rakish::Logger
+# includes the module ::Rakish::Logger
 #
 # :include:doc/RakishOverview.html
 #
