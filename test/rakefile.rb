@@ -195,7 +195,7 @@ module Rakish
 #	log.debug("test const is #{c.TEST_CONST}");
 #end
 #
-#config = RakishProject(:name=>'project1', :extends=>TestProject, :includes=>[BaDaBing,BaDaBoom,BaDaBing,BooBoo]) do |c|
+#config = Rakish.Project(:name=>'project1', :extends=>TestProject, :includes=>[BaDaBing,BaDaBoom,BaDaBing,BooBoo]) do |c|
 #
 #
 #
@@ -205,7 +205,7 @@ module Rakish
 #	c.set(:mysym, 121)
 #end
 #
-#config2 = RakishProject(:name=>'project2', :config=>config, :includes=>[BaDaBoom,BaDaBing,BaDaBing]) do |c|
+#config2 = Rakish.Project(:name=>'project2', :config=>config, :includes=>[BaDaBoom,BaDaBing,BaDaBing]) do |c|
 #	c.printStuff();
 #	c.printStuff2();
 #	log.debug "### new symbol is #{c.get(:mysym)}"
@@ -263,7 +263,7 @@ task :propertyBagTest => [] do |t|
 
 end
 
-RakishProject(
+Rakish.Project(
  	:name=>'test-project1',
  	:dependsUpon=> [
  	]
@@ -275,7 +275,7 @@ RakishProject(
 
 end
 
-RakishProject(
+Rakish.Project(
     :includes=> [ Rakish::RubydocModule ],
  	:name=>'test-project2',
  	:dependsUpon=> [

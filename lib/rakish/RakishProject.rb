@@ -124,8 +124,9 @@ class << self
 	end
 end
 
-
-class Project < BuildConfig
+# Base class for all Rakish.[Projects]
+# Create subclasses of this using Rakish.Project
+class ProjectBase < BuildConfig
 	include Rakish::Util
 
 	# initialize "static" class variables
@@ -301,9 +302,9 @@ public
 	#                    '2CD0548E-6945-4b77-83B9-D0993009CD75'
 	#
 	# &block is always yielded to in the directory of the projects file, and the
-	# Rake namespace of the new project (project scope), and called in this instance's context
+	# Rake namespace of the new project (project scope), and called in the project instance's context
 
-	def initialize(args={},&block)
+	def initialize(args={},&block) # :nodoc:
 
 		# derive path to file declaring this project - from loaded file that
 		# called this initializer
@@ -444,7 +445,7 @@ end
 # declaration system without having to explicitly create new classes with
 # explicit names everywhere. I did learn something about Ruby however :)
 # the "opts" are the same ones that would be used for
-# Rakish::Project.new
+# Rakish::ProjectBase.new
 
 def self.GetProjectClass(opts={})
 
@@ -452,12 +453,16 @@ def self.GetProjectClass(opts={})
     # and get list of explicit modules to include
     # eliminate duplicate modules, and sort the list.
 
-    extends = opts[:extends]||Project;
+    extends = opts[:extends]||ProjectBase;
 
     # if no explicit inclusions just return the class
     return(extends) unless(included=opts[:includes]);
 
+    included.flatten!
     if included.length > 1
+        # TODO: maybe get a list of all included modules and generate a hash
+        # TODO: but this likely not needed or won't make things faster
+        # TODO: not sure how ruby's string keys for hashes work.
         included = Set.new(included).to_a();
         included.sort! do |a,b|
             a.to_s <=> b.to_s
@@ -479,18 +484,36 @@ def self.GetProjectClass(opts={})
     projClass;
 end
 
-def self.CreateNewProject(args={},&b)
-    GetProjectClass(args).new(args,&b);
+# Declare and create a new empty Project that subclasses Rakish::ProjectBase
+#
+#  named args:
+#
+#   :name        => name of this project, defaults to parent directory name
+#   :package     => package name for this project defaults to nothing
+#   :config      => explicit parent configuration, defaults to the GlobalConfig
+#   :dependsUpon => array of project directories or specific rakefile paths this project
+#                   depends upon
+#   :id          => uuid to assign to project in "uuid string format"
+#                    '2CD0548E-6945-4b77-83B9-D0993009CD75'
+#   :includes    => If provided, ProjectModules and other modules to "include" in this project.
+#
+# &b is always yielded to in the directory of the project's file, and the
+# Rake namespace of the new project (project scope), and called in the project instance's context
+
+def self.Project(args={},&b)
+    baseIncludes = args[:baseIncludes];
+    if(baseIncludes)
+        includes=[baseIncludes]
+        if(args[:includes])
+            includes << opts[:includes]
+        end
+        args[:includes]=includes
+    end
+    GetProjectClass(args).new(args,&b)
 end
 
 # initialize the build application instance
 Rakish.build
 
 end # Rakish
-
-
-# global project declaration alias for Rakish::CreateNewProject
-def RakishProject(args={},&block)
-	Rakish::CreateNewProject(args,&block)
-end
 

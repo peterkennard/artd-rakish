@@ -142,7 +142,7 @@ class BuildConfig
 end
 
 
-# global singleton default RakishProject configuration
+# global singleton default Rakish.Project configuration
 class GlobalConfig < BuildConfig
 
 	@@gcfg = nil

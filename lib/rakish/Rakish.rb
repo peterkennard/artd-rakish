@@ -506,7 +506,11 @@ module Rakish
 		#        include HasConstructor
 		#
 		#        initialize(*args)
-		#            self.class.initializeIncluded(self,args[0]);
+		#           # Of course all modules included on this object and by their recursively
+		#           # included modules must respond properly to args so likely best to use
+		#           # named hash args and a naming convention for what included modules
+		#           # use as opposed to an array of positional arguments
+		#           self.class.initializeIncluded(self,args);
 		#        end
 		#    end
 		
@@ -514,7 +518,6 @@ module Rakish
 			(@_init_||=[])<<b if block_given?
 		end
 
-	
 		def _initBlocks_ # :nodoc:
 			@_init_;
 		end

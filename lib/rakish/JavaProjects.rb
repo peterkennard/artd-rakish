@@ -459,7 +459,12 @@ if(false) # dead code
 
 end
 
-# Frozen class definition for java projects
-JavaProject = GetProjectClass( :includes=>[JavaProjectModule] );
+# Declare JavaProject
+#   Shorthand for:
+#      Rakish.Project(:includes=>[Rakish::JavaProjectModule[,...]], ...)
+def self.JavaProject(args={},&b)
+    args[:baseIncludes]=JavaProjectModule;
+    Rakish.Project(args,&b);
+end
 
 end # Rakish
