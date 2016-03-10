@@ -155,7 +155,11 @@ end
 
 # For now this is intimately associated with a JavaBuilderModule
 # Maybe it shoould just be part of it?  This requires that
-# a JavaBuilderModule beincluded in any project using it at present.
+# a JavaBuilderModule be included in any project using it at present.
+# and it reads the setting off the JavaBuilder as it's input.
+#
+# it sends its output to "#{buildDir}/javadoc/#{moduleName}/api"
+
 module JavadocBuilderModule
 
     class JavadocBuilder < BuildConfig
@@ -166,7 +170,7 @@ module JavadocBuilderModule
             end
         end
 
-        def doBuildJavadoc(t)
+        def doBuildJavadoc(t) # :nodoc:
 
             cfg = t.config;
             java = cfg.java;
@@ -195,13 +199,14 @@ module JavadocBuilderModule
             end
         end
 
-        BuildJavadocAction = ->(t) do
+        @@BuildJavadocAction = ->(t) do
             t.config.doBuildJavadoc(t);
         end
-
+        # Create a task for building the javadocs for all the source roots specified
+        # in the JavaBulder (java) configuration for the owning project.
         def javadocTask(opts={})
             tsk = Rake::FileTask.define_task docOutputDir;
-            tsk.enhance([:compile], &BuildJavadocAction);
+            tsk.enhance([:compile], &@@BuildJavadocAction);
             tsk.config = self;
             tsk
         end
@@ -442,11 +447,6 @@ protected
 
             jarTask = jarBuilder.jarTask(jarPath);
             jarTask.enhance(:compile);
-
-#            jarTask = proj.createJarFileTask();
-#            jarTask.enhance(:compile);
-#            jarTask.addDirectoryContents();
-
 
             zipBuilder = proj.createZipBuilder();
             java.sourceRoots.each do |dir|
