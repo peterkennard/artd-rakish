@@ -616,6 +616,11 @@ module Rakish
             @path_.uniq!
         end
 
+        # like array.join() to build path strings
+        def join(s)
+            @path_.join(s);
+        end
+
         # Find a file with the given name (or relative subpath) in this search set
         # If the input name is an absolute path it is simply returned.
         #  named ops:
@@ -1523,7 +1528,7 @@ module Rakish
 		# Create a FileSet containing an initial set of files
 		# contained in 'files'.  It will acccept 'wildcard' 
 		# entries as defined for a Rake::FileList which are expanded 
-		# relative to the current directory.
+		# relative to the current directory at the time entries are added
 
 		def initialize(*files)
 			@h={}
@@ -1578,6 +1583,7 @@ module Rakish
 	public
 		# Add files contained in 'files' to this set.  It will acccept 'wildcard' 
 		# entries which are expanded relative to the current directory.
+		# relative to the current directory at the time entries are added
 		def include(*files)
 			add_ary(files)
 		end
@@ -1585,16 +1591,18 @@ module Rakish
 		# Add a single file path to this set if it is not present.
 		#
 		# returns true if the path was not previously in the set, false otherwise
+		# note does NOT expand the path when inserted
 		def add?(f)
 			f = Key.new(f)
 			return false if @h[f]
 			@ordered << f if @ordered
-			@h[f]=nil
+  			@h[f]=nil
 			true
 		end
 		# Add a single file path to this set
+		# note does NOT expand the path when inserted
 		def add(f)
-			@h[Key.new(f)]=nil
+			add?(f);
 		end
 		alias :<< :add
 		
@@ -1680,10 +1688,14 @@ module Rakish
 	
 	
 	# Case independent "path" hash
+	# preserves order of addition
 	class FileHash < FileSet
 		def initialize()
 			super
 		end
+        def addAll
+
+        end
 		def [](k)
 			@h[Key.new(k)]
 		end

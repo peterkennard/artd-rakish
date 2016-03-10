@@ -22,26 +22,32 @@ module JavaProjectConfig
            @@classpathSeparator_||= ( HostIsWindows_ ? ';' : ':');
         end
 
-        # Get classpath setting
+        # Get classpaths - unrersolved until after compile
         def classPaths
             @classPaths_||=(getInherited(:classPaths)||FileSet.new);
         end
 
         # Add a path or paths to the compile time class path.
-        # jar files with .jar suffix if not specified as an absolte path
-        # will be searched for
-        # in the jarSearchPath
+        # jar files added are not resolved until compile time against the
+        # jarSearchPath
         def addClassPaths(*paths)
             paths.flatten!
-            paths.map! do |path|
-                path=jarSearchPath.findFile(path) if (path =~ /\.jar$/)
-                path
-            end
             unless(@_cpWritable_)
                 @_cpWritable_ = true;
-                @classPaths_=FileSet.new(classPaths);
+                cp = classPaths;
+                @classPaths_=OrderedFileSet.new;
+                cp.each do |v|
+                    @classPaths_.add?(v);
+                end
             end
-            classPaths.include(paths);
+            paths.each do |v|
+                if(v =~ /\.jar$/)
+                    @_cpResolved_=false unless(Rakish.path_is_absolute?(v));
+                else
+                    v = File.expand_path(v)
+                end
+                @classPaths_.add?(v);
+            end
         end
 
         # Retrieve jar file library search path
@@ -147,6 +153,9 @@ module JarBuilderModule
 
 end
 
+# For now this is intimately associated with a JavaBuilderModule
+# Maybe it shoould just be part of it?  This requires that
+# a JavaBuilderModule beincluded in any project using it at present.
 module JavadocBuilderModule
 
     class JavadocBuilder < BuildConfig
@@ -170,7 +179,7 @@ module JavadocBuilderModule
             cmdline = "\"#{cfg.java_home}/bin/javadoc\" -d \"#{cfg.docOutputDir}\"";
             cmdline += " -quiet";
             unless(java.classPaths.empty?)
-                classpath = java.classPaths.join(separator);
+                classpath = java.resolveClassPaths.join(separator);
                 cmdline += " -classpath \"#{classpath}\"";
             end
 
@@ -207,6 +216,7 @@ end
 
 module JavaProjectModule
     include JavaProjectConfig
+    include JavadocBuilderModule
 
     # Overrides java in JavaProjectConfig
     # Get instance of JavaBuilder < JavaConfig for this project
@@ -275,6 +285,31 @@ protected
             end
         end
 
+        # Resolve all jars in the class path in the jarSearchPath and relative to the owning projects folder
+        # returns the resolved classPaths
+        def resolveClassPaths()
+
+            cp = classPaths;
+            unless @_cpResolved_
+                FileUtils.cd(projectDir) do
+                    @classPaths_=FileSet.new
+                    cp.each do |path|
+                       if(path =~ /\.jar$/)
+                            found = jarSearchPath.findFile(path);
+                            unless found
+                                log.warn("could not find jar #{path} from #{File.expand_path('.')}\n     in:\n       #{jarSearchPath.join("\n      ")}");
+                                next;
+                            end
+                            path=found;
+                       end
+                       @classPaths_.add?(path);
+                    end
+                end
+                cp=@classPaths_;
+            end
+            cp;
+        end
+
         def outputClasspath
             @outputClasspath||="#{buildDir()}/production/#{moduleName()}";
         end
@@ -291,12 +326,12 @@ protected
             cmdline << " -g -d \"#{outClasspath}\""
 
             separator = config.classpathSeparator;
-            paths = config.classPaths
+            paths = config.resolveClassPaths
 
             unless(paths.empty?)
                 cmdline << " -classpath \"#{outClasspath}";
                 paths.each do |path|
-                    cmdline << "#{separator}#{getRelativePath(path)}"
+                   cmdline << "#{separator}#{getRelativePath(path)}"
                 end
                 cmdline << "\"";
             end
@@ -305,7 +340,6 @@ protected
             javaSrc = FileList.new;
 
             unless(paths.empty?)
-
                 prepend = " -sourcepath \"";
                 paths.each do |path|
                     javaSrc.include("#{path}/**/*.java");
@@ -437,53 +471,6 @@ protected
 
         end
     end
-
-
-if(false) # dead code
-    protected
-
-        class JarFileTask < Rake::FileTask # :nodoc:
-
-            def jarContents
-                @contents_||=[]
-            end
-
-            def addDirectoryContents(dir)
-                jarContents << dir;
-            end
-       end
-
-    public
-
-        def createJarFileTask(opts={}) # :nodoc:
-
-            jarPath = opts[:name]||"#{binDir()}/#{moduleName}.jar";
-            jarPath = jarPath.pathmap("%X.jar");
-
-            tsk = JarFileTask.define_task jarPath do |t|
-
-                config = t.config;
-
-                FileUtils.mkdir_p(getRelativePath(t.name).pathmap('%d'));
-
-                cmdOpts = 'cvMf';
-                unless config.verbose?
-                    cmdOpts = cmdOpts.gsub('v','');
-                end
-
-                cmdline = "\"#{config.java_home}/bin/jar\" #{cmdOpts} \"#{getRelativePath(t.name)}\"";
-
-                t.jarContents.each do |path|
-                    cmdline += " -C \"#{getRelativePath(path)}\" .";
-                end
-
-                execLogged(cmdline, :verbose=>config.verbose?);
-            end
-            tsk.config = self;
-            tsk
-        end
-    end
-
 end
 
 # Declare JavaProject
