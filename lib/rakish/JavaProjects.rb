@@ -153,75 +153,8 @@ module JarBuilderModule
 
 end
 
-# For now this is intimately associated with a JavaBuilderModule
-# Maybe it shoould just be part of it?  This requires that
-# a JavaBuilderModule be included in any project using it at present.
-# and it reads the setting off the JavaBuilder as it's input.
-#
-# it sends its output to "#{buildDir}/javadoc/#{moduleName}/api"
-
-module JavadocBuilderModule
-
-    class JavadocBuilder < BuildConfig
-
-        addInitBlock do |pnt,opts|
-            enableNewFields do |my|
-                my.docOutputDir="#{buildDir()}/javadoc/#{moduleName}/api";
-            end
-        end
-
-        def doBuildJavadoc(t) # :nodoc:
-
-            cfg = t.config;
-            java = cfg.java;
-
-            # log.debug("doc output path is [#{cfg.docOutputDir}]");
-
-            FileUtils.mkdir_p(cfg.docOutputDir);
-            separator = cfg.java.classpathSeparator;
-
-            cmdline = "\"#{cfg.java_home}/bin/javadoc\" -d \"#{cfg.docOutputDir}\"";
-            cmdline += " -quiet";
-            unless(java.classPaths.empty?)
-                classpath = java.resolveClassPaths.join(separator);
-                cmdline += " -classpath \"#{classpath}\"";
-            end
-
-            sourcepath = java.sourceRoots.join(';');
-            cmdline += " -sourcepath \"#{sourcepath}\"";
-            cmdline += " -subpackages \"com\"";
-
-            execLogged(cmdline, :verbose=>cfg.verbose?);
-
-            dtime = Time.new;
-            File.open("#{t.name}/_buildDate.txt",'w') do |file|
-                file.puts("documentation built on #{dtime}");
-            end
-        end
-
-        @@BuildJavadocAction = ->(t) do
-            t.config.doBuildJavadoc(t);
-        end
-        # Create a task for building the javadocs for all the source roots specified
-        # in the JavaBulder (java) configuration for the owning project.
-        def javadocTask(opts={})
-            tsk = Rake::FileTask.define_task docOutputDir;
-            tsk.enhance([:compile], &@@BuildJavadocAction);
-            tsk.config = self;
-            tsk
-        end
-    end
-
-    def createJavadocBuilder
-        JavadocBuilder.new(self)
-    end
-
-end
-
-
 module JavaProjectModule
     include JavaProjectConfig
-    include JavadocBuilderModule
 
     # Overrides java in JavaProjectConfig
     # Get instance of JavaBuilder < JavaConfig for this project
@@ -231,7 +164,6 @@ module JavaProjectModule
 
     include JarBuilderModule
     include ZipBuilderModule
-    include JavadocBuilderModule
 
 protected
 
@@ -249,10 +181,15 @@ protected
         def initialize(proj) # :nodoc:
             super(proj.getAnyAbove(:java),proj);
             @myProject = proj; # cache this
+            @docOutputDir="#{buildDir}/javadoc/#{moduleName}/api";
         end
 
         # the project this is attached to
         attr_reader :myProject
+
+        # the path javadoc output is written to.
+        #  this defaults to "#{buildDir}/javadoc/#{moduleName}/api"
+        attr_accessor :docOutputDir
 
         def export(t,&b) # :nodoc:
             @myProject.export(t,&b)
@@ -373,7 +310,7 @@ protected
             raise "Java compile failure" if(ret.exitstatus != 0);
         end
 
-        class JavaCTask < Rake::Task
+        class JavaCTask < Rake::Task # :nodoc:
             def needed?
                 !sources.empty?
             end
@@ -426,9 +363,59 @@ protected
             tsk;
         end
 
-        # Adds and exports simple configured targets for building classes, creating jar file, src.zip file
-        # and exports :compile (classes), :libs (jar files), and :dist (jar file, -src.zip, and -doc.zip file
-        # requires that source roots and compile classpaths have been set in this builder.
+        def doBuildJavadoc(t) # :nodoc:
+
+            cfg = t.config;
+            java = cfg.java;
+
+            # log.debug("doc output path is [#{cfg.docOutputDir}]");
+
+            FileUtils.mkdir_p(cfg.docOutputDir);
+            separator = cfg.java.classpathSeparator;
+
+            cmdline = "\"#{cfg.java_home}/bin/javadoc\" -d \"#{cfg.docOutputDir}\"";
+            cmdline += " -quiet";
+            unless(java.classPaths.empty?)
+                classpath = java.resolveClassPaths.join(separator);
+                cmdline += " -classpath \"#{classpath}\"";
+            end
+
+            sourcepath = java.sourceRoots.join(';');
+            cmdline += " -sourcepath \"#{sourcepath}\"";
+            cmdline += " -subpackages \"com\"";
+
+            execLogged(cmdline, :verbose=>cfg.verbose?);
+
+            dtime = Time.new;
+            File.open("#{t.name}/_buildDate.txt",'w') do |file|
+                file.puts("documentation built on #{dtime}");
+            end
+        end
+
+        @@BuildJavadocAction = ->(t) do
+            t.config.doBuildJavadoc(t);
+        end
+
+        # Create a new task for building the javadocs for all the source roots specified
+        # in the JavaBulder (java) configuration for the owning project.
+        # don't call multiple times in a project !!
+        def getJavadocTask(opts={})
+            tsk = Rake::FileTask.define_task docOutputDir;
+            tsk.enhance([:compile], &@@BuildJavadocAction);
+            tsk.config = self;
+            tsk
+        end
+
+        # Adds and exports simple configured targets for building classes, .jar, -src.zip, and -doc.zip files
+        #
+        #   this creates and exports tasks for:
+        #     :compile (class files)
+        #     :libs (.jar file),
+        #     :javadoc ( -doc.zip file)
+        #     :dist (jar file, -src.zip, and -doc.zip file
+        #
+        #   this requires that source roots and compile classpaths have been set in this builder.
+        #
         def addLibraryTargets(opts={})
 
             export task :resources;
@@ -456,12 +443,11 @@ protected
 
             export (task :libs => [jarTask, srcZip ])
 
-            docBuilder = proj.createJavadocBuilder();
-            docTask = docBuilder.javadocTask;
+            docTask = getJavadocTask;
             docTask.enhance([:compile]);
 
             zipBuilder = proj.createZipBuilder();
-            zipBuilder.addDirectory(docBuilder.docOutputDir "**/*");
+            zipBuilder.addDirectory(docOutputDir, "**/*");
 
             docZip = zipBuilder.zipTask(jarTask.name.pathmap('%X-doc.zip'));
             docZip.enhance(docTask);
