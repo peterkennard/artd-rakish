@@ -212,6 +212,8 @@ module Rake
 	end
 
 	class << self
+	    # get a new generated unique name for "anonymous" classes
+	    # and tasks and other uses
 		def get_unique_name
 			@_s_||=0
 			@_s_ += 1
