@@ -61,9 +61,15 @@ end
 #
 module Rakish
 
-    HostIsCygwin_ = RUBY_PLATFORM =~ /(cygwin)/i # :nodoc:
+    # set to true if called from windows - cygwin
+    HostIsCygwin_ = (RUBY_PLATFORM =~ /(cygwin)/i) != nil;
     # set to true if called on a windows host
-    HostIsWindows_ = (Rake::application.windows? || HostIsCygwin_ )
+    HostIsWindows_ = (/cygwin|mswin|mingw|bccwin|wince|emx/ =~ RUBY_PLATFORM) != nil;
+    # set to true if called on a unix host
+    HostIsUnix_ = (!HostIsWindows_);
+    # set to true on a MacOS or iOS host
+    HostIsMac_ = (/darwin/ =~ RUBY_PLATFORM) != nil;
+
 
 	# Logger module
 	# To use this Logger initialization include it in a class or module
@@ -198,6 +204,7 @@ module Rakish
 
 end
 
+
 # Rake extensions
 module Rake
 
@@ -211,6 +218,9 @@ module Rake
 			:"_nona_#{@_s_}"
 		end
 	end
+
+
+
 
     # Rake::TaskManager extensions
 	module TaskManager
@@ -472,6 +482,24 @@ end
 
 module Rakish
 
+    unless defined? ::File.path_is_absolute?
+        # extension to Ruby ::File class
+        class ::File
+            if(HostIsWindows_)
+                # Return true if path is an absolute path
+                def self.path_is_absolute?(path)
+                    f0 = path[0]
+                    f0 == '/' or f0 == '\\' or path[1] == ':'
+                end
+            else
+                # Return true if file is an absolute path
+                def self.path_is_absolute?(path)
+                    path[0] == '/'
+                end
+            end
+        end
+    end
+
 	# Extensons to root level Module
 	
 	class ::Module
@@ -552,17 +580,6 @@ module Rakish
 		end
 	end
 
-    if(HostIsWindows_)
-        def self.path_is_absolute?(path)
-            f0 = path[0]
-            f0 == '/' or f0 == '\\' or path[1] == ':'
-        end
-    else
-        def self.path_is_absolute?(path)
-            path[0] == '/'
-        end
-    end
-
     # Container for searchable path set for finding files in
     class SearchPath
 
@@ -629,7 +646,7 @@ module Rakish
         #              as in '.exe'
 
         def findFile(name,opts={})
-            return(name) if(Rakish.path_is_absolute?(name))
+            return(name) if(File.path_is_absolute?(name))
             found = nil;
             suffi = opts[:suffi];
             @path_.each do |path|

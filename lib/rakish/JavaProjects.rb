@@ -42,7 +42,7 @@ module JavaProjectConfig
             end
             paths.each do |v|
                 if(v =~ /\.jar$/)
-                    @_cpResolved_=false unless(Rakish.path_is_absolute?(v));
+                    @_cpResolved_=false unless(File.path_is_absolute?(v));
                 else
                     v = File.expand_path(v)
                 end
