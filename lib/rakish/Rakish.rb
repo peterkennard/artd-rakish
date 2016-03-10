@@ -559,7 +559,7 @@ module Rakish
         end
     else
         def self.path_is_absolute?(path)
-            filename[0] == '/'
+            path[0] == '/'
         end
     end
 
