@@ -1620,8 +1620,10 @@ module Rakish
 		end
 		# Add a single file path to this set
 		# note does NOT expand the path when inserted
+		# returns self for convenience
 		def add(f)
 			add?(f);
+			self
 		end
 		alias :<< :add
 		

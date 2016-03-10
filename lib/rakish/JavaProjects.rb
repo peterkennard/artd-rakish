@@ -52,18 +52,49 @@ module JavaProjectConfig
 
         # Retrieve jar file library search path
         def jarSearchPath
-            @jarSearchPaths_||=(getInherited(:jarSearchPath)||SearchPath.new);
+            @jarSearchPaths_||=(getInherited(:jarSearchPath)||SearchPath.new('.'));
         end
 
         # Add a jar file library search path for finding jar files
         # reltive paths will be searched relative to the current directory
         # when the search is done.
+        # The default root search path contains the entry for '.'
         def addJarSearchPath(*paths)
             unless(@_jspWritable_)
                 @jarSearchPaths_=SearchPath.new(jarSearchPath)
                 @_jspWritable_=true;
             end
             @jarSearchPaths_.addPath(*paths)
+        end
+
+        # Given a list of jar files any non absolute paths are searched for
+        # in the jarSearchPath and if found the absolute path is set in the result.
+        # the order of the list is preserved.  The list is flattened
+        # Wildcards are not allowed.
+        #
+        #  named options:
+        #     :errorOnMissing => if true raise an exception if the file is not found in the path
+        def resolveJarsWithPath(*jars)
+            opts = (jars.last.is_a?(Hash) ? jars.pop : {})
+            throwOnMissing=opts[:errorOnMissing];
+            jars.flatten!
+            compact=false;
+            jars.each do |path|
+                if(path =~ /\.jar$/)
+                    found = jarSearchPath.findFile(path);
+                    unless found
+                        if(throwOnMissing)
+                            raise Exception.new("could not find jar #{path} from #{File.expand_path('.')}\n     in:\n       #{jarSearchPath.join("\n      ")}");
+                        end
+                        compact=true;
+                        next;
+                    end
+                    path=found;
+                end
+                path
+            end
+            jars.compact! if(compact)
+            jars
         end
     end
 
