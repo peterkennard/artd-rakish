@@ -372,11 +372,14 @@ protected
     #            puts("project is altered");
     #        end
 
+
             tsk.enhance(deps);
             tsk.enhance(tasks);
             tsk.config = self;
 
+
             tasks = copyFiles.generateFileTasks();
+log.debug("####### copy files [#{tasks.length}] \"#{deps.join("\"\n      ")}\""); 
             tsk.enhance(tasks);
 
             task :clean do
