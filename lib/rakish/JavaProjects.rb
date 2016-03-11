@@ -75,7 +75,7 @@ module JavaProjectConfig
         # items without the .jar suffix are passed through unaltered
         #
         #  named options:
-        #     :errorOnMissing => if true raise an exception if the file is not found in the path
+        #     :onMissing => ( see Rakish::SearchPath.findFile )
         #
         def resolveJarsWithPath(*jars)
             opts = (jars.last.is_a?(Hash) ? jars.pop : {})
@@ -261,14 +261,11 @@ protected
             unless @_cpResolved_
                 FileUtils.cd(projectDir) do
                     @classPaths_=FileSet.new
+                    opts={ :onMissing=>'log.warn' };
                     cp.each do |path|
                        if(path =~ /\.jar$/)
-                            found = jarSearchPath.findFile(path);
-                            unless found
-                                log.warn("could not find jar #{path} from #{File.expand_path('.')}\n     in:\n       #{jarSearchPath.join("\n      ")}");
-                                next;
-                            end
-                            path=found;
+                            path = jarSearchPath.findFile(path,opts);
+                            next unless path
                        end
                        @classPaths_.add?(path);
                     end

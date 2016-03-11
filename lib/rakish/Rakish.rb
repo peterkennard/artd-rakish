@@ -641,8 +641,20 @@ module Rakish
         end
 
     private
-        def raiseNotFound(name) # :nodoc:
-            raise Exception.new("could not find file #{name} from #{File.expand_path('.')}\n     in:\n       #{join("\n      ")}");
+        def onNotFound(name,opts) # :nodoc:
+            msg = "could not find file #{name}\n     from: #{File.expand_path('.')}\n     in:\n       #{join("\n      ")}"
+            case opts[:onMissing]
+            when 'log.error'
+                ::Rakish.log.error msg;
+            when 'log.warn'
+                ::Rakish.log.warn msg;
+            when 'log.debug'
+                ::Rakish.log.debug msg;
+            when 'log.info'
+                ::Rakish.log.debug msg;
+            else
+                raise Exception.new(msg);
+            end
         end
     public
 
@@ -652,11 +664,15 @@ module Rakish
         #    :suffi => If set search for file with suffix in order of suffi list
         #              '' is a valid suffix in this case. suffi must have leading dot
         #              as in '.exe'
-        #    :errorOnMissing => raise an exception if the file is not present
+        #    :onMissing => reporting action to perform when file is not found
+        #              'log.error','log.warn',log.debug','log.info',
+        #              any other true (or non false/nil) value raises an exception
+        #              I prefer 'raise'
+        #
 
         def findFile(name,opts={})
             if(File.path_is_absolute?(name))
-                raiseNotFound(name) if(opts[:errorOnMissing] && (!File.exists?(name)))
+                onNotFound(name,opts) if(opts[:onMissing] && (!File.exists?(name)))
                 return(name);
             end
             found = nil;
@@ -679,7 +695,7 @@ module Rakish
                     break if(found)
                 end
             end
-            raiseNotFound(name) if(!found && opts[:errorOnMissing]);
+            onNotFound(name,opts) if(!found && opts[:onMissing]);
             found;
         end
     end
@@ -730,8 +746,9 @@ module Rakish
 	module Util
 		include ::Rake::DSL
 		include Rakish::Logger
-				
-		module Git
+
+		# Very simple module for Git used to initialize my projects
+		module Git # :nodoc:
 
 			class << self
 				def clone(src,dest,opts={})
