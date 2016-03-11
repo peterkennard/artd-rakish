@@ -26,20 +26,41 @@ module Rakish
             @@unzipPath_ ||= Rakish::Util.findInBinPath('unzip');
         end
 
-        # Note: file list not resolved until configured task is invoked
-        def addFileTree(destdir, basedir, *files) # :nodoc:
+        # Adds all the files from a subtree into the destdir
+        # the subtree will have it's leading "basedir" removed from the file path
+        # and replaced with the "basedir" before adding to the archive.
+        #  ie:
+        #     file = '/a/b/c/d/e/file.txt'
+        #     basedir = '/a/b/c'
+        #     destdir = 'archive/dir'
+        #
+        #     added to archive = 'archive/dir/file.txt'
+        #
+        # Note: the file list not resolved until configured archive task is
+        # checked for being "needed?" or invoked.
+
+        def addFileTree(destdir, basedir, *files)
             entry = {};
             entry[:destDir]=(destdir);
-            entry[:baseDir]=(File.expand_path(basedir));
+
+            (basedir=File.expand_path(basedir)) unless basedir=='#';
+
+            entry[:baseDir]=basedir;
 
             filePaths = [];
-
             files.flatten.each do |file|
                 filePaths << File.expand_path(file);
             end
 
             entry[:files]=filePaths;
             @archiveContents_ << entry;
+        end
+
+
+
+        # Add files in the *files list into the 'destdir' in the archive
+        def addFiles(destdir,*files)
+            addFileTree(destdir,'#',*files); # note '#' is flag to do addFiles
         end
 
         # Sets up a task to load contents from a directory to the root of the archive file recursively.
@@ -75,12 +96,13 @@ module Rakish
             end
             entry = {};
             entry[:destDir]=('.');
-            entry[:baseDir]=("#{File.expand_path(archivePath)}###");
+            entry[:baseDir]=("#{File.expand_path(archivePath)}###"); # note "###" is flag to indicate source is an archive
             entry[:files]=filters;
             @archiveContents_ << entry;
         end
 
-        def loadTempDir(dir) # :nodoc:
+        def loadTempDir(dir) # :nodoc: TODO "the "####" and '#' flag thing is messy maybe :type in entry ??
+
 
             archiveContents_.each do |entry|
 
@@ -109,7 +131,11 @@ module Rakish
                     unless(FileCopySet === contents)
                         contents = FileCopySet.new; # a new set for each entry.
                         # for each entry add files to a copy set
-                        contents.addFileTree(entry[:destDir],baseDir,entry[:files]);
+                        if(baseDir=="#")
+                            contents.addFiles(entry[:destDir],entry[:files]);
+                        else
+                            contents.addFileTree(entry[:destDir],baseDir,entry[:files]);
+                        end
                     end
                     # copy the file set to the temp folder
                     contents.filesByDir do |destDir,files|
@@ -133,6 +159,7 @@ module Rakish
         protected
 
             def resolvePrerequisites
+                # TODO "the "####" and '#' flag thing is messy maybe :type in entry ??
                 unless defined? @filesResolved_
                     @filesResolved_ = true;
                     contents = config.archiveContents_;
@@ -145,7 +172,11 @@ module Rakish
                         else
                             copySet = FileCopySet.new;
                             # for each entry add files to the copy set
-                            copySet.addFileTree(entry[:destDir],baseDir,entry[:files]);
+                            if(baseDir=='#')
+                                copySet.addFiles(entry[:destDir],entry[:files]);
+                            else
+                                copySet.addFileTree(entry[:destDir],baseDir,entry[:files]);
+                            end
                             @prerequisites |= copySet.sources;
                             # replace file list in entry with the resolved copy set
                             entry[:files] = copySet if entry[:cacheList]

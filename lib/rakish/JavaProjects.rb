@@ -51,6 +51,7 @@ module JavaProjectConfig
         end
 
         # Retrieve jar file library search path
+        # The root config with no parent will have '.' installed as the first item in the path.
         def jarSearchPath
             @jarSearchPaths_||=(getInherited(:jarSearchPath)||SearchPath.new('.'));
         end
@@ -68,28 +69,22 @@ module JavaProjectConfig
         end
 
         # Given a list of jar files any non absolute paths are searched for
-        # in the jarSearchPath and if found the absolute path is set in the result.
-        # the order of the list is preserved.  The list is flattened
-        # Wildcards are not allowed.
+        # in the jarSearchPath relative to the current directory, any that are found
+        # will have the absolute path is set in the result. the order of the list is
+        # preserved.  The list is flattened, and wildcards are not allowed.
+        # items without the .jar suffix are passed through unaltered
         #
         #  named options:
         #     :errorOnMissing => if true raise an exception if the file is not found in the path
+        #
         def resolveJarsWithPath(*jars)
             opts = (jars.last.is_a?(Hash) ? jars.pop : {})
-            throwOnMissing=opts[:errorOnMissing];
             jars.flatten!
             compact=false;
-            jars.each do |path|
+            jars.map! do |path|
                 if(path =~ /\.jar$/)
-                    found = jarSearchPath.findFile(path);
-                    unless found
-                        if(throwOnMissing)
-                            raise Exception.new("could not find jar #{path} from #{File.expand_path('.')}\n     in:\n       #{jarSearchPath.join("\n      ")}");
-                        end
-                        compact=true;
-                        next;
-                    end
-                    path=found;
+                    path = jarSearchPath.findFile(path,opts);
+                    compact=true unless path;
                 end
                 path
             end

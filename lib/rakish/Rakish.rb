@@ -640,15 +640,25 @@ module Rakish
             @path_.join(s);
         end
 
+    private
+        def raiseNotFound(name) # :nodoc:
+            raise Exception.new("could not find file #{name} from #{File.expand_path('.')}\n     in:\n       #{join("\n      ")}");
+        end
+    public
+
         # Find a file with the given name (or relative subpath) in this search set
         # If the input name is an absolute path it is simply returned.
         #  named ops:
         #    :suffi => If set search for file with suffix in order of suffi list
         #              '' is a valid suffix in this case. suffi must have leading dot
         #              as in '.exe'
+        #    :errorOnMissing => raise an exception if the file is not present
 
         def findFile(name,opts={})
-            return(name) if(File.path_is_absolute?(name))
+            if(File.path_is_absolute?(name))
+                raiseNotFound(name) if(opts[:errorOnMissing] && (!File.exists?(name)))
+                return(name);
+            end
             found = nil;
             suffi = opts[:suffi];
             @path_.each do |path|
@@ -669,6 +679,7 @@ module Rakish
                     break if(found)
                 end
             end
+            raiseNotFound(name) if(!found && opts[:errorOnMissing]);
             found;
         end
     end
@@ -1811,11 +1822,15 @@ module Rakish
 		end
 		
 		# add files all assigned to the destdir directory
+		#   for the destdir the be the root of the detination area
+		#   use '/' or '.'
 		def addFiles(destdir, *files)			
 			destdir = destdir.to_s
-#			if(destdir =~ /^\//)
-#				destdir = $'
-#			end
+            if(destdir.length==0 || destdir=='/') # to make it consistent root directory name
+			    destdir='.'
+			elsif(destdir =~ /^\//)
+				destdir = $'
+			end
 			if(!files.empty?)
 				ilist = (@byDir_[destdir] ||= [])
 				add_files_a(ilist,files,nil)
@@ -1853,23 +1868,27 @@ module Rakish
 	
 	public
 	
-		# Add a tree of files all of which are to be assigned
-		# to the supplied 'destdir' relative to 'destdir' as the source files are 
-		# relative to the supplied 'basedir'
-		#
-		#  ie: if destdir is 'outdir' basedir is '/base/dir'
-		#  the file '/base/dir/dir2/file.x' will be assigned to the 
-		#  directory outdir/dir2[/file.x]
-		#
+        # Adds all the files from a subtree into the destdir in the set
+        # the subtree will have it's leading "basedir" removed from the file path
+        # and replaced with the "basedir" before adding to the archive.
+        #  ie:
+        #     file = '/a/b/c/d/e/file.txt'
+        #     basedir = '/a/b/c'
+        #     destdir = 'set/dir' or '/set/dir' or '/' for the root of the destination
+        #
+        #     added to set = 'set/dir/d/e/file.txt'
+        #
 		# <b>named options:</b>
 		#   :data => user value to assign to all entries added to this set
 		#
 		def addFileTree(destdir, basedir, *files)
 			opts = (Hash === files.last) ? files.pop : {}			
 			destdir = destdir.to_s
-#			if (destdir =~ /^\//)
-#				destdir = $'
-#			end
+            if(destdir.length==0 || destdir=='/') # to make director name consistent for different usages.
+			    destdir='.'
+			elsif (destdir =~ /^\//)
+				destdir = $'
+			end
 			basedir = File.expand_path(basedir)	
 			regx = Regexp.new('^' + Regexp.escape(basedir+'/'),Regexp::IGNORECASE);
 			add_filet_a(destdir,regx,files,opts[:data])
