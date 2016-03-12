@@ -379,7 +379,7 @@ protected
 
 
             tasks = copyFiles.generateFileTasks();
-log.debug("####### copy files [#{tasks.length}] \"#{deps.join("\"\n      ")}\""); 
+# log.debug("####### copy files [#{tasks.length}] \"#{deps.join("\"\n      ")}\"");
             tsk.enhance(tasks);
 
             task :clean do
