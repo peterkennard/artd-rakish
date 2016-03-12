@@ -1844,7 +1844,7 @@ module Rakish
 		def addFiles(destdir, *files)			
 			destdir = destdir.to_s
 			if(destdir =~ /^\//)
-				destdir=(destdir.length=1 ? '.' : $');
+				destdir=(destdir == '/' ? '.' : $');
 			end
 			if(!files.empty?)
 				ilist = (@byDir_[destdir] ||= [])
@@ -1900,7 +1900,7 @@ module Rakish
 			opts = (Hash === files.last) ? files.pop : {}			
 			destdir = destdir.to_s
 			if (destdir =~ /^\//)
-                destdir=(destdir.length==1 ? '.' : $');
+                destdir=(destdir == '/' ? '.' : $');
 			end
 			basedir = File.expand_path(basedir)	
 			regx = Regexp.new('^' + Regexp.escape(basedir+'/'),Regexp::IGNORECASE);
