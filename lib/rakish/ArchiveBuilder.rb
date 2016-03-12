@@ -151,6 +151,9 @@ module Rakish
                     unless(FileCopySet === contents)
                         contents = FileCopySet.new; # a new set for each entry.
                         # for each entry add files to a copy set
+
+                        log.debug("######!!!!!!! #{entry[:destDir]}");
+
                         if(baseDir=="#")
                             contents.addFiles(entry[:destDir],entry[:files]);
                         else
