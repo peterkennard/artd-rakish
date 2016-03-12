@@ -1832,6 +1832,7 @@ module Rakish
 	public
 		# Add a directory with no source files to this set, if not already there.
 		def addDir(dir)
+		    dir = '.' if(dir == '/');
 #			if(dir =~ /^\//)
 #				dir = $'           # truncate leading '/' ???
 #			end
