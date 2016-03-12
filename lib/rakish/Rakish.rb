@@ -1830,14 +1830,9 @@ module Rakish
 			end		
 		end
 	public
-		# Add a directory with no source files to this set, if not already there.
+		# Add a directory (in destination) with no source files to this set, if not already there.
 		def addDir(dir)
-			if(destdir =~ /^\//)
-		        destdir = '.' if(destdir == '/');
-				# destdir = $'           # truncate leading '/' ???
-			else
-			    log.debug("###### no '\' in #{destdir}");
-			end
+		    log.debug("\n###### destdir #{dir}");
 			@byDir_[dir]||=[]
 		end
 		
@@ -1849,9 +1844,8 @@ module Rakish
 			if(destdir =~ /^\//)
 		        destdir = '.' if(destdir == '/');
 				# destdir = $'           # truncate leading '/' ???
-			else
-			    log.debug("###### no '\' in #{destdir}");
 			end
+		    log.debug("\n###### destdir #{destdir}");
 			if(!files.empty?)
 				ilist = (@byDir_[destdir] ||= [])
 				add_files_a(ilist,files,nil)
@@ -1895,7 +1889,7 @@ module Rakish
         #  ie:
         #     file = '/a/b/c/d/e/file.txt'
         #     basedir = '/a/b/c'
-        #     destdir = 'set/dir' or '/set/dir' or '/' for the root of the destination
+        #     destdir = 'set/dir' or or '/' for the root of the destination
         #
         #     added to set = 'set/dir/d/e/file.txt'
         #
@@ -1908,9 +1902,8 @@ module Rakish
 			if(destdir =~ /^\//)
 		        destdir = '.' if(destdir == '/');
 				# destdir = $'           # truncate leading '/' ???
-			else
-			    log.debug("###### no '\' in #{destdir}");
 			end
+		    log.debug("\n###### destdir #{destdir}");
 			basedir = File.expand_path(basedir)
 			regx = Regexp.new('^' + Regexp.escape(basedir+'/'),Regexp::IGNORECASE);
 			add_filet_a(destdir,regx,files,opts[:data])
