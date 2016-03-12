@@ -1829,25 +1829,18 @@ module Rakish
 				list << Entry.new(File.expand_path(f.to_s),data)
 			end		
 		end
+
 	public
 		# Add a directory (in destination) with no source files to this set, if not already there.
+        # dir = './set/dir' or '.' for the root of a relative destination
 		def addDir(dir)
-		    log.debug("\n###### destdir #{dir}");
-			@byDir_[dir]||=[]
+			@byDir_[dir.to_s]||=[]
 		end
 		
 		# add files all assigned to the destdir directory
-		#   for the destdir the be the root of the detination area
-		#   use '/' or '.'
-		def addFiles(destdir, *files)			
-			destdir = destdir.to_s
-			if(destdir =~ /^\//)
-		        destdir = '.' if(destdir == '/');
-				# destdir = $'           # truncate leading '/' ???
-			end
-		    log.debug("\n###### destdir #{destdir}");
+		def addFiles(destdir, *files)
 			if(!files.empty?)
-				ilist = (@byDir_[destdir] ||= [])
+				ilist = (@byDir_[destdir.to_s] ||= [])
 				add_files_a(ilist,files,nil)
 			end
 		end
@@ -1889,7 +1882,7 @@ module Rakish
         #  ie:
         #     file = '/a/b/c/d/e/file.txt'
         #     basedir = '/a/b/c'
-        #     destdir = 'set/dir' or or '/' for the root of the destination
+        #     destdir = './set/dir' or '.' for the root of a relative destination
         #
         #     added to set = 'set/dir/d/e/file.txt'
         #
@@ -1899,11 +1892,6 @@ module Rakish
 		def addFileTree(destdir, basedir, *files)
 			opts = (Hash === files.last) ? files.pop : {}			
 			destdir = destdir.to_s
-			if(destdir =~ /^\//)
-		        destdir = '.' if(destdir == '/');
-				# destdir = $'           # truncate leading '/' ???
-			end
-		    log.debug("\n###### destdir #{destdir}");
 			basedir = File.expand_path(basedir)
 			regx = Regexp.new('^' + Regexp.escape(basedir+'/'),Regexp::IGNORECASE);
 			add_filet_a(destdir,regx,files,opts[:data])
@@ -1958,9 +1946,6 @@ module Rakish
 				# TODO: maybe have an output directory option and maybe relative path option for destinations ?
 				# dir = File.join(destDir,dir);
 				ensureDirectoryTask(dir)
-				if(dir =~ /CodeGenerator$/)
-				    log.debug("######## #{dir} !!!");
-				end
 
 				files.each do |srcfile|
 					destname = File.basename(srcfile);

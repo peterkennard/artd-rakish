@@ -29,10 +29,11 @@ module Rakish
         # Adds all the files from a subtree into the destdir
         # the subtree will have it's leading "basedir" removed from the file path
         # and replaced with the "basedir" before adding to the archive.
+        # note: all "destdir" paths are relative to the root of the archive
         #  ie:
         #     file = '/a/b/c/d/e/file.txt'
         #     basedir = '/a/b/c'
-        #     destdir = 'archive/dir'
+        #     destdir = './archive/dir'
         #
         #     added to archive = 'archive/dir/file.txt'
         #
@@ -40,6 +41,19 @@ module Rakish
         # checked for being "needed?" or invoked.
 
         def addFileTree(destdir, basedir, *files)
+
+            # ensure all destdirs are relative to an implicit destination folder
+            # with the root specified by '.'
+            if(destdir=='.' || destdir == './' || destdir == '/'  || destdir=='')
+                destdir == '.'
+            elsif(destdir =~ /^\//)
+                destdir="./#{$'}"
+            else
+                unless(destdir =~ /^\.\//)
+                    destdir="./#{destdir}";
+                end
+            end
+
             entry = {};
             entry[:destDir]=(destdir);
 
@@ -59,6 +73,7 @@ module Rakish
 
 
         # Add files in the *files list into the 'destdir' in the archive
+        # note: all "destdir" paths are relative to the root of the archive
         def addFiles(destdir,*files)
             addFileTree(destdir,'#',*files); # note '#' is flag to do addFiles
         end
