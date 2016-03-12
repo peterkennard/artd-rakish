@@ -1832,10 +1832,10 @@ module Rakish
 	public
 		# Add a directory with no source files to this set, if not already there.
 		def addDir(dir)
-		    dir = '.' if(dir == '/');
-#			if(dir =~ /^\//)
+			if(dir =~ /^\//)
+		        destdir = '.' if(destdir == '/');
 #				dir = $'           # truncate leading '/' ???
-#			end
+			end
 			@byDir_[dir]||=[]
 		end
 		
@@ -1844,10 +1844,10 @@ module Rakish
 		#   use '/' or '.'
 		def addFiles(destdir, *files)			
 			destdir = destdir.to_s
-		    destdir = '.' if(destdir == '/');
-#			if(destdir =~ /^\//)
-#				destdir=(destdir == '/' ? '.' : $');
-#			end
+			if(destdir =~ /^\//)
+		        destdir = '.' if(destdir == '/');
+#				destdir = $'           # truncate leading '/' ???
+			end
 			if(!files.empty?)
 				ilist = (@byDir_[destdir] ||= [])
 				add_files_a(ilist,files,nil)
@@ -1901,11 +1901,11 @@ module Rakish
 		def addFileTree(destdir, basedir, *files)
 			opts = (Hash === files.last) ? files.pop : {}			
 			destdir = destdir.to_s
-		    destdir = '.' if(destdir == '/');
-#			if (destdir =~ /^\//)
-#                destdir=(destdir == '/' ? '.' : $');
-#			end
-			basedir = File.expand_path(basedir)	
+			if(destdir =~ /^\//)
+		        destdir = '.' if(destdir == '/');
+#				destdir = $'           # truncate leading '/' ???
+			end
+			basedir = File.expand_path(basedir)
 			regx = Regexp.new('^' + Regexp.escape(basedir+'/'),Regexp::IGNORECASE);
 			add_filet_a(destdir,regx,files,opts[:data])
 		end
@@ -1959,6 +1959,9 @@ module Rakish
 				# TODO: maybe have an output directory option and maybe relative path option for destinations ?
 				# dir = File.join(destDir,dir);
 				ensureDirectoryTask(dir)
+				if(dir =~ /CodeGenerator$/)
+				    log.debug("######## #{dir} !!!");
+				end
 
 				files.each do |srcfile|
 					destname = File.basename(srcfile);
