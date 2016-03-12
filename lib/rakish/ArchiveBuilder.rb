@@ -42,16 +42,9 @@ module Rakish
 
         def addFileTree(destdir, basedir, *files)
 
-            # ensure all destdirs are relative to an implicit destination folder
-            # with the root specified by '.'
-            if(destdir=='.' or destdir == './' or destdir == '/' or destdir == '')
-                destdir = '.'
-            elsif(destdir =~ /^\//)
+            # ensure all destdirs are relative to an implicit folder
+            if(destdir =~ /^\//)
                 destdir="./#{$'}"
-            else
-                unless(destdir =~ /^\.\//)
-                    destdir="./#{destdir}";
-                end
             end
 
             entry = {};

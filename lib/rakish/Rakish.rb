@@ -484,9 +484,11 @@ end
 
 module Rakish
 
-    unless defined? ::File.path_is_absolute?
-        # extension to Ruby ::File class
-        class ::File
+    # extension to Ruby ::File class
+    class ::File
+
+        unless defined? ::File.path_is_absolute?
+
             if(HostIsWindows_)
                 # Return true if path is an absolute path
                 def self.path_is_absolute?(path)
@@ -1811,6 +1813,27 @@ module Rakish
 		end
 	
 	protected
+
+        @@truncLen_ = File.expand_path("/./").length;
+
+        # Cleans up a relative path 'rp' without expanding against the current directory
+        #  ie:
+        #   ./a/b/c/../../ => ./a
+        #   ./ => .
+        #
+        #  NOTE: this will not work if the relative path evaluates to below itself
+        #  which is improper for a destination directory
+        #
+        def cleanupDestdir(dd) # :nodoc:
+            dd=dd.to_s;
+            unless(File.path_is_absolute?(dd))
+                dd = File.expand_path("/./#{dd}");
+                dd = "./#{dd[@@truncLen_,10000]}";
+                dd='.' if(dd=='./')
+            end
+            dd
+        end
+
 		def add_simple_a(list,files,data) # :nodoc:
 			files.each do |f|
 				list << Entry.new(File.expand_path(f.to_s),data)
@@ -1834,13 +1857,13 @@ module Rakish
 		# Add a directory (in destination) with no source files to this set, if not already there.
         # dir = './set/dir' or '.' for the root of a relative destination
 		def addDir(dir)
-			@byDir_[dir.to_s]||=[]
+			@byDir_[cleanupDestdir(dir)]||=[]
 		end
 		
 		# add files all assigned to the destdir directory
 		def addFiles(destdir, *files)
 			if(!files.empty?)
-				ilist = (@byDir_[destdir.to_s] ||= [])
+				ilist = (@byDir_[cleanupDestdir(destdir)] ||= [])
 				add_files_a(ilist,files,nil)
 			end
 		end
@@ -1891,7 +1914,7 @@ module Rakish
 		#
 		def addFileTree(destdir, basedir, *files)
 			opts = (Hash === files.last) ? files.pop : {}			
-			destdir = destdir.to_s
+			destdir = cleanupDestdir(destdir);
 			basedir = File.expand_path(basedir)
 			regx = Regexp.new('^' + Regexp.escape(basedir+'/'),Regexp::IGNORECASE);
 			add_filet_a(destdir,regx,files,opts[:data])

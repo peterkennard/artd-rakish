@@ -4,7 +4,7 @@ require "rakish/JavaProjects.rb";
 require "rakish/IntellijConfig.rb";
 require "rakish/RubydocModule.rb";
 
-InitBuildConfig :include=>[ Rakish::IntellijConfig, Rakish::CppProjectConfig] do |cfg|
+Rakish.Configuration :include=>[ Rakish::IntellijConfig, Rakish::CppProjectConfig] do |cfg|
 
 	cfg.thirdPartyPath = File.expand_path("#{myDir}/../../third-party");
 	cfg.verbose = false;
@@ -83,7 +83,6 @@ module Rakish
     end
 
     InitClass.new("arg1","arg2");
-
 
 	module Util
 		def testMethod()
