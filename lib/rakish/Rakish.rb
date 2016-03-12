@@ -1844,9 +1844,10 @@ module Rakish
 		#   use '/' or '.'
 		def addFiles(destdir, *files)			
 			destdir = destdir.to_s
-			if(destdir =~ /^\//)
-				destdir=(destdir == '/' ? '.' : $');
-			end
+		    destdir = '.' if(destdir == '/');
+#			if(destdir =~ /^\//)
+#				destdir=(destdir == '/' ? '.' : $');
+#			end
 			if(!files.empty?)
 				ilist = (@byDir_[destdir] ||= [])
 				add_files_a(ilist,files,nil)
@@ -1900,9 +1901,10 @@ module Rakish
 		def addFileTree(destdir, basedir, *files)
 			opts = (Hash === files.last) ? files.pop : {}			
 			destdir = destdir.to_s
-			if (destdir =~ /^\//)
-                destdir=(destdir == '/' ? '.' : $');
-			end
+		    destdir = '.' if(destdir == '/');
+#			if (destdir =~ /^\//)
+#                destdir=(destdir == '/' ? '.' : $');
+#			end
 			basedir = File.expand_path(basedir)	
 			regx = Regexp.new('^' + Regexp.escape(basedir+'/'),Regexp::IGNORECASE);
 			add_filet_a(destdir,regx,files,opts[:data])
