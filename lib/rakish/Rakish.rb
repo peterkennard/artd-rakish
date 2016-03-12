@@ -1900,7 +1900,7 @@ module Rakish
 			opts = (Hash === files.last) ? files.pop : {}			
 			destdir = destdir.to_s
 			if (destdir =~ /^\//)
-                destdir=(destdir.length=1 ? '.' : $');
+                destdir=(destdir.length==1 ? '.' : $');
 			end
 			basedir = File.expand_path(basedir)	
 			regx = Regexp.new('^' + Regexp.escape(basedir+'/'),Regexp::IGNORECASE);
