@@ -54,6 +54,8 @@ module Rakish
                 end
             end
 
+log.debug("######\ndestdir #{destdir}");
+
             entry = {};
             entry[:destDir]=(destdir);
 
