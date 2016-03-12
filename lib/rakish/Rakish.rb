@@ -1843,10 +1843,8 @@ module Rakish
 		#   use '/' or '.'
 		def addFiles(destdir, *files)			
 			destdir = destdir.to_s
-            if(destdir.length==0 || destdir=='/') # to make it consistent root directory name
-			    destdir='.'
-			elsif(destdir =~ /^\//)
-				destdir = $'
+			if(destdir =~ /^\//)
+				destdir=(destdir.length=1 ? '.' : $');
 			end
 			if(!files.empty?)
 				ilist = (@byDir_[destdir] ||= [])
@@ -1901,10 +1899,8 @@ module Rakish
 		def addFileTree(destdir, basedir, *files)
 			opts = (Hash === files.last) ? files.pop : {}			
 			destdir = destdir.to_s
-            if(destdir.length==0 || destdir=='/') # to make director name consistent for different usages.
-			    destdir='.'
-			elsif (destdir =~ /^\//)
-				destdir = $'
+			if (destdir =~ /^\//)
+                destdir=(destdir.length=1 ? '.' : $');
 			end
 			basedir = File.expand_path(basedir)	
 			regx = Regexp.new('^' + Regexp.escape(basedir+'/'),Regexp::IGNORECASE);
