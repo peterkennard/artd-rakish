@@ -1832,9 +1832,11 @@ module Rakish
 	public
 		# Add a directory with no source files to this set, if not already there.
 		def addDir(dir)
-			if(dir =~ /^\//)
+			if(destdir =~ /^\//)
 		        destdir = '.' if(destdir == '/');
-				dir = $'           # truncate leading '/' ???
+				# destdir = $'           # truncate leading '/' ???
+			else
+			    log.debug("###### no '\' in #{destdir}");
 			end
 			@byDir_[dir]||=[]
 		end
@@ -1846,7 +1848,9 @@ module Rakish
 			destdir = destdir.to_s
 			if(destdir =~ /^\//)
 		        destdir = '.' if(destdir == '/');
-				destdir = $'           # truncate leading '/' ???
+				# destdir = $'           # truncate leading '/' ???
+			else
+			    log.debug("###### no '\' in #{destdir}");
 			end
 			if(!files.empty?)
 				ilist = (@byDir_[destdir] ||= [])
@@ -1903,7 +1907,9 @@ module Rakish
 			destdir = destdir.to_s
 			if(destdir =~ /^\//)
 		        destdir = '.' if(destdir == '/');
-				destdir = $'           # truncate leading '/' ???
+				# destdir = $'           # truncate leading '/' ???
+			else
+			    log.debug("###### no '\' in #{destdir}");
 			end
 			basedir = File.expand_path(basedir)
 			regx = Regexp.new('^' + Regexp.escape(basedir+'/'),Regexp::IGNORECASE);
