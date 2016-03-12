@@ -51,10 +51,12 @@ module Rakish
             else
                 unless(destdir =~ /^\.\//)
                     destdir="./#{destdir}";
+                    log.debug("######\ndestdir #{destdir}");
+                else
+                    log.debug("######\ndestdir #{destdir}");
                 end
             end
 
-log.debug("######\ndestdir #{destdir}");
 
             entry = {};
             entry[:destDir]=(destdir);
