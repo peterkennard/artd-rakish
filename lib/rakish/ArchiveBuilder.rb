@@ -44,10 +44,11 @@ module Rakish
 
             # ensure all destdirs are relative to an implicit destination folder
             # with the root specified by '.'
-            if(destdir=='.' || destdir == './' || destdir == '/'  || destdir=='')
+            if(destdir=='.' or destdir == './' or destdir == '/' or destdir == '')
                 destdir == '.'
             elsif(destdir =~ /^\//)
                 destdir="./#{$'}"
+                log.debug("######\ndestdir #{destdir}");
             else
                 unless(destdir =~ /^\.\//)
                     destdir="./#{destdir}";
