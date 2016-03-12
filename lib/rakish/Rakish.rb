@@ -1834,7 +1834,7 @@ module Rakish
 		def addDir(dir)
 			if(dir =~ /^\//)
 		        destdir = '.' if(destdir == '/');
-#				dir = $'           # truncate leading '/' ???
+				dir = $'           # truncate leading '/' ???
 			end
 			@byDir_[dir]||=[]
 		end
@@ -1846,7 +1846,7 @@ module Rakish
 			destdir = destdir.to_s
 			if(destdir =~ /^\//)
 		        destdir = '.' if(destdir == '/');
-#				destdir = $'           # truncate leading '/' ???
+				destdir = $'           # truncate leading '/' ???
 			end
 			if(!files.empty?)
 				ilist = (@byDir_[destdir] ||= [])
@@ -1878,7 +1878,7 @@ module Rakish
 					elsif(destdir.length > 0)
 						dir = "#{destdir}/#{dir}"
 					end
-						(@byDir_[dir]||=[]) << Entry.new(f,data)
+					(@byDir_[dir]||=[]) << Entry.new(f,data)
 				end
 			end		
 		end
@@ -1903,7 +1903,7 @@ module Rakish
 			destdir = destdir.to_s
 			if(destdir =~ /^\//)
 		        destdir = '.' if(destdir == '/');
-#				destdir = $'           # truncate leading '/' ???
+				destdir = $'           # truncate leading '/' ???
 			end
 			basedir = File.expand_path(basedir)
 			regx = Regexp.new('^' + Regexp.escape(basedir+'/'),Regexp::IGNORECASE);
