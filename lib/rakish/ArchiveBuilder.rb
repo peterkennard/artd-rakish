@@ -48,16 +48,11 @@ module Rakish
                 destdir = '.'
             elsif(destdir =~ /^\//)
                 destdir="./#{$'}"
-                log.debug("######\ndestdir #{destdir}");
             else
                 unless(destdir =~ /^\.\//)
                     destdir="./#{destdir}";
-                    log.debug("######\ndestdir #{destdir}");
-                else
-                    log.debug("######\ndestdir #{destdir}");
                 end
             end
-
 
             entry = {};
             entry[:destDir]=(destdir);
@@ -151,9 +146,6 @@ module Rakish
                     unless(FileCopySet === contents)
                         contents = FileCopySet.new; # a new set for each entry.
                         # for each entry add files to a copy set
-
-                        log.debug("######!!!!!!! #{entry[:destDir]}");
-
                         if(baseDir=="#")
                             contents.addFiles(entry[:destDir],entry[:files]);
                         else
