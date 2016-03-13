@@ -11,7 +11,7 @@ spawn ( compilers and the like ) the little ruby tasks are better off being run 
 doing something with a lot of waiting involved like uploading a file. In any case limiting the number of threads
 would help this too.
 
-===Make tomcat srvlet module releasable
+===Make tomcat servlet module releasable
 ===A real manual
 ===Make intellij integration module releasable
 
