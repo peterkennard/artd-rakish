@@ -953,8 +953,8 @@ module Rakish
 		#     setIndent means set a variable "indent" in the environment
 		#     to be the indent level of the current raw line
 		#
-		#   ffrom = input lines (has to implement each_line)
-		#   fout  = output file (has to implement puts)
+		#   lines = input lines (has to implement each_line)
+		#   fout  = output file (has to implement puts, print)
 		#   bnd   = "binding" to context to evaluate substitutions in
 		def rubyLinePP(lines,fout,bnd,opts={})
 

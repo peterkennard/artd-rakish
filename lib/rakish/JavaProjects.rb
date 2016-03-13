@@ -17,6 +17,8 @@ module JavaProjectConfig
             yield self if block_given?
         end
 
+        attr_property :debug
+
         # Get java class path separator-delimiter
         def classpathSeparator
            @@classpathSeparator_||= ( HostIsWindows_ ? ';' : ':');
@@ -288,7 +290,7 @@ protected
             outClasspath = getRelativePath(outputClasspath);
 
             cmdline = "\"#{config.java_home}/bin/javac\"";
-            cmdline << " -g -d \"#{outClasspath}\""
+            cmdline << " #{config.debug ? '-g' : '-g:none'} -d \"#{outClasspath}\""
 
             separator = config.classpathSeparator;
             paths = config.resolveClassPaths
