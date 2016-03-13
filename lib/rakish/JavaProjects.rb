@@ -339,8 +339,7 @@ protected
             end
         end
 
-        # :nodoc:
-        CompileJavaAction = ->(t) do
+        @@CompileJavaAction_ = ->(t) do
             t.config.doCompileJava(t);
         end
 
@@ -359,7 +358,7 @@ protected
                 copyFiles.addFileTree(outputClasspath, root, files);
             end
 
-            tsk = JavaCTask.define_unique_task &CompileJavaAction
+            tsk = JavaCTask.define_unique_task &@@CompileJavaAction_
             task :compile=>[tsk]
 
             # add sources we know about

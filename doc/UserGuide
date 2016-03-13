@@ -3,4 +3,8 @@
 
 :include:doc/RakishOverview.html
 
-Test of extra rdoc file
+:include:doc/SimpleJavaSamples.txt
+
+:include:doc/WhyIDidIt.txt
+
+
