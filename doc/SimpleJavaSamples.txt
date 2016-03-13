@@ -1,5 +1,5 @@
 
-==Java Projet file Samples
+==Java Project file Samples
 
 As I haven't written the real "manual" other than the rdocs on the ruby files so I figure this will help
 This is actual production code for me.
@@ -331,8 +331,8 @@ All this is is the dependencies and the reallyClean target
 
 Though the ServletProjectModule isn't in the gem (yet) I put this here to
 show building an archive (.war file) and searching the jar file library path to
-get them.  moduleJars are built and thuys in the "binDir" the others come
-from the library search path.  Lets you know what can be done.
+get them.  moduleJars are built bt dependent projects and they are in the "binDir" the others come
+from the library search path.
 
     myDir = File.dirname(__FILE__);
     require "#{myDir}/../build-options.rb";
