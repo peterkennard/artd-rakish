@@ -7,6 +7,15 @@ Gem::Specification.new do |s|
   s.description = "Rakish Rake build system built on top of Rake for managing large scale projects with lots of modules."
   s.authors     = ["Peter Kennard"]
   s.email       = 'peterk@livingwork.com'
+
+  privateKeyPath = File.expand_path("~/.ssh/gem-private_key.pem");
+  certPath = File.expand_path("~/.ssh/gem-public_cert.pem");
+
+  if $0 =~ /gem\z/ && File.exists?(privateKeyPath)
+      s.cert_chain  = certPath;
+      s.signing_key = privateKeyPath;
+  end
+
   s.files       =  FileList.new(["lib/rakish.rb",
                                   "lib/rakish/*",
 								  "doc/*"
