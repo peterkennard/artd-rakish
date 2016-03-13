@@ -1,7 +1,7 @@
 
 ==Why I did it
 
-I have over many years had to use various build scripting systems IDEs and rwites scripts for them.
+I have over many years had to use various build scripting systems IDEs and wiite scripts for them.
 
 Many projects after they got at all big required lots of things to be done,
  - signing files,
