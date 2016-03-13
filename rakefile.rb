@@ -1,3 +1,5 @@
+myDir = File.expand_path(File.dirname(__FILE__));
+
 require 'rake'
 
 include Rake::DSL
@@ -20,19 +22,27 @@ module OS
   end
 end
 
+gemspec = Gem::Specification::load("#{myDir}/rakish.gemspec");
+
 task :default do 
 end
 
-task :installGem do |t|
-	myDir = File.dirname(__FILE__);
-	
-	spec = Gem::Specification::load("#{myDir}/rakish.gemspec")
-	# puts spec.version
-	
+task :buildGem do |t|
 	cd myDir do
 		system("gem build rakish.gemspec");
+	end
+end
+
+task :pushGem do |t|
+	cd myDir do
+		system("gem push rakish-#{gemspec.version}.gem");
+	end
+end
+
+task :installGem => [ :buildGem ] do |t|
+	cd myDir do
 		userstr = OS.windows? ? "" : "--user-install"
-		system("gem install --local --pre #{userstr} rakish-#{spec.version}.gem");
+		system("gem install --local --pre #{userstr} rakish-#{gemspec.version}.gem");
 	end
 end
 
