@@ -1,3 +1,4 @@
+myDir = File.expand_path(File.dirname(__FILE__));
 require 'rake'
 
 Gem::Specification.new do |s|
@@ -9,10 +10,10 @@ Gem::Specification.new do |s|
   s.email       = 'peterk@livingwork.com'
 
   privateKeyPath = File.expand_path("~/.ssh/gem-private_key.pem");
-  certPath = File.expand_path("~/.ssh/gem-public_cert.pem");
+  certPath = File.expand_path("#{File.join(myDir,"certs/peterk@artd.com.pem")}");
 
-  if $0 =~ /gem\z/ && File.exists?(privateKeyPath)
-      s.cert_chain  = certPath;
+  if($0 =~ /gem\z/ && File.exists?(privateKeyPath))
+      s.cert_chain  = [ certPath ];
       s.signing_key = privateKeyPath;
   end
 
