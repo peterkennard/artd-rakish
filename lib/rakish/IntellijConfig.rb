@@ -46,7 +46,7 @@ module Rakish
 
 
                 @tagPath.push(name);
-                log.debug(@tagPath.join("::"));
+                # log.debug(@tagPath.join("::"));
                 if(@tagPath == @@compPath)
                     @compName = attributes['name'];
                 elsif(@tagPath === @@flagsPath)
@@ -106,9 +106,6 @@ module Rakish
                     listener = CompilerParser.new(cfg);
                     parser = REXML::Parsers::StreamParser.new(File.new(xmlPath), listener)
                     parser.parse
-
-                    log.debug("####### intellij output path is #{@@intellij_.outputPath}");
-                    log.debug("####### intellij javac Flags are \"#{@@intellij_.javacFlags}\"");
 
                 end
             end

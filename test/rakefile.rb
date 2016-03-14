@@ -21,7 +21,29 @@ Rakish.Configuration :include=>[ Rakish::IntellijConfig, Rakish::CppProjectConfi
 	end
 
     cfg.cppDefine('WINVER=0x0700');
-	
+
+    # tomcat deployment options
+
+	tomcatConfig = Rakish::BuildConfig.new
+	tomcatConfig.enableNewFields do |cfg|
+    	cfg.managerURL = "http://localhost:8080/manager/text";
+    	cfg.managerUsername = "admin";
+    	cfg.managerPassword = "1111";
+	end
+
+	# deployment configurations for the three categories of apps
+	cfg.omsConfig = Rakish::BuildConfig.new(tomcatConfig) do |cfg|
+		cfg.managerURL = "http://localhost:8080/manager/text"
+	end
+
+	cfg.routerConfig = Rakish::BuildConfig.new(tomcatConfig) do |cfg|
+	   	cfg.managerURL = "http://localhost:8081/manager/text"
+	end
+
+    (cfg.servicesConfig = Rakish::BuildConfig.new(tomcatConfig)).enableNewFields do |cfg|;
+    	cfg.managerURL = "http://localhost:8082/manager/text";
+	end
+
 end
 
 
@@ -78,7 +100,7 @@ module Rakish
 
         def initialize(*args)
             self.class.initializeIncluded(self,args[0]);
-            log.debug "InintClass initialized #{@foo}";
+            log.debug "InitClass initialized #{@foo}";
         end
     end
 
@@ -129,6 +151,53 @@ end
 		log.info("CONST == \"#{CONSTA}\"")
 	end
 end
+
+
+class MyClass < Rakish::PropertyBag
+
+    def initialize(*args)
+        super(*args);
+        if(args.length < 1)
+            # self.testField = "test class string"
+        end
+    end
+
+    attr_property :testField
+
+end
+
+class UncleClass < Rakish::PropertyBag
+
+    def initialize(*args)
+        super();
+        if(args.length < 1)
+            self.uncleField = "uncle string"
+        end
+    end
+
+    attr_property :uncleField
+
+end
+
+
+testClass = MyClass.new();
+uncleClass = UncleClass.new();
+
+log.debug("######### field is \"#{testClass.testField}\"")
+
+class MyClass2 < MyClass
+
+    def initialize(*args)
+        super(*args);
+    end
+end
+
+testClass2 = MyClass2.new(testClass,uncleClass);
+
+log.debug("parents \"#{testClass2.parents.length}\"")
+log.debug("field is \"#{testClass2.testField}\"")
+log.debug("uncle field is \"#{testClass2.uncleField}\"")
+
 
 def FooObj(&block)
 	MyObj.new(&block).putit()
@@ -217,6 +286,7 @@ module Rakish
 
 task :propertyBagTest => [] do |t|
 
+
     cf1 = BuildConfig.new do |cfg|
         cfg.enableNewFields do
             cfg.field1 = "field1"
@@ -267,6 +337,9 @@ Rakish.Project(
  	:dependsUpon=> [
  	]
 ) do
+
+    log.debug("####### services config is #{servicesConfig}");
+
 
     task :test do |t|
         log.debug("doing #{t.name}");

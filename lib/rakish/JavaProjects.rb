@@ -11,13 +11,14 @@ module JavaProjectConfig
 
     class JavaConfig < PropertyBag
 
+        attr_property :javacFlags
+
         def initialize(parent,projConfig) # :nodoc:
             super(parent,projConfig);
             # self.class.initializeIncluded(self,parent);
             yield self if block_given?
         end
 
-        attr_property :debug
 
         # Get java class path separator-delimiter
         def classpathSeparator
@@ -93,6 +94,11 @@ module JavaProjectConfig
             jars.compact! if(compact)
             jars
         end
+
+        def addJavacFlags(flags)
+            self.javacFlags=flags
+        end
+
     end
 
     # Get instance of JavaConfig for this configuration
@@ -208,6 +214,7 @@ protected
 
         def initialize(proj) # :nodoc:
             super(proj.getAnyAbove(:java),proj);
+
             @myProject = proj; # cache this
             @docOutputDir="#{buildDir}/javadoc/#{moduleName}/api";
         end
@@ -285,12 +292,13 @@ protected
 
             config = t.config;
 
+
             FileUtils::mkdir_p(outputClasspath);
 
             outClasspath = getRelativePath(outputClasspath);
 
             cmdline = "\"#{config.java_home}/bin/javac\"";
-            cmdline << " #{config.debug ? '-g' : '-g:none'} -d \"#{outClasspath}\""
+            cmdline << " #{config.javacFlags ? config.javacFlags : '-g'} -d \"#{outClasspath}\""
 
             separator = config.classpathSeparator;
             paths = config.resolveClassPaths
@@ -372,7 +380,6 @@ protected
     #        if(any_task_earlier?(tasks,File.mtime(File.expand_path(__FILE__))))
     #            puts("project is altered");
     #        end
-
 
             tsk.enhance(deps);
             tsk.enhance(tasks);

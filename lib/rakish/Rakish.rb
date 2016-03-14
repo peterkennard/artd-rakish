@@ -254,7 +254,10 @@ module Rake
 		# formatted the way we like it for a particualar IDE
 
 		def display_error_message(ex)
-		  
+
+		  $stdout.flush;
+		  $stderr.flush;
+
 		  $stderr.puts "#{name} aborted!: #{ex.message}"
 		  backtrace = ex.backtrace;
 
@@ -1359,19 +1362,19 @@ module Rakish
 
 		# get the first parent of this property bag if any
 		def parent
-			@parent_
+			(parents.length > 0 ? @parents_[0] : nil);
 		end
 
 		# get the list of ancestors (flattened) in search order.
 		def parents
-			@parents_
+			@parents_||=[]
 		end
 		# This will supply inheritable parents to children. 
 		# 
 		# By default only parents[0] and it's hetitableParents are inheritable by children
 		# added parents resolve in the search only.
 		def heritableParents
-			return @parents_ unless @_hpc_;
+			return parents unless @_hpc_;
 			@parents_.take(@_hpc_)
 		end
 
@@ -1420,13 +1423,10 @@ module Rakish
 		# ancestor list to get first inherited value or nil if not found.
 		# opts - none define at present
 		def getAnyAbove(sym)
-			if(@parents_)
-
-				@parents_.each do |p|
-					val = p.getMy(sym);
-					return(val) if val;
-				end
-			end
+            parents.each do |p|
+                val = p.getMy(sym);
+                return(val) if val;
+            end
 			nil
 		end
 
@@ -1455,13 +1455,11 @@ module Rakish
 				unless @_h.has_key?(sym)
 					if(self.class.method_defined? sym)
 						v=__send__(sym)
-					else
-						if(@parent_)
-							@parents_.each do |p|
-								val = p.getMy(sym);
-								return(val) if val;
-							end
-						end
+					elsif(@parents_.length > 1)
+                        @parents_.each do |p|
+                            val = p.getMy(sym);
+                            return(val) if val;
+                        end
 					end
 				end
 			end
@@ -1542,16 +1540,20 @@ module Rakish
 							raise PropertyBagMod::cantOverrideX_(sym)
 						end
 						return(@_h[sym]=args[0]) # assign value to property
-					elsif @parents_ # "recurse" to parents
+					elsif(@parents_.length > 0) # "recurse" to parents
 					    # we don't actually recurse here but check the flattened parent list in order
+					    eqSym = "#{sym}=".to_sym;
+					    anyDefined = self.class.method_defined?(eqSym);
 						@parents_.each do |p|
 			               return(p.send(sym)) if(p.class.method_defined? sym);
 						   v = p._h[sym];
-						   return(v) if v || p._h.has_key?(sym);
+						   return(v) if (v || p._h.has_key?(sym));
+						   anyDefined||=p.class.method_defined?(eqSym);
 						end
-						raiseUndef_ sym;
+						return v if(anyDefined);
+						raiseUndef_(sym)
 					else
-						return v if (self.class.method_defined?("#{sym}="))
+						return v if (self.class.method_defined?("#{sym}="));
 						raiseUndef_ sym;
 					end
 				end
