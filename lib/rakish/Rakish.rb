@@ -1455,7 +1455,7 @@ module Rakish
 				unless @_h.has_key?(sym)
 					if(self.class.method_defined? sym)
 						v=__send__(sym)
-					elsif(@parents_.length > 1)
+					elsif(@parents_.length > 0)
                         @parents_.each do |p|
                             val = p.getMy(sym);
                             return(val) if val;
