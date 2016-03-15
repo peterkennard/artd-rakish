@@ -95,6 +95,8 @@ module JavaProjectConfig
             jars
         end
 
+        # Add javac command flags for compile time.
+        # currently only sets them
         def addJavacFlags(flags)
             self.javacFlags=flags
         end
