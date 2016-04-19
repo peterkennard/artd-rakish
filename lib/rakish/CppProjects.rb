@@ -251,6 +251,9 @@ module CppProjectConfig
 		end
  	end
 
+    # temporary include directory built for compiling
+    # where generated include files or links to the project sources
+    # are created
 	def INCDIR
 		@INCDIR||=getAnyAbove(:INCDIR)||"#{buildDir()}/include";
 	end
@@ -400,13 +403,6 @@ module CppProjectModule
             tsk.config = self;
             export(:vcprojclean);
         end
-	end
-
-    # temporary include directory built for compiling
-    # where generated include files or links to the project sources
-    # are created
-	def buildIncludeDir
-        INCDIR()
 	end
 
 	def resolveConfiguredTasks()
