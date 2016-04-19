@@ -1,0 +1,18 @@
+
+==Items To Do
+
+===Of course make a decent C++/C/asm module for msc and gcc g++ etc
+
+===Make a usable MultiProcessTask for spawning multiple asynchronous tasks
+The one in Rake actually slows things down when too
+many are spawned due to the thread swithing overhead so it really isn't practical.  What it should do is maintain a semaphone
+managed queue and only spawn as many tasks as there are processor cores on the machine to handle the big processes they
+spawn ( compilers and the like ) the little ruby tasks are better off being run in the primary thread unless they are
+doing something with a lot of waiting involved like uploading a file. In any case limiting the number of threads
+would help this too.
+
+===Make tomcat servlet module releasable
+===A real manual
+===Make intellij integration module releasable
+
+

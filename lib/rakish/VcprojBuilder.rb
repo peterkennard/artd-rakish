@@ -1,5 +1,8 @@
 module Rakish
 
+# Module to generate VCProject files for ocmpiel C++ specified in this build
+# Not really part of public distributioin - too littered with local stuff
+# specific to my main builds  This needs to be converted to work in a more configurable way
 class VcprojBuilder
 	include Rakish::Util
 

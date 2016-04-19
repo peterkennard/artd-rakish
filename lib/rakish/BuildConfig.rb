@@ -3,7 +3,7 @@ require "#{myDir}/Rakish.rb"
 
 module Rakish
 
-class InvalidConfigError < Exception
+class InvalidConfigError < Exception # :nodoc:
 	def initialize(cfg, msg)
 		super("Invalid Configuration \"#{cfg}\": #{msg}.");
 	end
@@ -19,7 +19,7 @@ module BuildConfigModule
  	#	log.debug("initializing BuildConfig #{pnt}")
  		enableNewFields do |cfg|
 			if(pnt)
- 				cfg.nativeConfigName = getInherited(:nativeConfigName);
+ 				cfg.nativeConfigName = getAnyAbove(:nativeConfigName);
  			end
  		end
  	end
@@ -77,9 +77,6 @@ module BuildConfigModule
     # folder to output native binary dll and so files to
 	attr_property 	:binDir
 
-    # path to third party unix like utilities on windows machines
- 	attr_property	:thirdPartyPath
-
  	# parsable native configuration name as configuration and
  	# used as a reference to which librarys to link with for a particular
  	# compiler and processor configuration
@@ -89,28 +86,28 @@ module BuildConfigModule
     # defaults to the nativeConfigName
 	attr_property   :nativeOutputSuffix
 
-    # root folder for buuild output files
+    # root folder for build output files
 	def buildDir
-		@buildDir||=getInherited(:buildDir);
+		@buildDir||=getAnyAbove(:buildDir);
 	end
 
     # folder to output native executable and dll files to.
     # defaults to (buildDir)/bin
 	def binDir
-        @binDir||=getInherited(:binDir)||"#{buildDir()}/bin";
+        @binDir||=getAnyAbove(:binDir)||"#{buildDir()}/bin";
 	end
 
     # folder to output native library files and link references to.
     # defaults to (buildDir)/lib
 	def nativeLibDir
-		@nativeLibDir||=getInherited(:nativeLibDir)||"#{buildDir()}/lib";
+		@nativeLibDir||=getAnyAbove(:nativeLibDir)||"#{buildDir()}/lib";
 	end
 
     # folder to output native intermedite and object files to.
     # config defaults to (buildDir)/obj
     # in a project module defaults to the value set in th (configValue)/(moduleName)
 	def nativeObjDir
-		@nativeObjDir||=getInherited(:nativeObjDir)||"#{buildDir()}/obj";
+		@nativeObjDir||=getAnyAbove(:nativeObjDir)||"#{buildDir()}/obj";
 	end
 
     # suffix to add to native output files
@@ -129,8 +126,9 @@ module BuildConfigModule
 	attr_accessor 	:verbose
 
 	def verbose?
-		@verbose ||= getInherited(:verbose);
+		@verbose ||= getAnyAbove(:verbose);
 	end
+
 end
 
 
@@ -150,8 +148,9 @@ class BuildConfig
 
 end
 
+protected
 
-# global singleton default RakishProject configuration
+# global singleton default Rakish.Project configuration
 class GlobalConfig < BuildConfig
 
 	@@gcfg = nil
@@ -195,9 +194,6 @@ class GlobalConfig < BuildConfig
 
 			enableNewFields(&@initGlobalPaths) if @initGlobalPaths;
 
-			cfg.thirdPartyPath ||= File.join(ENV['ARTD_TOOLS'],'../.');
-			cfg.thirdPartyPath = File.expand_path(cfg.thirdPartyPath);
-
 			@buildDir ||= ENV['RakishBuildRoot']||"#{Rake.original_dir}/build";
 			@buildDir = File.expand_path(@buildDir);
 
@@ -235,16 +231,30 @@ class GlobalConfig < BuildConfig
 	end
 end
 
+public
+
+# Declare (create) a new named configuration
+#
+#  named arguments:
+#     :name         => Name for this configuration. This must be unique for all loaded projects,
+#                      defaults to 'root'.
+#     :include      => [ Array of configuration modules to include ]
+#     :inheritsFrom => Parent configuration's name.
+#                      Defaults to 'root' if name != 'root'
+
+def self.Configuration(opts={},&block)
+    name = opts[:name]||='root'
+    me = nil;
+    if(name == 'root')
+        me = GlobalConfig.new(opts,&block);
+    else
+        return(nil); # for now.
+    end
+    me.name=name;
+    build.registerConfiguration(me);
+    me
+end
+
 
 end # module Rakish
 
-# Convenience method for Rakish::GlobalConfig.initInstance(&block)
-def InitBuildConfig(opts={},&block)
-	Rakish::GlobalConfig.new(opts,&block)
-end
-
-
-# Convenience method for Rakish::ProjectConfig.new(&block)
-def ProjectConfig(&block)
-#	Rakish::ProjectConfig.new(&block)
-end
