@@ -402,6 +402,13 @@ module CppProjectModule
         end
 	end
 
+    # temporary include directory built for compiling
+    # where generated include files or links to the project sources
+    # are created
+	def buildIncludeDir
+        INCDIR()
+	end
+
 	def resolveConfiguredTasks()
 
 		cfg = @cppBuildConfig
