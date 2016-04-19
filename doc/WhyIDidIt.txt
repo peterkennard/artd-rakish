@@ -1,0 +1,96 @@
+
+==Why I did it
+
+I have over many years had to use various build scripting systems IDEs and wiite scripts for them.
+
+Many projects after they got at all big required lots of things to be done,
+ - signing files,
+ - building custom tools
+ - genrating code with those custom tools
+ - auto generating version Ids
+ - generating documentation
+ - inserting special comment headers
+ - creating distribution packages
+ - invoking automated testing.
+ - build on checkin on various build servers
+
+And many other little things.
+
+Makefiles though I managed to do what was needed are arcane,
+don't handle strings with spaces in them, have no sense of arrays or collections,
+and really don't handle large trees of dependent modules well having to reload
+everything in every subprocess and re-scan all the dependencies each time.
+and one has to deal with backslash hell and the differences beween windows and
+unix shells. and there is no sense at all of scoped variables or namespaces. I could go on :)
+
+That said the big advantage was it is open, available on all platforms, and either part of the os or
+brain dead easy to install.  The goal being tell a new team member "download this", "install make"
+go to the root folder and enter "make all" ir whatever and it builds the whole massive project.
+
+That all said makefiles have been superior at divvying up processes such as C++
+compiles efficiently on multi-core machines for the absolute fastest rebuild build times.
+However the big projects were surely an undocumented hell for anyone trying to figure
+out how all the makefiles were put together.
+
+With Java I got really annoyed with Ant as XML is just not a programming system.
+
+And yes I know ther are all sorts of Mavens, IDEs and then like.  Many either platform proprietary
+or so oriented to a particular language like Ant with Java that builing and manging mixeld lanquage
+projects with them was a bear.  And I found that one always ended up havint to write programs in
+other languanges or scripting systems to make it all hang together and one eneded up with a hard
+to document and mantain blob of stuff again.
+
+So maybe 8 years ago I decided I woudl bite the bullet and make what I wanted in a "makefile" system.
+not dependent an a particular IDE or proprietary product or using a limited specialty languange etc.
+
+I discovered Ruby and it's sistem module Rake which are very nice.  Ruby is coherant, well documented,
+standard, cross platform, easy to install, has great text processing capabilities, regexes, collections, namespaces,
+scoped variables, hashes "closures - ie: blocks" and many other great features.  Easier to manage that ECMA
+script etc.  Anyway you Ruby people will know what I mean.
+
+Rake though it covers the basics of "makefiles" is limited in scope but does handle task management and dependency,
+checking well and has namespaces and useful utilities for paths and files. And it is built on Ruby.
+
+So Rakish as tha name inplies is my attempt at making Rake a bit sexier.
+
+Using it all I have "Project"s which are the items used to define medium build atoms larger than tasks.
+A library from source, a jar file, a set of classes, etc and contauined in a single folder.
+And then projects are dependent on other projects.  Each project has it's own internal
+namespece so internal tasks unless "exported" don't conflict with others outside.
+Also I can load the entire tree of projects in one go fast and can check dependencies globally on the whole
+mess for faster incremental build times and a tree of makefiles.  Project loading s lazy so if one builds
+a module with few dependencies only what it is dependent on will be loaded.
+
+The "Configurations" are managed through a "PropertyBag" object I built from ruby.  Property bags can have fields
+added dynamically, and can inherit values from "parents" and what I might call "uncles" ( parents are inherited by
+their children. "Uncles" are only available at the level they are attached to and are not passed down
+to children at the next level.  This enables a configuration override structure so for example each project
+though it might inherit the global intermediate output path appends it's name etc so it has it's own sandbox.
+
+I also made a superclass constructor system so multiple modules included in Projects are intialized
+on an instance of a project in much the same way as Java or C++ superclasses, yet they are still mixins
+offering nice multiple inheritance.
+
+"Projects" are basiclally property bags and hosts for these modules, depedency initialization code and
+containers and builders of tasks. Projects include modules that customize the projects for different types of
+capabilities.  One can add custom capabilites to any project by writing a module for it to the pattern of the others.
+
+The ArchiveBuilder (Zip and Jar modules ) and the Java one in the gem is mature and tested. I re-did it as a
+pattern of how I now think best to structure these modules.  It consists of a configuration Module and a
+Project module.  I am now using it for my current Java projects integrated with intellij.
+
+There is a C++ module I converted from old makefiles but it is
+not really ready for prime time as it has too many messy dependencies on the local enviropnment just like the makefiles
+it is included more just so people know it is there.  And I have a tomcat servlet module and a few others.
+I would have improved it but Java web programs has been the majority of work for the past several years and the
+C++ stuff still works to build my libraries and native code for Java bindings.
+
+I have glue modules to run these builds integrated with intellij, have done so with eclipse, and Microsoft
+Developers Studio.
+
+Anyway maybe this can grow into a community resource so I can use it and clients won't be afraid of it :)
+And maybe convice people I am worth hiring :)
+
+All the best
+Peter K.
+

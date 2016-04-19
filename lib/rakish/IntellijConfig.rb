@@ -1,7 +1,4 @@
 myDir = File.dirname(__FILE__);
-unless defined? BUILD_OPTIONS_LOADED
-    MAKEDIR=File.expand_path("#{myDir}");
-end
 
 require "#{myDir}/BuildConfig.rb";
 require 'rexml/document';
@@ -9,9 +6,11 @@ require 'rexml/streamlistener'
 
 module Rakish
 
+    # Module to include in a 'root' Rakish.Configuration[link:./Rakish.html#method-c-Configuration]
+    # to provide settings from an intellij idea invoked rakish build.
     module IntellijConfig
 
-        class XMLListener
+        class XMLListener # :nodoc:
             include Rakish::Util
             include REXML::StreamListener
 
@@ -38,15 +37,49 @@ module Rakish
             end
         end
 
+        class CompilerParser < XMLListener
+
+            @@flagsPath = [ 'project', 'component', 'option' ];
+            @@compPath = [ 'project', 'component' ];
+
+            def tag_start(name, attributes)
+
+
+                @tagPath.push(name);
+                # log.debug(@tagPath.join("::"));
+                if(@tagPath == @@compPath)
+                    @compName = attributes['name'];
+                elsif(@tagPath === @@flagsPath)
+                   optName = attributes['name'];
+                   if(@compName == 'JavacSettings' && optName == 'ADDITIONAL_OPTIONS_STRING')
+                        config.javacFlags = attributes['value'];
+                   end
+                end
+            end
+
+        end
+
+
+
+
+        # If non nil is a PropertyBag containing items parsed from the invoking intllij build.
+        # This Works in concert with the call-rake.xml and script if used as an intellij ant script.
+        #
+        #  fields assigned:
+        #     projectRoot - The path to the .idea folder of the invoking intellij project.
+        #     outputPath  - The "Project compiler Output" path specified in the intellij settings.
+        #     javacFlags  - "Extra Compiler Flags" from Java Compiler settings.
+        #
         def intellij
             @@intellij_;
         end
 
-        class Globals < PropertyBag
+        class Globals < PropertyBag # :nodoc:
         	attr_property   :outputPath
+        	attr_property   :javacFlags
         end
 
-        def self.initGlobals
+        def self.initGlobals # :nodoc:
             @@intellij_ = nil;
 
             if(ENV['IDEA_PROJECT'])
@@ -59,14 +92,22 @@ module Rakish
                 xmlPath = File.expand_path("#{ideaProject}/misc.xml");
 
                 @@intellij_.enableNewFields do |cfg|
+
+                    javacFlags="";
+
                     cfg.projectRoot = projectRoot;
 
                     listener = XMLListener.new(cfg);
-
                     parser = REXML::Parsers::StreamParser.new(File.new(xmlPath), listener)
                     parser.parse
-                end
 
+                    xmlPath = File.expand_path("#{ideaProject}/compiler.xml");
+
+                    listener = CompilerParser.new(cfg);
+                    parser = REXML::Parsers::StreamParser.new(File.new(xmlPath), listener)
+                    parser.parse
+
+                end
             end
 
         end

@@ -3,6 +3,7 @@ require "#{myPath}/BuildConfig.rb"
 
 module Rakish
 
+# Nacent project inclusion module for invoking Rdoc
 module RubydocModule
     include BuildConfigModule
 
@@ -16,16 +17,13 @@ protected
     class RubydocBuilder < BuildConfig
         include RubydocModule
 
-        CreateRubydocAction = ->(t) do
-            t.config.doBuildRubydocs(t);
-        end
 
-        def doBuildRubydocs(t)
+        def doBuildRubydocs(t) # :nodoc:
 
 
-            cd "#{t.config.projectDir}/../bin/rakish" do
+            cd "#{t.config.projectDir}/../lib/rakish" do
                 command = [ 'rdoc',
-                            "--output=#{t.config.projectDir}/doc",
+                            "--output=#{t.config.projectDir}/rdoc",
                           ];
                 execLogged(command);
             end
@@ -33,13 +31,22 @@ protected
 
         end
 
+        # create task to invoke Rdoc to the specifications in this builder.
         def rubydocTask
-            tsk = Task.define_unique_task &CreateRubydocAction;
+            tsk = Rake::Task.define_unique_task &CreateRubydocAction;
             tsk.config = self;
             tsk
         end
+
+        # action for rdoc task.
+        # :nodoc:
+        CreateRubydocAction = ->(t) do
+            t.config.doBuildRubydocs(t);
+        end
+
     end
 
+    # Creates a RubydocBuilder for the including project's configuration
     def createRubydocBuilder
         RubydocBuilder.new(self);
     end

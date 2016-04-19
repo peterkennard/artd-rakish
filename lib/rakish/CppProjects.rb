@@ -3,7 +3,13 @@ require "#{myPath}/RakishProject.rb"
 
 module Rakish
 
+    # :nodoc: legacy only looked at in the
+	MAKEDIR = File.dirname(File.expand_path(__FILE__)); # :nodoc:
 
+	# C++ build module
+    # Not really part of public distributioin - too littered with local stuff
+    # specific to my main builds  This needs to be converted to work in a more configurable way
+    # for multiple platforms
 module CTools
 	include Rakish::Logger
 	include Rakish::Util
@@ -245,16 +251,21 @@ module CppProjectConfig
 		end
  	end
 
-	def binDir
-		@binDir||=getInherited(:binDir)||"#{buildDir()}/bin";
+    # temporary include directory built for compiling
+    # where generated include files or links to the project sources
+    # are created
+	def INCDIR
+		@INCDIR||=getAnyAbove(:INCDIR)||"#{buildDir()}/include";
 	end
-
+	def binDir
+		@binDir||=getAnyAbove(:binDir)||"#{buildDir()}/bin";
+	end
 	def nativeLibDir
-		@nativeLibDir||=getInherited(:nativeLibDir)||"#{buildDir()}/lib";
+		@nativeLibDir||=getAnyAbove(:nativeLibDir)||"#{buildDir()}/lib";
 	end
 
 	def vcprojDir
-		@vcprojDir||=getInherited(:vcprojDir)||"#{buildDir()}/vcproj";
+		@vcprojDir||=getAnyAbove(:vcprojDir)||"#{buildDir()}/vcproj";
 	end
 
     # add include paths in order to the current list of include paths.
@@ -379,7 +390,7 @@ module CppProjectModule
 	# starts executing tasks
 
 	def doCppPreBuild()
-        addIncludePaths( [ nativeObjectPath(),buildIncludeDir() ] );
+        addIncludePaths( [ nativeObjectPath(),INCDIR() ] );
         @cppBuildConfig = resolveConfiguration(nativeConfigName());
         resolveConfiguredTasks();
         if(@projectId)
@@ -439,7 +450,7 @@ module CppProjectModule
 	# Also adds removal of output files or links to task ':cleanincludes'
 	#
 	# <b>named args:</b>
-	#   :destdir => destination directory to place output files, defaults to buildIncludeDir/myPackage
+	#   :destdir => destination directory to place output files, defaults to INCDIR/myPackage
 	#
 	def addPublicIncludes(*args)
 
@@ -450,7 +461,7 @@ module CppProjectModule
 		unless(destdir = opts[:destdir])
 			destdir = myPackage;
 		end
-		destdir = File.join(buildIncludeDir(),destdir || '');
+		destdir = File.join(INCDIR(),destdir || '');
 		ensureDirectoryTask(destdir);
 		flist = createCopyTasks(destdir,files,:config => self,&LinkIncludeAction_)
 		task :includes => flist
@@ -594,7 +605,7 @@ end
 #
 #   :name        => name of this project, defaults to parent directory name
 #   :package     => package name for this project defaults to nothing
-#   :config      => explicit parent configuration, defaults to the GlobalConfig
+#   :config      => explicit parent configuration, defaults to 'root'
 #   :dependsUpon => array of project directories or specific rakefile paths this project
 #                   depends upon
 #   :id          => uuid to assign to project in "uuid string format"
@@ -603,7 +614,7 @@ end
 # &block is always yielded to in the directory of the projects file, and the
 # Rake namespace of the new project, and called in this instance's context
 
-CppProject = GetProjectClass( :includes=>[CppProjectModule] )
+CppProject = getProjectClass( :includes=>[CppProjectModule] )
 
 end # Rakish
 
@@ -612,7 +623,7 @@ end # Rakish
 
 if false
 
-	def acquireBuildId(dir, map=nil)
+	def acquireBuildId(dir, map=nil) # :nodoc:
 		outOfSync = false;
 		rev = 'test'
 		count = 0
@@ -654,7 +665,7 @@ public
 	# have been made and the last ID is 'test' will not call svnversion
 	# again (which is very slow) but will return 'test'
 
-	def getBuildId
+	def getBuildId # :nodoc:
 		unless defined? @@buildId_
 			idfile = "#{@buildDir}/obj/.rakishBuildId.txt"
 
@@ -684,6 +695,5 @@ public
 		end
 		@@buildId_
 	end
-
 end # false
 

@@ -1,6 +1,9 @@
 
 module Rakish
 
+	# C++ build tools
+    # Not really part of public distributioin - too littered with local stuff
+    # specific to my main builds  This needs to be converted to work in a more configurable way
 	module PlatformTools
 	
 		VALID_PLATFORMS = { 
