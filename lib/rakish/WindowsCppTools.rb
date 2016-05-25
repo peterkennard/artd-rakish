@@ -283,6 +283,12 @@ LoadableModule.onLoaded(Module.new do
 						linkOpts += " -libpath:\"#{tpp}/tools/msvc10/lib/amd64\""
 						linkOpts += " -libpath:\"#{tpp}/tools/msvc10/atlmfc/lib/amd64\""
 					end
+                when 'VC14'
+                    ipaths << "#{tpp}/tools/winsdk10/Include/um"
+                    ipaths << "#{tpp}/tools/winsdk10/Include/shared"
+                    ipaths << "#{tpp}/tools/winsdk10/Include/winrt"
+                    ipaths << "#{tpp}/tools/winsdk10/Include/ucrt"
+
 			end
 
 			@RC_EXE =  "#{tpp}/tools/winsdk/bin/rc.exe"
