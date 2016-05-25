@@ -27,6 +27,7 @@ LoadableModule.onLoaded(Module.new do
 		'VC8'=>true, 
 #		'VC9'=>true, 
 		'VC10'=>true,
+		'VC14'=>true,
 #		'ICL'=>true
 	};
 
@@ -140,6 +141,7 @@ LoadableModule.onLoaded(Module.new do
 			case(@compiler)
 				when 'VC9'
 				when 'VC10'
+				when 'VC14'
 				else
 					cppWarnings += ' -Wp64'
 			end
@@ -219,6 +221,7 @@ LoadableModule.onLoaded(Module.new do
 					@CVTRES_EXE = "#{tpp}/tools/msvc6/bin/cvtres.exe"
 					@MSVC_EXE = "#{tpp}/tools/msvc6/bin/cl.exe"
 					@LINK_EXE = "#{tpp}/tools/msvc6/bin/link.exe"
+					ipaths << "#{tpp}/tools/winsdk/Include"
 
 					cppOpts += " -GX";						
 					 " -I#{tpp}/tools/msvc6/include";
@@ -229,6 +232,7 @@ LoadableModule.onLoaded(Module.new do
 					@CVTRES_EXE = "#{tpp}/tools/msvc7/bin/cvtres.exe"
 					@MSVC_EXE ="#{tpp}/tools/msvc7/bin/cl.exe"
 					@LINK_EXE = "#{tpp}/tools/msvc7/bin/link.exe"
+					ipaths << "#{tpp}/tools/winsdk/Include"
 
 					cppOpts += " -GX"
 					ipaths << "#{tpp}/tools/msvc7/include\""
@@ -239,6 +243,7 @@ LoadableModule.onLoaded(Module.new do
 					@CVTRES_EXE = "#{tpp}/tools/msvc8/bin/cvtres.exe"
 					ipaths << "#{tpp}/tools/msvc8/include"
 					ipaths << "#{tpp}/tools/msvc8/atlmfc/include"
+					ipaths << "#{tpp}/tools/winsdk/Include"
 
 					if(@platform === "Win32")
 						@MSVC_EXE ="#{tpp}/tools/msvc8/bin/cl.exe"
@@ -255,8 +260,9 @@ LoadableModule.onLoaded(Module.new do
 					end
 				when 'VC9'
 					@CVTRES_EXE = "#{tpp}/tools/msvc9/bin/cvtres.exe"
-					ipaths << "#{tpp}/tools/msvc9/include"
+                    ipaths << "#{tpp}/tools/msvc9/include"
 					ipaths << "#{tpp}/tools/msvc9/atlmfc/include"
+					ipaths << "#{tpp}/tools/winsdk/Include"
 					if(@platform === "Win32")
 						@MSVC_EXE = "#{tpp}/tools/msvc9/bin/cl.exe"
 						@LINK_EXE = "#{tpp}/tools/msvc9/bin/link.exe"
@@ -272,6 +278,7 @@ LoadableModule.onLoaded(Module.new do
 					@CVTRES_EXE = "#{tpp}/tools/msvc10/bin/cvtres.exe"
 					ipaths << "#{tpp}/tools/msvc10/include"
 					ipaths << "#{tpp}/tools/msvc10/atlmfc/include"
+			        ipaths << "#{tpp}/tools/winsdk/Include"
 					if(@platform === "Win32")
 						@MSVC_EXE = "#{tpp}/tools/msvc10/bin/cl.exe"
 						@LINK_EXE = "#{tpp}/tools/msvc10/bin/link.exe"
@@ -283,20 +290,27 @@ LoadableModule.onLoaded(Module.new do
 						linkOpts += " -libpath:\"#{tpp}/tools/msvc10/lib/amd64\""
 						linkOpts += " -libpath:\"#{tpp}/tools/msvc10/atlmfc/lib/amd64\""
 					end
+				when 'VC14'
+                    ipaths << "#{tpp}/tools/winsdk10/Include/um"
+                    ipaths << "#{tpp}/tools/winsdk10/Include/shared"
+                    ipaths << "#{tpp}/tools/winsdk10/Include/winrt"
+                    ipaths << "#{tpp}/tools/winsdk10/Include/ucrt"
 			end
 
-			@RC_EXE =  "#{tpp}/tools/winsdk/bin/rc.exe"
+			@RC_EXE ||=  "#{tpp}/tools/winsdk/bin/rc.exe"
 
 			# items from appropriate windows SDKs
-			ipaths << "#{tpp}/tools/winsdk/Include"
+
+
 			ipaths << "#{tpp}/include/Win32"
 			ipaths << "#{tpp}/include"
 					
 			if(@platform === "Win32")
-				sdkLibPath = "#{tpp}/tools/winsdk/lib"
+				sdkLibPath ||= "#{tpp}/tools/winsdk/lib"
 			else
-				sdkLibPath = "#{tpp}/tools/winsdk/lib/x64"
+				sdkLibPath ||= "#{tpp}/tools/winsdk/lib/x64"
 			end
+
 			linkOpts += " -libpath:\"#{sdkLibPath}\""
 			
 			sdkLibs << 'oldnames.lib';
