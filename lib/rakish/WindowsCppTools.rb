@@ -27,6 +27,7 @@ LoadableModule.onLoaded(Module.new do
 		'VC8'=>true, 
 #		'VC9'=>true, 
 		'VC10'=>true,
+		'VC14'=>true,
 #		'ICL'=>true
 	};
 
@@ -140,6 +141,7 @@ LoadableModule.onLoaded(Module.new do
 			case(@compiler)
 				when 'VC9'
 				when 'VC10'
+				when 'VC14'
 				else
 					cppWarnings += ' -Wp64'
 			end
@@ -272,6 +274,7 @@ LoadableModule.onLoaded(Module.new do
 					@CVTRES_EXE = "#{tpp}/tools/msvc10/bin/cvtres.exe"
 					ipaths << "#{tpp}/tools/msvc10/include"
 					ipaths << "#{tpp}/tools/msvc10/atlmfc/include"
+
 					if(@platform === "Win32")
 						@MSVC_EXE = "#{tpp}/tools/msvc10/bin/cl.exe"
 						@LINK_EXE = "#{tpp}/tools/msvc10/bin/link.exe"
@@ -284,10 +287,26 @@ LoadableModule.onLoaded(Module.new do
 						linkOpts += " -libpath:\"#{tpp}/tools/msvc10/atlmfc/lib/amd64\""
 					end
                 when 'VC14'
-                    ipaths << "#{tpp}/tools/winsdk10/Include/um"
-                    ipaths << "#{tpp}/tools/winsdk10/Include/shared"
-                    ipaths << "#{tpp}/tools/winsdk10/Include/winrt"
-                    ipaths << "#{tpp}/tools/winsdk10/Include/ucrt"
+				
+					log.debug("############## selected VC14 compiler");
+					
+                    ipaths << "#{tpp}/tools/msvc14/Include"
+                    ipaths << "#{tpp}/tools/winsdk10/Include/10.0.10240.0/um"
+                    ipaths << "#{tpp}/tools/winsdk10/Include/10.0.10240.0/shared"
+                    ipaths << "#{tpp}/tools/winsdk10/Include/10.0.10240.0/ucrt"
+                    ipaths << "#{tpp}/tools/winsdk10/Include/10.0.10240.0/winrt"
+					
+					if(@platform === "Win32")
+						@MSVC_EXE = "#{tpp}/tools/msvc14/bin/cl.exe"
+						@LINK_EXE = "#{tpp}/tools/msvc14/bin/link.exe"
+						linkOpts += " -libpath:\"#{tpp}/tools/msvc14/lib\""
+						linkOpts += " -libpath:\"#{tpp}/tools/msvc14/atlmfc/lib\""
+					else
+						@MSVC_EXE = "#{tpp}/tools/msvc14/bin/x86_amd64/cl.exe"
+						@LINK_EXE = "#{tpp}/tools/msvc14/bin/x86_amd64/link.exe"
+						linkOpts += " -libpath:\"#{tpp}/tools/msvc14/lib/amd64\""
+						linkOpts += " -libpath:\"#{tpp}/tools/msvc14/atlmfc/lib/amd64\""
+					end
 
 			end
 
