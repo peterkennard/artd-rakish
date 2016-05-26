@@ -287,10 +287,7 @@ LoadableModule.onLoaded(Module.new do
 						linkOpts += " -libpath:\"#{tpp}/tools/msvc10/atlmfc/lib/amd64\""
 					end
                 when 'VC14'
-				
-					log.debug("############## selected VC14 compiler");
-					
-                    ipaths << "#{tpp}/tools/msvc14/Include"
+				    ipaths << "#{tpp}/tools/msvc14/Include"
                     ipaths << "#{tpp}/tools/winsdk10/Include/10.0.10240.0/um"
                     ipaths << "#{tpp}/tools/winsdk10/Include/10.0.10240.0/shared"
                     ipaths << "#{tpp}/tools/winsdk10/Include/10.0.10240.0/ucrt"
@@ -301,12 +298,17 @@ LoadableModule.onLoaded(Module.new do
 						@LINK_EXE = "#{tpp}/tools/msvc14/bin/link.exe"
 						linkOpts += " -libpath:\"#{tpp}/tools/msvc14/lib\""
 						linkOpts += " -libpath:\"#{tpp}/tools/msvc14/atlmfc/lib\""
+						linkOpts += " -libpath:\"#{tpp}/tools/winsdk10/Lib/10.0.10240.0/ucrt/x86\""
 					else
 						@MSVC_EXE = "#{tpp}/tools/msvc14/bin/x86_amd64/cl.exe"
 						@LINK_EXE = "#{tpp}/tools/msvc14/bin/x86_amd64/link.exe"
 						linkOpts += " -libpath:\"#{tpp}/tools/msvc14/lib/amd64\""
 						linkOpts += " -libpath:\"#{tpp}/tools/msvc14/atlmfc/lib/amd64\""
+						linkOpts += " -libpath:\"#{tpp}/tools/winsdk10/Lib/10.0.10240.0/ucrt/x64\""
 					end
+					
+					sdkLibs << "vcruntime.lib"
+				    sdkLibs << "ucrt.lib"
 
 			end
 
