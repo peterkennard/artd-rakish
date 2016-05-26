@@ -288,23 +288,23 @@ LoadableModule.onLoaded(Module.new do
 					end
                 when 'VC14'
 				    ipaths << "#{tpp}/tools/msvc14/Include"
-                    ipaths << "#{tpp}/tools/winsdk10/Include/10.0.10240.0/um"
-                    ipaths << "#{tpp}/tools/winsdk10/Include/10.0.10240.0/shared"
-                    ipaths << "#{tpp}/tools/winsdk10/Include/10.0.10240.0/ucrt"
-                    ipaths << "#{tpp}/tools/winsdk10/Include/10.0.10240.0/winrt"
+                    ipaths << "#{tpp}/tools/winsdk10/Include/10.0.10586.0/um"
+                    ipaths << "#{tpp}/tools/winsdk10/Include/10.0.10586.0/shared"
+                    ipaths << "#{tpp}/tools/winsdk10/Include/10.0.10586.0/ucrt"
+                    ipaths << "#{tpp}/tools/winsdk10/Include/10.0.10586.0/winrt"
 					
 					if(@platform === "Win32")
 						@MSVC_EXE = "#{tpp}/tools/msvc14/bin/cl.exe"
 						@LINK_EXE = "#{tpp}/tools/msvc14/bin/link.exe"
 						linkOpts += " -libpath:\"#{tpp}/tools/msvc14/lib\""
 						linkOpts += " -libpath:\"#{tpp}/tools/msvc14/atlmfc/lib\""
-						linkOpts += " -libpath:\"#{tpp}/tools/winsdk10/Lib/10.0.10240.0/ucrt/x86\""
+						linkOpts += " -libpath:\"#{tpp}/tools/winsdk10/Lib/10.0.10586.0/ucrt/x86\""
 					else
 						@MSVC_EXE = "#{tpp}/tools/msvc14/bin/x86_amd64/cl.exe"
 						@LINK_EXE = "#{tpp}/tools/msvc14/bin/x86_amd64/link.exe"
 						linkOpts += " -libpath:\"#{tpp}/tools/msvc14/lib/amd64\""
 						linkOpts += " -libpath:\"#{tpp}/tools/msvc14/atlmfc/lib/amd64\""
-						linkOpts += " -libpath:\"#{tpp}/tools/winsdk10/Lib/10.0.10240.0/ucrt/x64\""
+						linkOpts += " -libpath:\"#{tpp}/tools/winsdk10/Lib/10.0.10586.0/ucrt/x64\""
 					end
 					
 					sdkLibs << "vcruntime.lib"
@@ -427,9 +427,9 @@ LoadableModule.onLoaded(Module.new do
 			);
 
             cfg.cppDefineIfNot(
-	            'WINVER=0x0501',
+	            'WINVER=0x0601',
                 '_FILE_OFFSET_BITS=64',
-    	        '_WIN32_WINNT=0x0501',
+    	        '_WIN32_WINNT=0x0601',
 				'_WIN32_WINDOWS=0x0410',
 				'_WIN32_IE=0x0600'
 			);
