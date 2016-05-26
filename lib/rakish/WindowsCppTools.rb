@@ -226,11 +226,13 @@ LoadableModule.onLoaded(Module.new do
 					 " -I#{tpp}/tools/msvc6/include";
 					ipaths << "#{tpp}/tools/msvc7/include";
 					ipaths << "#{tpp}/tools/msvc8/include";
+			        ipaths << "#{tpp}/tools/winsdk/Include"
 					cppOpts += " -libpath:#{tpp}/tools/msvc6/lib";
 				when 'VC7'
 					@CVTRES_EXE = "#{tpp}/tools/msvc7/bin/cvtres.exe"
 					@MSVC_EXE ="#{tpp}/tools/msvc7/bin/cl.exe"
 					@LINK_EXE = "#{tpp}/tools/msvc7/bin/link.exe"
+			        ipaths << "#{tpp}/tools/winsdk/Include"
 
 					cppOpts += " -GX"
 					ipaths << "#{tpp}/tools/msvc7/include\""
@@ -242,6 +244,7 @@ LoadableModule.onLoaded(Module.new do
 					@CVTRES_EXE = "#{tpp}/tools/msvc8/bin/cvtres.exe"
 					ipaths << "#{tpp}/tools/msvc8/include"
 					ipaths << "#{tpp}/tools/msvc8/atlmfc/include"
+			        ipaths << "#{tpp}/tools/winsdk/Include"
 
 					if(@platform === "Win32")
 						@MSVC_EXE ="#{tpp}/tools/msvc8/bin/cl.exe"
@@ -261,6 +264,8 @@ LoadableModule.onLoaded(Module.new do
 					@CVTRES_EXE = "#{tpp}/tools/msvc9/bin/cvtres.exe"
 					ipaths << "#{tpp}/tools/msvc9/include"
 					ipaths << "#{tpp}/tools/msvc9/atlmfc/include"
+			        ipaths << "#{tpp}/tools/winsdk/Include"
+
 					if(@platform === "Win32")
 						@MSVC_EXE = "#{tpp}/tools/msvc9/bin/cl.exe"
 						@LINK_EXE = "#{tpp}/tools/msvc9/bin/link.exe"
@@ -278,6 +283,7 @@ LoadableModule.onLoaded(Module.new do
 					@CVTRES_EXE = "#{tpp}/tools/msvc10/bin/cvtres.exe"
 					ipaths << "#{tpp}/tools/msvc10/include"
 					ipaths << "#{tpp}/tools/msvc10/atlmfc/include"
+			        ipaths << "#{tpp}/tools/winsdk/Include"
 
 					if(@platform === "Win32")
 						@MSVC_EXE = "#{tpp}/tools/msvc10/bin/cl.exe"
@@ -323,8 +329,7 @@ LoadableModule.onLoaded(Module.new do
 			@RC_EXE =  "#{tpp}/tools/winsdk/bin/rc.exe"
 
 			# items from appropriate windows SDKs
-#			ipaths << "#{tpp}/tools/winsdk/Include"
-#			ipaths << "#{tpp}/include/Win32"
+			ipaths << "#{tpp}/include/Win32"
 			ipaths << "#{tpp}/include"
 
 			sdkLibs << 'oldnames.lib';
