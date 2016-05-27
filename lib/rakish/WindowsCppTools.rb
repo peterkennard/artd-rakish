@@ -221,98 +221,117 @@ LoadableModule.onLoaded(Module.new do
 					@CVTRES_EXE = "#{tpp}/tools/msvc6/bin/cvtres.exe"
 					@MSVC_EXE = "#{tpp}/tools/msvc6/bin/cl.exe"
 					@LINK_EXE = "#{tpp}/tools/msvc6/bin/link.exe"
-					ipaths << "#{tpp}/tools/winsdk/Include"
 
 					cppOpts += " -GX";						
 					 " -I#{tpp}/tools/msvc6/include";
 					ipaths << "#{tpp}/tools/msvc7/include";
 					ipaths << "#{tpp}/tools/msvc8/include";
+			        ipaths << "#{tpp}/tools/winsdk/Include"
 					cppOpts += " -libpath:#{tpp}/tools/msvc6/lib";
 				when 'VC7'
 					@CVTRES_EXE = "#{tpp}/tools/msvc7/bin/cvtres.exe"
 					@MSVC_EXE ="#{tpp}/tools/msvc7/bin/cl.exe"
 					@LINK_EXE = "#{tpp}/tools/msvc7/bin/link.exe"
-					ipaths << "#{tpp}/tools/winsdk/Include"
+			        ipaths << "#{tpp}/tools/winsdk/Include"
 
 					cppOpts += " -GX"
 					ipaths << "#{tpp}/tools/msvc7/include\""
 					ipaths << "#{tpp}/tools/msvc7/atlmfc/include\""
 					linkOpts += " -libpath:\"#{tpp}/tools/msvc7/lib\""
 					linkOpts += " -libpath:\"#{tpp}/tools/msvc7/atlmfc/lib\""
+                    linkOpts += " -libpath:\"#{tpp}/tools/winsdk/lib\""
 				when 'VC8'
 					@CVTRES_EXE = "#{tpp}/tools/msvc8/bin/cvtres.exe"
 					ipaths << "#{tpp}/tools/msvc8/include"
 					ipaths << "#{tpp}/tools/msvc8/atlmfc/include"
-					ipaths << "#{tpp}/tools/winsdk/Include"
+			        ipaths << "#{tpp}/tools/winsdk/Include"
 
 					if(@platform === "Win32")
 						@MSVC_EXE ="#{tpp}/tools/msvc8/bin/cl.exe"
 						@LINK_EXE = "#{tpp}/tools/msvc8/bin/link.exe"
 						@LIB_EXE = "#{tpp}/tools/msvc8/bin/lib.exe"
-							
 						linkOpts += " -libpath:\"#{tpp}/tools/msvc8/lib\""
 						linkOpts += " -libpath:\"#{tpp}/tools/msvc8/atlmfc/lib\""
+						linkOpts += " -libpath:\"#{tpp}/tools/winsdk/lib\""
 					else
 						@MSVC_EXE ="#{tpp}/tools/msvc8/bin/x86_x64/cl.exe"
 						@LINK_EXE = "#{tpp}/tools/msvc8/bin/x86_x64/link.exe"
 						linkOpts += " -libpath:\"#{tpp}/tools/msvc8/lib/x64\""
 						linkOpts += " -libpath:\"#{tpp}/tools/msvc8/atlmfc/lib/amd64\""
+						linkOpts += " -libpath:\"#{tpp}/tools/winsdk/lib/x64\""
 					end
 				when 'VC9'
 					@CVTRES_EXE = "#{tpp}/tools/msvc9/bin/cvtres.exe"
-                    ipaths << "#{tpp}/tools/msvc9/include"
+					ipaths << "#{tpp}/tools/msvc9/include"
 					ipaths << "#{tpp}/tools/msvc9/atlmfc/include"
-					ipaths << "#{tpp}/tools/winsdk/Include"
+			        ipaths << "#{tpp}/tools/winsdk/Include"
+
 					if(@platform === "Win32")
 						@MSVC_EXE = "#{tpp}/tools/msvc9/bin/cl.exe"
 						@LINK_EXE = "#{tpp}/tools/msvc9/bin/link.exe"
 						linkOpts += " -libpath:\"#{tpp}/tools/msvc9/lib\""
 						linkOpts += " -libpath:\"#{tpp}/tools/msvc9/atlmfc/lib\""
+						linkOpts += " -libpath:\"#{tpp}/tools/winsdk/lib\""
 					else
 						@MSVC_EXE = "#{tpp}/tools/msvc9/bin/x86_amd64/cl.exe"
 						@LINK_EXE = "#{tpp}/tools/msvc9/bin/x86_amd64/link.exe"
 						linkOpts += " -libpath:\"#{tpp}/tools/msvc9/lib/amd64\""
 						linkOpts += " -libpath:\"#{tpp}/tools/msvc9/atlmfc/lib/amd64\""
+						linkOpts += " -libpath:\"#{tpp}/tools/winsdk/lib/x64\""
 					end
 				when 'VC10'
 					@CVTRES_EXE = "#{tpp}/tools/msvc10/bin/cvtres.exe"
 					ipaths << "#{tpp}/tools/msvc10/include"
 					ipaths << "#{tpp}/tools/msvc10/atlmfc/include"
 			        ipaths << "#{tpp}/tools/winsdk/Include"
+
 					if(@platform === "Win32")
 						@MSVC_EXE = "#{tpp}/tools/msvc10/bin/cl.exe"
 						@LINK_EXE = "#{tpp}/tools/msvc10/bin/link.exe"
 						linkOpts += " -libpath:\"#{tpp}/tools/msvc10/lib\""
 						linkOpts += " -libpath:\"#{tpp}/tools/msvc10/atlmfc/lib\""
+						linkOpts += " -libpath:\"#{tpp}/tools/winsdk/lib\""
 					else
 						@MSVC_EXE = "#{tpp}/tools/msvc10/bin/x86_amd64/cl.exe"
 						@LINK_EXE = "#{tpp}/tools/msvc10/bin/x86_amd64/link.exe"
 						linkOpts += " -libpath:\"#{tpp}/tools/msvc10/lib/amd64\""
 						linkOpts += " -libpath:\"#{tpp}/tools/msvc10/atlmfc/lib/amd64\""
+						linkOpts += " -libpath:\"#{tpp}/tools/winsdk/lib/x64\""
 					end
-				when 'VC14'
-                    ipaths << "#{tpp}/tools/winsdk10/Include/um"
-                    ipaths << "#{tpp}/tools/winsdk10/Include/shared"
-                    ipaths << "#{tpp}/tools/winsdk10/Include/winrt"
-                    ipaths << "#{tpp}/tools/winsdk10/Include/ucrt"
+                when 'VC14'
+				    ipaths << "#{tpp}/tools/msvc14/Include"
+                    ipaths << "#{tpp}/tools/winsdk10/Include/10.0.10586.0/um"
+                    ipaths << "#{tpp}/tools/winsdk10/Include/10.0.10586.0/shared"
+                    ipaths << "#{tpp}/tools/winsdk10/Include/10.0.10586.0/ucrt"
+                    ipaths << "#{tpp}/tools/winsdk10/Include/10.0.10586.0/winrt"
+					
+					if(@platform === "Win32")
+						@MSVC_EXE = "#{tpp}/tools/msvc14/bin/cl.exe"
+						@LINK_EXE = "#{tpp}/tools/msvc14/bin/link.exe"
+						linkOpts += " -libpath:\"#{tpp}/tools/winsdk10/Lib/10.0.10586.0/ucrt/x86\""
+						linkOpts += " -libpath:\"#{tpp}/tools/winsdk10/Lib/10.0.10586.0/um/x86\""
+						linkOpts += " -libpath:\"#{tpp}/tools/msvc14/lib\""
+						linkOpts += " -libpath:\"#{tpp}/tools/msvc14/atlmfc/lib\""
+					else
+						@MSVC_EXE = "#{tpp}/tools/msvc14/bin/amd64/cl.exe"
+						@LINK_EXE = "#{tpp}/tools/msvc14/bin/amd64/link.exe"
+						linkOpts += " -libpath:\"#{tpp}/tools/winsdk10/Lib/10.0.10586.0/ucrt/x64\""
+						linkOpts += " -libpath:\"#{tpp}/tools/winsdk10/Lib/10.0.10586.0/um/x64\""
+						linkOpts += " -libpath:\"#{tpp}/tools/msvc14/lib/amd64\""
+						linkOpts += " -libpath:\"#{tpp}/tools/msvc14/atlmfc/lib/amd64\""
+					end
+					
+					sdkLibs << "vcruntime.lib"
+				    sdkLibs << "ucrt.lib"
+
 			end
 
-			@RC_EXE ||=  "#{tpp}/tools/winsdk/bin/rc.exe"
+			@RC_EXE =  "#{tpp}/tools/winsdk/bin/rc.exe"
 
 			# items from appropriate windows SDKs
-
-
 			ipaths << "#{tpp}/include/Win32"
 			ipaths << "#{tpp}/include"
-					
-			if(@platform === "Win32")
-				sdkLibPath ||= "#{tpp}/tools/winsdk/lib"
-			else
-				sdkLibPath ||= "#{tpp}/tools/winsdk/lib/x64"
-			end
 
-			linkOpts += " -libpath:\"#{sdkLibPath}\""
-			
 			sdkLibs << 'oldnames.lib';
 					
 			[
@@ -323,7 +342,7 @@ LoadableModule.onLoaded(Module.new do
 				'opengl32.lib',
 				'rpcrt4.lib',
 				'shell32.lib',
-				'user32.lib',
+				'User32.lib',
 				'winmm.lib',
 				'strmiids.lib',
 				'uuid.lib',
@@ -355,7 +374,7 @@ LoadableModule.onLoaded(Module.new do
 				'dbghelp.lib',
 				'cryptui.lib'
 			].each do |lib|
-				sdkLibs << File.join(sdkLibPath,lib);
+				sdkLibs << lib; # File.join(sdkLibPath,lib);
 			end
 
 			includesManifest = true;
@@ -414,9 +433,9 @@ LoadableModule.onLoaded(Module.new do
 			);
 
             cfg.cppDefineIfNot(
-	            'WINVER=0x0501',
+	            'WINVER=0x0601',
                 '_FILE_OFFSET_BITS=64',
-    	        '_WIN32_WINNT=0x0501',
+    	        '_WIN32_WINNT=0x0601',
 				'_WIN32_WINDOWS=0x0410',
 				'_WIN32_IE=0x0600'
 			);
