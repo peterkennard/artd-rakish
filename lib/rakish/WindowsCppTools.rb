@@ -299,7 +299,8 @@ LoadableModule.onLoaded(Module.new do
 						linkOpts += " -libpath:\"#{tpp}/tools/winsdk/lib/x64\""
 					end
                 when 'VC14'
-				    ipaths << "#{tpp}/tools/msvc14/Include"
+				    ipaths << "#{tpp}/tools/msvc14/include"
+				    ipaths << "#{tpp}/tools/msvc14/atlmfc/include"
                     ipaths << "#{tpp}/tools/winsdk10/Include/10.0.10586.0/um"
                     ipaths << "#{tpp}/tools/winsdk10/Include/10.0.10586.0/shared"
                     ipaths << "#{tpp}/tools/winsdk10/Include/10.0.10586.0/ucrt"

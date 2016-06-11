@@ -549,7 +549,7 @@ module CppProjectModule
 			project.dependencies.each do |dep|
                 # TODO: should this check for the type of project?
                 if(defined? dep.outputsNativeLibrary && dep.nativeLibDir != null)
-                    ldef = ctools.loadLinkref(dep.nativeLibDir,configName,dep.moduleName);
+				  ldef = ctools.loadLinkref(dep.nativeLibDir,configName,dep.moduleName);
                     if(ldef != nil)
                         deflibs = ldef[:libs];
                         libs += deflibs if deflibs;
