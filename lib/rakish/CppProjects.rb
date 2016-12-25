@@ -59,9 +59,9 @@ module CTools
 	end
 
 	# real bodge for now need to clean this up somehow.
-	def loadLinkref(libdir,cfg,baseName)
+	def loadLinkref(libdir,config,cfgName,baseName)
 		cd libdir, :verbose=>false do
-			libdef = File.expand_path("#{baseName}-#{cfg}.linkref");
+			libdef = File.expand_path("#{baseName}-#{cfgName}.linkref");
 			begin
 				libpaths=nil
 				libs=nil
@@ -78,7 +78,7 @@ module CTools
 				end
 				return({libpaths: libpaths, libs: libs});
 			rescue => e
-				log.debug("failed to load #{libdef} #{e}");
+				log.debug("#{config.projectFile},failed to load #{libdef} #{e}");
 			end
 			{}
 		end
@@ -547,18 +547,19 @@ module CppProjectModule
 		def dependencyLibs
 			libs=[]
 			project.dependencies.each do |dep|
-                # TODO: should this check for the type of project?
-                if(defined? dep.outputsNativeLibrary && dep.nativeLibDir != null)
-				  ldef = ctools.loadLinkref(dep.nativeLibDir,configName,dep.moduleName);
-                    if(ldef != nil)
-                        deflibs = ldef[:libs];
-                        libs += deflibs if deflibs;
+				if(defined? dep.outputsNativeLibrary)
+					if(dep.nativeLibDir)
+						ldef = ctools.loadLinkref(dep.nativeLibDir,self,configName,dep.moduleName);
+						if(ldef != nil)
+							deflibs = ldef[:libs];
+							libs += deflibs if deflibs;
+						end
                     end
 				end
 			end
 			if(thirdPartyLibs)
 				thirdPartyLibs.flatten.each do |tpl|
-					ldef = ctools.loadLinkref("#{thirdPartyPath}/lib",configName,tpl);
+					ldef = ctools.loadLinkref("#{thirdPartyPath}/lib",self,configName,tpl);
                     if(ldef != nil)
                         deflibs = ldef[:libs];
                         libs += deflibs if deflibs;
