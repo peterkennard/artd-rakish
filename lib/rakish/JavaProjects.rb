@@ -239,7 +239,18 @@ protected
         # [:generated] if true, part or all of this directory or it's contents will not exist until after a prerequisite target to the :compile task has built it's contents.
         def addSourceRoots(*roots)
             opts = (roots.last.is_a?(Hash) ? roots.pop : {})
+            roots.flatten!
             (@javaSourceDirs_||=FileSet.new).include(roots);
+            if(opts[:generated])
+                unless(opts[:noClean])
+                    task :cleanautogen do
+                        roots.each do |root|
+                             log.debug("removing #{root}");
+                            rm_rf(root);
+                        end
+                    end
+                end
+            end
         end
 
         # retrieve added source roots, default to [projectDir]/src if not set
