@@ -245,8 +245,8 @@ protected
                 unless(opts[:noClean])
                     task :cleanautogen do
                         roots.each do |root|
-                             log.debug("removing #{root}");
-                            rm_rf(root);
+                            log.info("removing #{root}");
+                            FileUtils.rm_rf(root);
                         end
                     end
                 end
@@ -357,9 +357,55 @@ protected
         end
 
         class JavaCTask < Rake::Task # :nodoc:
-            def needed?
-                !sources.empty?
+
+            def setCompileNeeded
+                @compileNeeded_ = true;
             end
+
+            def resolvePrerequisites
+                unless defined? @_sourcesResolved_
+
+                    @_sourcesResolved_=true;
+                    srcFiles = FileCopySet.new;
+                    copyFiles = FileCopySet.new;
+
+                    config.sourceRoots.each do |root|
+                        files = FileList.new
+                        files.include("#{root}/**/*.java");
+                        srcFiles.addFileTree(config.outputClasspath, root, files );
+                        files = FileList.new
+                        files.include("#{root}/**/*");
+                        files.exclude("#{root}/**/*.java");
+                        copyFiles.addFileTree(config.outputClasspath, root, files);
+                    end
+
+                      # add sources we know about
+                    tasks = srcFiles.generateFileTasks( :config=>self, :suffixMap=>{ '.java'=>'.class' }) do |t|  # , &DoNothingAction_);
+                        # add this source prerequisite file to the compile task if it is needed.
+                        t.config.setCompileNeeded();
+                    end
+
+                    enhance(tasks);
+                    tasks = copyFiles.generateFileTasks();
+                    enhance(tasks);
+                end
+            end
+
+            # Override of Rake::Task::prerequisite_tasks to return list of prerequisite tasks,
+            # generated and cached upon first access.
+            def prerequisite_tasks
+                resolvePrerequisites unless defined? @_sourcesResolved_
+                prerequisites.collect { |pre| lookup_prerequisite(pre) }
+            end
+
+            # Override of Rake::FileTask::needed? this resolves all the specified source file lists
+            # and adds them all as prerequisites to the task for which the purpose is to copy the sources into
+            # a destination archive.
+            def needed?
+                resolvePrerequisites unless defined? @_sourcesResolved_
+                @compileNeeded_
+            end
+
         end
 
         @@CompileJavaAction_ = ->(t) do
@@ -368,43 +414,31 @@ protected
 
         def javacTask(deps=[])
 
-            srcFiles = FileCopySet.new;
-            copyFiles = FileCopySet.new;
-
-            sourceRoots.each do |root|
-                files = FileList.new
-                files.include("#{root}/**/*.java");
-                srcFiles.addFileTree(outputClasspath, root, files );
-                files = FileList.new
-                files.include("#{root}/**/*");
-                files.exclude("#{root}/**/*.java");
-                copyFiles.addFileTree(outputClasspath, root, files);
-            end
-
             tsk = JavaCTask.define_unique_task &@@CompileJavaAction_
             task :compile=>[tsk]
 
-            # add sources we know about
-            tasks = srcFiles.generateFileTasks( :config=>tsk, :suffixMap=>{ '.java'=>'.class' }) do |t|  # , &DoNothingAction_);
-                # add this source prerequisite file to the compile task if it is needed.
-                t.config.sources << t.source
-            end
-
-    #        if(any_task_earlier?(tasks,File.mtime(File.expand_path(__FILE__))))
-    #            puts("project is altered");
-    #        end
-
             tsk.enhance(deps);
-            tsk.enhance(tasks);
             tsk.config = self;
 
-
-            tasks = copyFiles.generateFileTasks();
-# log.debug("####### copy files [#{tasks.length}] \"#{deps.join("\"\n      ")}\"");
-            tsk.enhance(tasks);
-
             task :clean do
-                addCleanFiles(tasks);
+                sourceRoots.each do |root|
+                    files = FileList.new
+                    files.include("#{root}/**/*.java");
+                    files.each do |file|
+                        file.sub!(root,outputClasspath);
+                        file.sub!('.java','.class');
+                        FileUtils.rm_f(file);
+                    end
+                    files = FileList.new
+                    files.include("#{root}/**/*");
+                    files.exclude("#{root}/**/*.java");
+                    files.each do |file|
+                        file.sub!(root,outputClasspath);
+                        if(File.file?(file))
+                            FileUtils.rm_f(file);
+                        end
+                    end
+                end
             end
 
             tsk;
