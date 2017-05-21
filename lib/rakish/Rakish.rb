@@ -703,12 +703,22 @@ module Rakish
             onNotFound(name,opts) if(!found && opts[:onMissing]);
             found;
         end
+        
+        def findFiles(*files) 
+            opts = (Hash === paths.last) ? paths.pop : {}
+            files.flatten!
+            ret=[];
+            files.each do |file|
+                ret << findFile(file,opts);
+            end
+            return(ret);
+*        end
     end
 
     # Intended to clean up things to minimize thread usage and queue up these so as to
     # keep avaiable processor cores saturated but without thread thrashing. Spawning lots of threads
     # does not help in the process spawning case and actually slows things down.
-	class MultiProcessTask < Rake::Task
+    class MultiProcessTask < Rake::Task
 	private
 		def invoke_prerequisites(args, invocation_chain)
 			threads = @prerequisites.collect { |p|
