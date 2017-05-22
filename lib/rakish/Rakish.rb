@@ -705,14 +705,14 @@ module Rakish
         end
         
         def findFiles(*files) 
-            opts = (Hash === paths.last) ? paths.pop : {}
+            opts = (Hash === files.last) ? files.pop : {}
             files.flatten!
             ret=[];
             files.each do |file|
                 ret << findFile(file,opts);
             end
-            return(ret);
-*        end
+            ret;
+        end
     end
 
     # Intended to clean up things to minimize thread usage and queue up these so as to
