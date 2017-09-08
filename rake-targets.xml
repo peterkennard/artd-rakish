@@ -11,4 +11,8 @@
         <call-rake target="installGem"/>
     </target>
 
+    <target name="subdirTest" description="test required subprojects">
+        <call-rake file="./test/subdir-test/rakefile.rb" target="subdir-test:test"/>
+    </target>
+
 </project>
