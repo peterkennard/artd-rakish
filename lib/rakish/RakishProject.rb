@@ -93,35 +93,31 @@ class Build
 		FileUtils.cd File.expand_path(pwd) do;
 			namespace ':' do
 				lastpath = '';
+                begin
+                    rakefiles.each do |path|
+                        lastpath = path;
+                        projdir = nil;
 
-                rakefiles.each do |path|
-                    lastpath = path;
-                    projdir = nil;
+                        if(File.directory?(path))
+                            projdir = path;
+                            path = File.join(projdir,'rakefile.rb');
+                        else
+                            projdir = File.dirname(path);
+                        end
 
-                    if(File.directory?(path))
-                        projdir = path;
-                        path = File.join(projdir,'rakefile.rb');
-                    else
-                        projdir = File.dirname(path);
-                    end
-
-                    begin
-                        FileUtils.cd(projdir) do
-                            if(require(path))
-                                #	puts "project #{path} loaded" if verbose?
+                        unless(opts[:optional] && (!File.exist?(path)))
+                            FileUtils.cd(projdir) do
+                                if(require(path))
+                                    #	puts "project #{path} loaded" if verbose?
+                                end
                             end
-                        end
-                        projs |= @projectsByFile[path];
-                    rescue LoadError => e
-                        # TODO: is exception handling the most efficient way to do this check for optionally loaded files ?
-                        unless(opts[:optional])
-                            log.error("#{e}");
-                            raise e;
+                            projs |= @projectsByFile[path];
                         end
                     end
+                rescue LoadError => e
+                    log.error("#{e}");
+                    raise e;
                 end
-
-
 			end # namespace
 		end # cd
 		projs
