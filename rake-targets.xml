@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="rake-targets" default="">
+
+    <import file="./call-rake.xml" />
+
+    <target name="cleanAll" description="delete output directory">
+        <call-rake target="cleanAll" />
+    </target>
+
+    <target name="installGem" description="install rakish rubygem">
+        <call-rake target="installGem"/>
+    </target>
+
+</project>

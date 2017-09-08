@@ -39,11 +39,16 @@ task :pushGem do |t|
 	end
 end
 
-task :installGem => [ :buildGem ] do |t|
+task :installGem => [:buildGem] do |t|
 	cd myDir do
 		userstr = OS.windows? ? "" : "--user-install"
 		system("gem install --local --pre #{userstr} rakish-#{gemspec.version}.gem");
 	end
 end
 
+task :cleanAll do |t|
+end
 
+# just here to handle being called from exec-rake.bat dealing with quoted empty arguments
+task '' do
+end
