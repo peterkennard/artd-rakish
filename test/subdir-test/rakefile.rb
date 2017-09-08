@@ -4,6 +4,11 @@ require "#{myDir}/../build-options.rb"
 Rakish.Project(
     :includes=> [ Rakish::RubydocModule ],
  	:name=>'subdir-test',
+ 	:dependsOptionallyUpon=> [
+        'notPresent1',
+        'optionalSubdir',
+        'notPresent2'
+    ],
  	:dependsUpon=> [
  	    'subdir1',
  	    'subdir2',
@@ -15,7 +20,11 @@ Rakish.Project(
 	
     task :test => [ ':subdir1:test', ':subdir2:test', ':subdir3:test' ] do |t|
         log.debug("executing subdir test");
+        dependencies.each do |dep|
+            log.debug("loaded dependency #{dep.moduleName}");
+        end
     end
+
 
 end
 

@@ -87,35 +87,41 @@ class Build
 
 	def loadProjects(*args) # :nodoc: knternal called by RakishProject to load dependencies.
 
+        opts = (Hash === args.last) ? args.pop : {}
 		rakefiles = FileSet.new(args);
 		projs=[];
 		FileUtils.cd File.expand_path(pwd) do;
 			namespace ':' do
 				lastpath = '';
-				begin
-					rakefiles.each do |path|
 
-						lastpath = path;
-						projdir = nil;
+                rakefiles.each do |path|
+                    lastpath = path;
+                    projdir = nil;
 
-						if(File.directory?(path))
-							projdir = path;
-							path = File.join(projdir,'rakefile.rb');
-						else
-							projdir = File.dirname(path);
-						end
+                    if(File.directory?(path))
+                        projdir = path;
+                        path = File.join(projdir,'rakefile.rb');
+                    else
+                        projdir = File.dirname(path);
+                    end
 
-						FileUtils.cd(projdir) do
-							if(require(path))
-								#	puts "project #{path} loaded" if verbose?
-							end
-						end
-						projs |= @projectsByFile[path];
-					end
-				rescue LoadError => e
-					log.error("#{e}");
-					raise e;
-				end
+                    begin
+                        FileUtils.cd(projdir) do
+                            if(require(path))
+                                #	puts "project #{path} loaded" if verbose?
+                            end
+                        end
+                        projs |= @projectsByFile[path];
+                    rescue LoadError => e
+                        # TODO: is exception handling the most efficient way to do this check for optionally loaded files ?
+                        unless(opts[:optional])
+                            log.error("#{e}");
+                            raise e;
+                        end
+                    end
+                end
+
+
 			end # namespace
 		end # cd
 		projs
@@ -266,21 +272,21 @@ public
 		self
 	end
 
-    def addProjectDependencies(*args) # :nodoc:  not used anywhere at present
-    	# NOTE: for some unknown reason when this is called from initialize exception handling is
-    	# somehow screwed up so we don't call it from there.
-		begin
-			projs = @build.loadProjects(*args);
-			if(@dependencies)
-				@dependencies = @dependencies + (projs - @dependencies);
-			else
-				@dependencies = projs;
-			end
-		rescue LoadError=>e
-			log.error("dependency not found in #{myFile}: #{e}");
-			raise e
-		end
-    end
+#    def addProjectDependencies(*args) # :nodoc:  not used anywhere at present
+#    	# NOTE: for some unknown reason when this is called from initialize exception handling is
+#    	# somehow screwed up so we don't call it from there.
+#		begin
+#			projs = @build.loadProjects(*args);
+#			if(@dependencies)
+#				@dependencies = @dependencies + (projs - @dependencies);
+#			else
+#				@dependencies = projs;
+#			end
+#		rescue LoadError=>e
+#			log.error("dependency not found in #{myFile}: #{e}");
+#			raise e
+#		end
+#    end
 
 	# Add file or files to be deleted in the :clean task
 	# used by task builder modules included in a project
@@ -314,6 +320,8 @@ public
 	#   :config      => explicit parent configuration, defaults to the GlobalConfig
 	#   :dependsUpon => array of project directories or specific rakefile paths this project
 	#                   depends upon
+	#   :dependsOptionallyUpon => array of project directories or specific rakefile paths this project
+	#                            depends upon that are ignored if not present.
 	#   :id          => uuid to assign to project in "uuid string format"
 	#                    '2CD0548E-6945-4b77-83B9-D0993009CD75'
 	#
@@ -344,6 +352,7 @@ public
 		# end
 
 		fileDependencies = args[:dependsUpon] || Array.new;
+        optionalFileDependencies = args[:dependsOptionallyUpon];
 
 		parent = @build.configurationByName(args[:config]);
 
@@ -368,9 +377,14 @@ public
 			begin
 				@dependencies = @build.loadProjects(*fileDependencies);
 			rescue LoadError => e
-				log.error("dependency not found in #{myFile}: #{e}");
+				log.error("requred dependency not found in #{myFile}: #{e}");
 				raise e
 			end
+
+            if(optionalFileDependencies)
+                projs = @build.loadProjects(*optionalFileDependencies, :optional=>TRUE);
+                @dependencies = @dependencies + (projs - @dependencies);
+            end
 
 			# call instance initializer block inside local namespace and project's directory.
 			# and in the directory the defining file is contained in.

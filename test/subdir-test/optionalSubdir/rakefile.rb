@@ -3,15 +3,15 @@ require "#{myDir}/../../build-options.rb"
 
 Rakish.Project(
     :includes=> [ Rakish::RubydocModule ],
- 	:name=>'subdir1',
+ 	:name=>'optionalSubdir',
  	:dependsUpon=> [
  	]
 ) do |s|
 
-	log.debug("init #{moduleName} test !!");
+	log.debug("init optionalSubdir test !!");
 	
     task :test do |t|
-        log.debug("executing #{moduleName} test");
+        log.debug("executing optionalSubdir test");
     end
 
 end
