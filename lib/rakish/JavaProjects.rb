@@ -301,6 +301,10 @@ protected
             @outputClasspath||="#{buildDir()}/production/#{moduleName()}";
         end
 
+        def tempFilePath
+            @tempFilePath||="#{buildDir()}/temp/#{moduleName()}";
+        end
+
         def doCompileJava(t) # :nodoc:
 
             config = t.config;
@@ -313,8 +317,11 @@ protected
             cmdline = "\"#{config.java_home}/bin/javac\"";
             cmdline << " #{config.javacFlags ? config.javacFlags : '-g'} -d \"#{outClasspath}\""
 
+            cmdFileOffset = cmdline.length();
+
             separator = config.classpathSeparator;
             paths = config.resolveClassPaths
+
 
             unless(paths.empty?)
                 cmdline << " -classpath \"#{outClasspath}";
@@ -352,7 +359,20 @@ protected
                 cmdline << " \"#{getRelativePath(src)}\"";
             end
 
-            ret = execLogged(cmdline, :verbose=>verbose?);
+            ret = 0;
+            # to cover for windows command line length restriction write to file if too long.
+            commandLength = cmdline.length;
+            if(commandLength > 30000)
+                FileUtils.mkdir_p(nativeObjDir());
+                argFilePath = "#{nativeObjDir()}/javacArgs.txt";
+                File.open(argFilePath,'w') do |fout|
+                    fout.write(cmdline.slice(cmdFileOffset,commandLength - cmdFileOffset));
+                end
+                ret = execLogged("#{cmdline.slice(0,cmdFileOffset)} \"@#{argFilePath}\"", :verbose=>verbose?);
+            else
+                ret = execLogged(cmdline, :verbose=>verbose?);
+            end
+
             raise "Java compile failure" if(ret.exitstatus != 0);
         end
 
