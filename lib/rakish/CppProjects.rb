@@ -110,11 +110,11 @@ module CTools
             # @#$#@$#@ messed up. set time of new file ahead by one second.
             # seems rake time resolution is low enough that the comparison often says 
             # times are equal between depends files and depends.rb.
-            mv(tempfile, outName, :force=>true);
+            FileUtils.mv(tempfile, outName, :force=>true);
             time = Time.at(Time.new.to_f + 1.0);
             File.utime(time,time,outName);
 		else
-			rm(tempfile, :force=>true);
+			FileUtils.rm(tempfile, :force=>true);
 		end	
 	end
 
