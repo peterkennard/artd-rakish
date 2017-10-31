@@ -50,7 +50,8 @@ class Build
 	def onComplete 
 		dtime = Time.new.to_f - @startTime.to_f;		
 		ztime = (Time.at(0).utc) + dtime;
-		puts(ztime.strftime("Build complete in %H:%M:%S:%3N"))	
+		puts(ztime.strftime("Build complete in %H:%M:%S:%3N"))
+		0
 	end
 	
 	def registerProject(p) # :nodoc: internal used by projects to register themselves wheninitialized

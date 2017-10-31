@@ -682,7 +682,7 @@ LoadableModule.onLoaded(Module.new do
 						next unless obj.pathmap('%x') == '.obj' 
 						f.puts("\"#{obj}\"");
 					end			
-														
+
 					libs=[]
 					libs << @SDK_LIBS;
 				    libs << cfg.dependencyLibs
