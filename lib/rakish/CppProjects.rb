@@ -49,16 +49,14 @@ module CTools
 		Rakish::WindowsCppTools.getConfiguredTools(splitcfgs,strCfg);
 
 	end
-	def self.loadToolchain(moduleName, strConfig)
+	def self.loadToolchain(moduleName,configName,args={})
 	    if(moduleName == 'WindowsCppTools' || moduleName == 'WindowsCppTools')
-	        loadConfiguredTools(strConfig);
+	        loadConfiguredTools(configName);
 	    else
             begin
                 require moduleName;
-                mod = Kernel.const_get(moduleName.to_s);
-
-                # eval(:Bob.to_s)
-
+                mod = Rakish.const_get(moduleName.to_s);
+		mod.getConfiguredTools(configName,args);
             rescue
                 log.debug("unrecognized toolchain module \"#{moduleName}\"");
             end
