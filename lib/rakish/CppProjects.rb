@@ -236,8 +236,21 @@ module CppProjectConfig
 		end
  	end
 
-    def setToolchain(ctools)
-        @ctools = ctools;
+   # set toolchain for a cpp configuration
+   # if ther is only one non hash argument and it is a module the module is used as a pre-loaded toolchain
+   # otherwise the first argument is considered a module name of the tools module to load
+   # the second argument is the configuration name assigned to it, and subsequent hash argument are the 
+   # initialization arguments for creating the toolchain instance.
+   #
+    def setToolchain(ctools,*args)
+        if(ctools.is_a?(CTools)) 
+		@ctools = ctools;
+	else	
+		configName = args[0];
+		hash = args.last;		
+		hash = {} unless hash.is_a?(Hash)
+		@ctools = CTools.loadToolchain(ctools,configName,hash);
+	end
     end
 
     # temporary include directory built for compiling
