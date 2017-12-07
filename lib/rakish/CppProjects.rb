@@ -443,10 +443,12 @@ module CppProjectModule
 		## link tasks
 		tsk = tools.createLinkTask(objs,@cppBuildConfig);
 		if(tsk)
-			ensureDirectoryTask(cfg.nativeLibDir);
+			outdir = tsk[:linkTask].name.pathmap('%d');
+log.debug("outdir is #{outdir}");
+			ensureDirectoryTask(outdir);
 			ensureDirectoryTask(cfg.binDir);
 
-			task :build => [ :compile, cfg.nativeLibDir, cfg.binDir, tsk ].flatten
+			task :build => [ :compile, outdir, cfg.binDir, tsk[:setupTasks], tsk[:linkTask] ].flatten
 
 		end
 

@@ -908,8 +908,7 @@ module Rakish
 			# create a "setup" task to resolve everything and set up the link.
 			tsk = task "#{cfg.targetName}.#{cfg.targetType}.resolve", &@@resolveLinkAction_;
 			tsk.config = doLink; 
-
-			[ tsk, doLink ] # note this returns an array !!!
+			{ :setupTasks=>tsk, :linkTask=>doLink } # note this returns a hash !!
 		end
 
 	end
