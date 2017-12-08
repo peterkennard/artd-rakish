@@ -166,11 +166,12 @@ module Rakish
 
 			# for consumers of CTools toolchain
 			def initCompileTask(cfg)
-				cfg.project.addCleanFiles("#{cfg.nativeObjectPath()}/*#{objExt()}",
-									     "#{cfg.nativeObjectPath()}/*.d"
+				ensureDirectoryTask(cfg.moduleConfiguredObjDir);
+				cfg.project.addCleanFiles("#{cfg.moduleConfiguredObjDir}/*#{objExt()}",
+									     "#{cfg.moduleConfiguredObjDir}/*.d"
 									    );
 				Rake::Task.define_task :compile => [:includes,
-												cfg.nativeObjectPath(),
+												cfg.moduleConfiguredObjDir,
 												:depends]
 			end	
 

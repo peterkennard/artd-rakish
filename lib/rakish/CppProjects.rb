@@ -176,7 +176,8 @@ module CTools
 				end
 				t.prerequisites.each do |dep|
 					next unless (dep.pathmap('%x') == '.raked')
-					system "cat \'#{dep}\' >> depends.rb"
+					next unless (File.exists?(dep))
+ 					system "cat \'#{dep}\' >> depends.rb"
 				end
 			end
 		end
@@ -403,43 +404,40 @@ module CppProjectModule
 	# starts executing tasks
 
 	def doCppPreBuild()
-        addIncludePaths( [ moduleConfiguredObjDir(),buildIncludeDir() ] );
-        @cppBuildConfig = resolveConfiguration(nativeConfigName());
-        resolveConfiguredTasks();
-        if(@projectId)
-            ensureDirectoryTask(vcprojDir);
-            tsk = task :vcproj=>[vcprojDir], &VCProjBuildAction_;
-            tsk.config = self;
-            export(:vcproj);
-
-            tsk = task :vcprojclean, &VCProjCleanAction_;
-            tsk.config = self;
-            export(:vcprojclean);
-        end
+		addIncludePaths( [ moduleConfiguredObjDir(),buildIncludeDir() ] );
+		@cppBuildConfig = resolveConfiguration(nativeConfigName());
+		resolveConfiguredTasks();
+		if(@projectId)
+			ensureDirectoryTask(vcprojDir);
+			tsk = task :vcproj=>[vcprojDir], &VCProjBuildAction_;
+			tsk.config = self;
+			export(:vcproj);
+			tsk = task :vcprojclean, &VCProjCleanAction_;
+			tsk.config = self;
+			export(:vcprojclean);
+		end
 	end
 
-    def self.doUpdateDepends(t)
-        cfg = t.config;
-        if(cfg.dependencyFilesUpdated)
-            tools = cfg.ctools
-            objs = t.sources;
-            cd(cfg.moduleConfiguredObjDir(),:verbose=>false) do
-                File.open('depends.rb','w') do |out|
-                    out.puts("# puts \"loading #{t.name}\"");
-                end
-                objs.each do |obj|
-                    raked = obj.pathmap('%n.raked');
-                    if(File.exists?(raked))
-                        system "cat \'#{raked}\' >> depends.rb"
-                    end
-                end
-           end
-        end
-    end
+	def self.doUpdateDepends(t)
+		cfg = t.config;
+		tools = cfg.ctools
+		objs = t.sources;
+		cd(cfg.moduleConfiguredObjDir(),:verbose=>false) do
+			File.open('depends.rb','w') do |out|
+				out.puts("# puts \"loading #{t.name}\"");
+			end
+			objs.each do |obj|
+			 	raked = obj.pathmap('%n.raked');
+				if(File.exists?(raked))
+					system "cat \'#{raked}\' >> depends.rb"
+			    	end
+			end
+		end
+	end
 
 	UpdateDependsAction_ = lambda do |t|
-        doUpdateDepends(t);
-    end
+        	doUpdateDepends(t) if(t.config.dependencyFilesUpdated)
+	end
 
 	def resolveConfiguredTasks()
 
