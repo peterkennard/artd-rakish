@@ -545,6 +545,7 @@ module CppProjectModule
 		end
 
 		def dependencyLibs
+
 			libs=[]
 			project.dependencies.each do |dep|
 				if(defined? dep.outputsNativeLibrary)
@@ -557,9 +558,19 @@ module CppProjectModule
                     end
 				end
 			end
+
 			if(thirdPartyLibs)
 				thirdPartyLibs.flatten.each do |tpl|
-					ldef = ctools.loadLinkref("#{thirdPartyPath}/lib",self,configName,tpl);
+					libpath = NIL;
+					if(File.path_is_absolute?(tpl))
+					    libpath = tpl.pathmap('%d');
+					    tpl = tpl.pathmap('%f');
+					else
+					    puts("adding lib #{tpl}");
+					    libpath = "#{thirdPartyPath}/lib";
+					end
+					
+					ldef = ctools.loadLinkref(libpath,self,configName,tpl);
                     if(ldef != nil)
                         deflibs = ldef[:libs];
                         libs += deflibs if deflibs;
