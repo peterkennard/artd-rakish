@@ -90,12 +90,12 @@ LoadableModule.onLoaded(Module.new do
 			case(@debugType)
 				when 'Debug'
 					cppOpts += ' -Zi -Od'
-					linkOpts += ' -debug -nodefaultlib'
+					linkOpts += ' -debug' # -nodefaultlib'
 				when 'Checked'
 					cppOpts += ' -Zi -Ox'
-					linkOpts += ' -debug -nodefaultlib'
+					linkOpts += ' -debug' # -nodefaultlib'
 				when 'Release'
-					linkOpts += ' -nodefaultlib'
+					linkOpts += ' ' # -nodefaultlib'
 					cppOpts += ' -O3 -Qprec-div-'
 				when 'ICL'
 					cppOpts += ' -O3 -Qprec-div-'
@@ -385,7 +385,7 @@ LoadableModule.onLoaded(Module.new do
 				'setupapi.lib',
 				'dbghelp.lib',
 				'cryptui.lib',
-			    'bthprops.lib',
+			  #  'bthprops.lib',
 			].each do |lib|
 				sdkLibs << lib;
 			end
@@ -573,7 +573,7 @@ LoadableModule.onLoaded(Module.new do
 			#	@echo -n "$(CPP_OBJS_BASE) $(C_OBJS_BASE)" > $(TARGET_LOBJ)
 
 			File.open(lnkfile,'w') do |f|
-				f.puts("#{@LIB_OPTIONS} -nodefaultlib -out:\"#{t.name}\"" );							
+				f.puts("#{@LIB_OPTIONS} -nodefaultlib -out:\"#{t.name}\"" );
 				# object files
 				objs = t.prerequisites
 				objs.flatten.each do |obj|
