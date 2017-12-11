@@ -299,31 +299,42 @@ LoadableModule.onLoaded(Module.new do
 						linkOpts += " -libpath:\"#{tpp}/tools/winsdk/lib/x64\""
 					end
                 when 'VC14'
-				    ipaths << "#{tpp}/tools/msvc14/include"
-				    ipaths << "#{tpp}/tools/msvc14/atlmfc/include"
-                    ipaths << "#{tpp}/tools/winsdk10/Include/10.0.10586.0/um"
-                    ipaths << "#{tpp}/tools/winsdk10/Include/10.0.10586.0/shared"
-                    ipaths << "#{tpp}/tools/winsdk10/Include/10.0.10586.0/ucrt"
-                    ipaths << "#{tpp}/tools/winsdk10/Include/10.0.10586.0/winrt"
-					
-					if(@platform === "Win32")
-						@MSVC_EXE = "#{tpp}/tools/msvc14/bin/cl.exe"
-						@LINK_EXE = "#{tpp}/tools/msvc14/bin/link.exe"
-						linkOpts += " -libpath:\"#{tpp}/tools/winsdk10/Lib/10.0.10586.0/ucrt/x86\""
-						linkOpts += " -libpath:\"#{tpp}/tools/winsdk10/Lib/10.0.10586.0/um/x86\""
-						linkOpts += " -libpath:\"#{tpp}/tools/msvc14/lib\""
-						linkOpts += " -libpath:\"#{tpp}/tools/msvc14/atlmfc/lib\""
-					else
-						@MSVC_EXE = "#{tpp}/tools/msvc14/bin/amd64/cl.exe"
-						@LINK_EXE = "#{tpp}/tools/msvc14/bin/amd64/link.exe"
-						linkOpts += " -libpath:\"#{tpp}/tools/winsdk10/Lib/10.0.10586.0/ucrt/x64\""
-						linkOpts += " -libpath:\"#{tpp}/tools/winsdk10/Lib/10.0.10586.0/um/x64\""
-						linkOpts += " -libpath:\"#{tpp}/tools/msvc14/lib/amd64\""
-						linkOpts += " -libpath:\"#{tpp}/tools/msvc14/atlmfc/lib/amd64\""
-					end
-					
-					sdkLibs << "vcruntime.lib"
-				    sdkLibs << "ucrt.lib"
+                    begin
+                        sdkLib = "C:/Program Files (x86)/Windows Kits/10/Lib/10.0.16299.0";
+                        sdkInclude = "C:/Program Files (x86)/Windows Kits/10/Include/10.0.16299.0";
+                        unless(File.directory?(sdkLib))
+                            log.debug("selcting windows SDK");
+                            sdkLib = "#{tpp}/tools/winsdk10/Lib/10.0.10586.0";
+                            sdkInclude = "#{tpp}/tools/winsdk10/Include/10.0.10586.0";
+                        end
+                        log.debug("selcting windows SDK #{sdkLib}");
+
+                        ipaths << "#{tpp}/tools/msvc14/include"
+                        ipaths << "#{tpp}/tools/msvc14/atlmfc/include"
+                        ipaths << "#{sdkInclude}/um"
+                        ipaths << "#{sdkInclude}/shared"
+                        ipaths << "#{sdkInclude}/ucrt"
+                        ipaths << "#{sdkInclude}/winrt"
+
+                        if(@platform === "Win32")
+                            @MSVC_EXE = "#{tpp}/tools/msvc14/bin/cl.exe"
+                            @LINK_EXE = "#{tpp}/tools/msvc14/bin/link.exe"
+                            linkOpts += " -libpath:\"#{sdkLib}/ucrt/x86\""
+                            linkOpts += " -libpath:\"#{sdkLib}/um/x86\""
+                            linkOpts += " -libpath:\"#{tpp}/tools/msvc14/lib\""
+                            linkOpts += " -libpath:\"#{tpp}/tools/msvc14/atlmfc/lib\""
+                        else
+                            @MSVC_EXE = "#{tpp}/tools/msvc14/bin/amd64/cl.exe"
+                            @LINK_EXE = "#{tpp}/tools/msvc14/bin/amd64/link.exe"
+                            linkOpts += " -libpath:\"#{sdkLib}/ucrt/x64\""
+                            linkOpts += " -libpath:\"#{sdkLib}/um/x64\""
+                            linkOpts += " -libpath:\"#{tpp}/tools/msvc14/lib/amd64\""
+                            linkOpts += " -libpath:\"#{tpp}/tools/msvc14/atlmfc/lib/amd64\""
+                        end
+
+                        sdkLibs << "vcruntime.lib"
+                        sdkLibs << "ucrt.lib"
+				    end
 
 			end
 
@@ -373,9 +384,10 @@ LoadableModule.onLoaded(Module.new do
 				't2embed.lib',
 				'setupapi.lib',
 				'dbghelp.lib',
-				'cryptui.lib'
+				'cryptui.lib',
+			    'bthprops.lib',
 			].each do |lib|
-				sdkLibs << lib; # File.join(sdkLibPath,lib);
+				sdkLibs << lib;
 			end
 
 			includesManifest = true;
