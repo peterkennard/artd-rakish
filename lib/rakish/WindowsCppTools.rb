@@ -52,6 +52,14 @@ LoadableModule.onLoaded(Module.new do
 			'.exe'
 		end
 
+        def platform
+            @platform
+        end
+
+        def compiler
+            @compiler
+        end
+
 		def initialize(args)
 
 			splitcfgs = args[:split];
@@ -281,7 +289,7 @@ LoadableModule.onLoaded(Module.new do
                             sdkLib = "#{tpp}/tools/winsdk10/Lib/10.0.10586.0";
                             sdkInclude = "#{tpp}/tools/winsdk10/Include/10.0.10586.0";
                         end
-                        log.debug("selcting windows SDK #{sdkLib}");
+                        # log.debug("selcting windows SDK #{sdkLib}");
 
                         ipaths << "#{tpp}/tools/msvc14/include"
                         ipaths << "#{tpp}/tools/msvc14/atlmfc/include"

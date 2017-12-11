@@ -153,20 +153,16 @@ EOTEXT
 
 
 	def eachConfig(&b) 
-		[	
-			"Win64-VC14-MD-Debug",
-			"Win64-VC14-MDd-Debug",
-			"Win64-VC14-MT-Debug",
-			"Win64-VC14-MTd-Debug",
-			"Win64-VC14-MD-Release",
-			"Win64-VC14-MT-Release"
 
-#			"Win32-VC10-MD-Debug",
-#			"Win32-VC10-MDd-Debug",
-#			"Win32-VC10-MT-Debug",
-#			"Win32-VC10-MTd-Debug",
-#			"Win32-VC10-MD-Release",
-#			"Win32-VC10-MT-Release"
+	    spl = cppProject.nativeConfigName.split('-', 3);
+
+		[
+			"#{spl[0]}-#{spl[1]}-MD-Debug",
+			"#{spl[0]}-#{spl[1]}-MDd-Debug",
+			"#{spl[0]}-#{spl[1]}-MT-Debug",
+			"#{spl[0]}-#{spl[1]}-MTd-Debug",
+			"#{spl[0]}-#{spl[1]}-MD-Release",
+			"#{spl[0]}-#{spl[1]}-MT-Release"
 		].each do |cfg|
 			cfg = cppProject.resolveConfiguration(cfg);
 			next unless cfg
