@@ -110,33 +110,7 @@ LoadableModule.onLoaded(Module.new do
 #					LINK_OPTIONS += -dynamicbase -nxcompat 
 #					LINK_OPTIONS_DEBUG += -assemblydebug
 #				endif
-#
-#				ifeq ($(DEBUGTYPE),Debug)
-#					CPP_OPTIONS += $(CPP_OPTIONS_DEBUG) -Od
-#					LINK_OPTIONS += -nodefaultlib $(LINK_OPTIONS_DEBUG)
-#					SDK_LIB += chkstk.obj
-#					DEBUGTYPEREF := Debug
-#				endif
-#				ifeq ($(DEBUGTYPE),Checked)
-#					CPP_OPTIONS += $(CPP_OPTIONS_DEBUG) -Ox
-#					LINK_OPTIONS += -nodefaultlib $(LINK_OPTIONS_DEBUG)
-#					DEBUGTYPEREF := Release
-#				endif
-#				ifeq ($(DEBUGTYPE),Release)
-#					ifeq ($(COMPILER),ICL)
-#						CPP_OPTIONS += -O3 -Qprec-div-
-#					else
-#						CPP_OPTIONS += -Ox
-#					endif
-#					LINK_OPTIONS += -nodefaultlib
-#					DEBUGTYPEREF := Release
-#				endif
-#				ifeq ($(COMPILER),ICL)
-#					COMPILERREF := VC8
-#				else
-#					COMPILERREF := $(COMPILER)
-#				endif
-			
+
 			cppWarnings = ' -W3'
 			case(@compiler)
 				when 'VC9'
