@@ -1,6 +1,6 @@
 module Rakish
 
-# Module to generate VCProject files for ocmpiel C++ specified in this build
+# Module to generate VCProject files for ocmpile C++ specified in this build
 # Not really part of public distributioin - too littered with local stuff
 # specific to my main builds  This needs to be converted to work in a more configurable way
 class VcprojBuilder
@@ -86,7 +86,7 @@ EOTEXT
 	def addVCX10RakefileUserMacroGroup(out, cfg)
 		
 		out << "<PropertyGroup Condition=\"'$(Configuration)|$(Platform)\'=='#{cfg.configName}|Win32'\">";
-		out << "  <NMakeOutput>#{cppProject.moduleName}.exe</NMakeOutput>";
+		out << "  <NMakeOutput>#{cppProject.binDir()}/#{cppProject.moduleName}-#{cfg.configName}.exe</NMakeOutput>";
 		
 		begin
 			cppdefs = '';
@@ -154,12 +154,19 @@ EOTEXT
 
 	def eachConfig(&b) 
 		[	
-			"Win32-VC10-MD-Debug",
-			"Win32-VC10-MDd-Debug",
-			"Win32-VC10-MT-Debug",
-			"Win32-VC10-MTd-Debug",
-			"Win32-VC10-MD-Release",
-			"Win32-VC10-MT-Release" 
+			"Win64-VC14-MD-Debug",
+			"Win64-VC14-MDd-Debug",
+			"Win64-VC14-MT-Debug",
+			"Win64-VC14-MTd-Debug",
+			"Win64-VC14-MD-Release",
+			"Win64-VC14-MT-Release"
+
+#			"Win32-VC10-MD-Debug",
+#			"Win32-VC10-MDd-Debug",
+#			"Win32-VC10-MT-Debug",
+#			"Win32-VC10-MTd-Debug",
+#			"Win32-VC10-MD-Release",
+#			"Win32-VC10-MT-Release"
 		].each do |cfg|
 			cfg = cppProject.resolveConfiguration(cfg);
 			next unless cfg

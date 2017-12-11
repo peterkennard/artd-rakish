@@ -359,7 +359,6 @@ LoadableModule.onLoaded(Module.new do
 				'setupapi.lib',
 				'dbghelp.lib',
 				'cryptui.lib',
-			  #  'bthprops.lib',
 			].each do |lib|
 				sdkLibs << lib;
 			end
