@@ -283,13 +283,15 @@ LoadableModule.onLoaded(Module.new do
                 when 'VC14'
                     begin
                         sdkLib = "C:/Program Files (x86)/Windows Kits/10/Lib/10.0.16299.0";
+                        sdkBin = "C:/Program Files (x86)/Windows Kits/10/bin/10.0.16299.0";
                         sdkInclude = "C:/Program Files (x86)/Windows Kits/10/Include/10.0.16299.0";
                         msvcDir = "C:/Program Files (x86)/Microsoft Visual Studio/2017/Community/VC/Tools/MSVC/14.11.25503";
 
                         unless(File.directory?(sdkLib))
-                            log.debug("selcting windows SDK");
+                            # log.debug("selcting windows SDK"     );
                             sdkLib = "#{tpp}/tools/winsdk10/Lib/10.0.10586.0";
                             sdkInclude = "#{tpp}/tools/winsdk10/Include/10.0.10586.0";
+                            sdkBin = ""#{tpp}/tools/winsdk10/bin/10.0.10586.0"";
                         end
 
                         # log.debug("selcting windows SDK #{sdkLib}");
@@ -300,12 +302,16 @@ LoadableModule.onLoaded(Module.new do
                         ipaths << "#{sdkInclude}/winrt"
 
                         if(@platform === "Win32")
+                            sdkBin = "#{sdkBin}/x86";
                             linkOpts += " -libpath:\"#{sdkLib}/ucrt/x86\""
                             linkOpts += " -libpath:\"#{sdkLib}/um/x86\""
                         else
+                            sdkBin = "#{sdkBin}/x64";
                             linkOpts += " -libpath:\"#{sdkLib}/ucrt/x64\""
                             linkOpts += " -libpath:\"#{sdkLib}/um/x64\""
                         end
+
+                        @sdkBinDir = sdkBin;
 
                         msvcBinDir = NIL;
                         if(File.directory?(msvcDir))
@@ -333,6 +339,7 @@ LoadableModule.onLoaded(Module.new do
                             ipaths << "#{tpp}/tools/msvc14/include"
                             ipaths << "#{tpp}/tools/msvc14/atlmfc/include"
                         end
+
 
                         @MSVC_EXE = "#{msvcBinDir}/cl.exe"
                         @LINK_EXE = "#{msvcBinDir}/link.exe"
@@ -394,24 +401,18 @@ LoadableModule.onLoaded(Module.new do
 				sdkLibs << lib;
 			end
 
-			includesManifest = true;
 			case(@compiler)
 				when 'VC8'
-					@ManifestSource = "#{tpp}/tools/msvc8/manifest/#{@platform}-#{@linkType}.manifest"
-					linkOpts += " -manifest:no"
+					@defaultManifest ||= "#{tpp}/tools/msvc8/manifest/#{@platform}-#{@linkType}.manifest"
 				when 'VC9'
-					@ManifestSource = "#{tpp}/tools/msvc9/manifest/#{@platform}-#{@linkType}.manifest"
-					linkOpts += " -manifest:no"
+					@defaultManifest ||= "#{tpp}/tools/msvc9/manifest/#{@platform}-#{@linkType}.manifest"
 				when 'VC10'
-					@ManifestSource = "#{tpp}/tools/msvc10/manifest/#{@platform}-#{@linkType}.manifest"
-					linkOpts += " -manifest:no"
+					@defaultManifest ||= "#{tpp}/tools/msvc10/manifest/#{@platform}-#{@linkType}.manifest"
+				when 'VC14'
 				when 'ICL'
-					@ManifestSource = "#{tpp}/tools/msvc8/manifest/#{@platform}-#{@linkType}.manifest"
-					linkOpts += " -manifest:no"
-				else
-					includesManifest = false;
+					@defaultManifest = NIL;
 			end
-							
+
 			# assign results to instance variables			
 			@CPP_OPTIONS 	= cppOpts;
 			@CPP_WARNINGS 	= cppWarnings;
@@ -614,11 +615,21 @@ LoadableModule.onLoaded(Module.new do
 				#SHARED_LIBS_FILES := $(addsuffix .lib,$(call GET_REFERENCES,$(SHARED_LIBS),$(OUTPUT_PATH)))
 				#
 
+                manifest = cfg.manifestFile;
+                manifest ||= @defaultManifest;
+
 				File.open(lnkfile,'w') do |f|
 					f.puts("-map:\"#{t.sources[:mapfile]}\"");
 					f.puts("-pdb:\"#{t.sources[:pdbfile]}\"");
 					f.puts("-implib:\"#{t.sources[:implib]}\"");
 					f.puts("-DLL #{@LINK_OPTS}");
+
+	                if(manifest)
+                        puts("manifest is \"#{manifest}\"");
+  	                    f.puts(" -manifest:embed \"-manifestinput:#{manifest}\"");
+	                else
+	                    f.puts(" -manifest:no");
+	                end
 
 					# library search paths
 					eachof cfg.libpaths do |lpath|
@@ -652,10 +663,17 @@ LoadableModule.onLoaded(Module.new do
 				raise e
 			end
 					
-			cmdline = "\"#{@LINK_EXE}\" -nologo @\"#{lnkfile}\"";					
+            opath = ENV['PATH']
+            if(@sdkBinDir)
+                ENV['PATH'] = "#{@sdkBinDir};#{opath}";
+            end
+			cmdline = "\"#{@LINK_EXE}\" -nologo @\"#{lnkfile}\"";
 			log.info(cmdline) if(cfg.verbose?)
 			system( cmdline );
-					
+
+            ENV['PATH'] = opath;
+
+
 			#ifeq ($(RUN_SIGNTOOL),1)
 			#	@echo "Signing $(notdir $(TARGET_FILE))"; \
 			#	$(SIGNTOOL_EXE) -in $(TARGET_FILE) -out $(TARGET_FILE).signed
@@ -678,12 +696,23 @@ LoadableModule.onLoaded(Module.new do
 					
 			# build linker source file
 			begin
+			    manifest = cfg.manifestFile;
+			    manifest ||= @defaultManifest;
+
 				File.open(lnkfile,'w') do |f|
 					f.puts("-out:\"#{t.name}\"");
 					f.puts("-map:\"#{t.sources[:mapfile]}\"");
 					f.puts("-pdb:\"#{t.sources[:pdbfile]}\"");							
 					f.puts("#{@LINK_OPTS}");
-	
+
+	                if(manifest)
+                        puts("manifest is \"#{manifest}\"");
+  	                    f.puts(" -manifest:embed \"-manifestinput:#{manifest}\"");
+	                else
+	                    f.puts(" -manifest:no");
+	                end
+
+
 					# library search paths
 					eachof cfg.libpaths do |lpath|
 						f.puts("-libpath:\"#{lpath}\"");
@@ -711,10 +740,17 @@ LoadableModule.onLoaded(Module.new do
 				log.error("error precessing: #{lnkfile} #{e}")			
 				raise e
 			end
-					
-			cmdline = "\"#{@LINK_EXE}\" -nologo @\"#{lnkfile}\"";					
+
+			cmdline = "\"#{@LINK_EXE}\" -nologo @\"#{lnkfile}\"";
+
+            opath = ENV['PATH']
+            if(@sdkBinDir)
+                ENV['PATH'] = "#{@sdkBinDir};#{opath}";
+            end
 			log.info(cmdline) if(cfg.verbose?)
 			system( cmdline );
+            ENV['PATH'] = opath;
+
 		end
 
 		@@makeManifestAction = lambda do |t|
@@ -723,7 +759,7 @@ LoadableModule.onLoaded(Module.new do
 		def doMakeManifest(t)
 			log.info("Generating #{File.basename(t.name)}");
 			data = t.data;
-			cp(@ManifestSource, data[:txt],:verbose => false) 
+			cp(@defaultManifest, data[:txt],:verbose => false)
 			File.open(t.name,'w') do |f|
 				f.puts "#include <windows.h>"						
 				if(@BASELINKAGE === 'Dynamic' && t.config.isLibrary)
@@ -762,7 +798,7 @@ LoadableModule.onLoaded(Module.new do
 			rcobjs=[]
 			basePath = File.join(cfg.nativeObjectPath,cfg.targetBaseName);
 					
-			if(@ManifestSource) # not present if not needed
+			if(@defaultManifest) # not present if not needed
 				manifest_rc = "#{basePath}.manifest.rc"
 				tsk = lookupTask(manifest_rc)
 				unless(tsk)
@@ -770,7 +806,7 @@ LoadableModule.onLoaded(Module.new do
 					# manifest resource
 					cfg.project.addCleanFiles(manifest_rc,manifest_txt);
 												
-					tsk = Rake::FileTask.define_task manifest_rc => [ cfg.nativeObjectPath, cfg.projectFile, @ManifestSource ]
+					tsk = Rake::FileTask.define_task manifest_rc => [ cfg.nativeObjectPath, cfg.projectFile, @defaultManifest ]
 					tsk.enhance &@@makeManifestAction;
 					tsk.config = cfg
 					tsk.data = { :txt=>manifest_txt }

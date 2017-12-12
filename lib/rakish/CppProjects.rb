@@ -437,7 +437,7 @@ module CppProjectModule
 		ensureDirectoryTask(nativeObjectPath());
 
 		## link tasks
-		tsk = tools.createLinkTask(objs,cfg);
+		tsk = tools.createLinkTask(objs,@cppBuildConfig);
 		if(tsk)
 			ensureDirectoryTask(cfg.nativeLibDir);
 			ensureDirectoryTask(cfg.binDir);
@@ -526,6 +526,7 @@ module CppProjectModule
 			@configName = cfgName;
 			@ctools = tools;
 			@targetBaseName = pnt.moduleName;
+			# @manifestFile = pnt.manifestFile;
 			tools.ensureConfigOptions(self);
 		end
 
@@ -583,6 +584,14 @@ module CppProjectModule
 		def objectFiles
 			[]
 		end
+
+        def setManifest(file)
+            @manifestFile = File.expand_path(file);
+        end
+        def manifestFile
+            @manifestFile
+        end
+
 	end
 
 	# for a specifc named configuraton, resolves the configration and loads it with the
