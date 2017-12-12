@@ -145,8 +145,14 @@ EOTEXT
 			end
 			out << '</ItemGroup>';
 		end
+		files = FileList.new();
+		files.include('*.*');
+	    files.exclude('*.cpp', '*.c' '*.asm','*.h', '*.hpp', '*.rc' );
+
 		out << '<ItemGroup>';
-		out << "  <None Include=\"#{vcprojRelative(cppProject.projectFile)}\" />";
+		    files.each do |f|
+		        out << "  <None Include=\"#{vcprojRelative(f)}\" />";  # cppProject.projectFile)}\" />";
+		    end
 		out << '</ItemGroup>';
 		out.join("\n#{indent}");
 	end
