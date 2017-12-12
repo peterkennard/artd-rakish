@@ -146,12 +146,15 @@ EOTEXT
 			out << '</ItemGroup>';
 		end
 		files = FileList.new();
-		files.include('*.*');
-	    files.exclude('*.cpp', '*.c' '*.asm','*.h', '*.hpp', '*.rc' );
+		files.include("#{cppProject.projectDir}/*.*");
+	    files.exclude('**/*.cpp', '**/*.c' '**/*.asm','**/*.h', '**.inl', '**/inc', '**/xsd', '**/*.hpp', '**/*.rc' );
+
 
 		out << '<ItemGroup>';
 		    files.each do |f|
-		        out << "  <None Include=\"#{vcprojRelative(f)}\" />";  # cppProject.projectFile)}\" />";
+		        log.debug("adding file #{f}");
+		        out << "  <None Include=\"#{vcprojRelative(f)}\" />";
+		        # cppProject.projectFile)}\" />";
 		    end
 		out << '</ItemGroup>';
 		out.join("\n#{indent}");
