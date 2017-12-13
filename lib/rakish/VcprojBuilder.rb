@@ -152,9 +152,7 @@ EOTEXT
 
 		out << '<ItemGroup>';
 		    files.each do |f|
-		        log.debug("adding file #{f}");
 		        out << "  <None Include=\"#{vcprojRelative(f)}\" />";
-		        # cppProject.projectFile)}\" />";
 		    end
 		out << '</ItemGroup>';
 		out.join("\n#{indent}");
