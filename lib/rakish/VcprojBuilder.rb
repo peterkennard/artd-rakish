@@ -86,7 +86,7 @@ EOTEXT
 	def addVCX10RakefileUserMacroGroup(out, cfg)
 		
 		out << "<PropertyGroup Condition=\"'$(Configuration)|$(Platform)\'=='#{cfg.configName}|Win32'\">";
-		out << "  <NMakeOutput>#{cppProject.binDir()}/#{cppProject.moduleName}-#{cfg.configName}.exe</NMakeOutput>";
+		out << "  <NMakeOutput>#{cppProject.binDir()}/#{cfg.targetName}.exe</NMakeOutput>";
 		
 		begin
 			cppdefs = '';

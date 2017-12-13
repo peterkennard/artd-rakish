@@ -257,9 +257,11 @@ module CppProjectConfig
 	def INCDIR
 		@INCDIR||=getAnyAbove(:INCDIR)||"#{buildDir()}/include";
 	end
+
 	def binDir
-		@binDir||=getAnyAbove(:binDir)||"#{buildDir()}/bin";
+		@binDir||=(getAnyAbove(:binDir)||"#{buildDir()}/bin/#{nativeConfigName}");
 	end
+
 	def nativeLibDir
 		@nativeLibDir||=getAnyAbove(:nativeLibDir)||"#{buildDir()}/lib";
 	end
@@ -542,7 +544,7 @@ module CppProjectModule
 		end
 
 		def targetName
-			@targetName||="#{targetBaseName}-#{configName}";
+			@targetName||="#{targetBaseName}";
 		end
 
 		def dependencyLibs

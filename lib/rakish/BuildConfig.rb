@@ -92,10 +92,10 @@ module BuildConfigModule
 	end
 
     # folder to output native executable and dll files to.
-    # defaults to (buildDir)/bin
+    # defaults to (buildDir)/bin/(nativeConfigName)
 	def binDir
-        @binDir||=getAnyAbove(:binDir)||"#{buildDir()}/bin";
-	end
+        @binDir||=getAnyAbove(:binDir)||"#{buildDir()}/bin/#{nativeConfigName}";
+    end
 
     # folder to output native library files and link references to.
     # defaults to (buildDir)/lib
@@ -207,11 +207,11 @@ class GlobalConfig < BuildConfig
 
 			# set defaults if not set above
 			@nativeLibDir ||= "#{@buildDir}/lib"
-			@binDir ||= "#{@buildDir}/bin"
 
 			# get config from command line
 			cfg.nativeConfigName ||= ENV['nativeConfigName'];
 			cfg.nativeConfigName ||= defaultConfig
+			binDir();
 
 		end
 
