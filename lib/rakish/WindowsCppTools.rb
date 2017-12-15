@@ -37,21 +37,24 @@ LoadableModule.onLoaded(Module.new do
 	class Win32Tools
 		include CTools
 
-		# platform specific file extensions
-		# TODO - make these project wide dependent on platform ???
-		def OBJEXT
+		# extension for pre linked object files
+		def objExt
 			'.obj'
 		end	
-		def LIBEXT 
+		# extension for static library files
+		def libExt
 			'.lib'
 		end
-		def DLLEXT 
+		# extension for dynamic library files
+		def dllExt
 			'.dll'
 		end
-		def EXEEXT 
+		# extension for executable files
+		def exeExt
 			'.exe'
 		end
 
+        # the target platform
         def platform
             @platform
         end
@@ -547,7 +550,7 @@ LoadableModule.onLoaded(Module.new do
 
 		# Override for CTools
 		def initCompileTask(cfg)
-			cfg.project.addCleanFiles("#{cfg.nativeObjectPath()}/*#{OBJEXT()}",
+			cfg.project.addCleanFiles("#{cfg.nativeObjectPath()}/*#{objExt()}",
 							"#{cfg.nativeObjectPath()}/*.sbr");
 			Rake::Task.define_task :compile => [:includes,
 												cfg.nativeObjectPath(),

@@ -163,7 +163,7 @@ module CTools
     def createCompileTasks(files,cfg)                
         # format object files name
 	                                 
-        mapstr = "#{cfg.nativeObjectPath()}/%n#{OBJEXT()}";
+        mapstr = "#{cfg.nativeObjectPath()}/%n#{objExt()}";
 
         objs=FileList[];
         files.each do |source|
@@ -175,7 +175,7 @@ module CTools
     end
 	
 	def initCompileTask(cfg)
-		cfg.project.addCleanFiles("#{cfg.nativeObjectPath()}/*#{OBJEXT()}");
+		cfg.project.addCleanFiles("#{cfg.nativeObjectPath()}/*#{objExt()}");
 		Rake::Task.define_task :compile => [:includes,
 											cfg.nativeObjectPath(),
 											:depends]

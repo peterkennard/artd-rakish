@@ -130,7 +130,7 @@ module Rakish
 			end
 
 			def initCompileTask(cfg)
-				cfg.project.addCleanFiles("#{cfg.nativeObjectPath()}/*#{OBJEXT()}",
+				cfg.project.addCleanFiles("#{cfg.nativeObjectPath()}/*#{objExt()}",
 							  "#{cfg.nativeObjectPath()}/*.sbr");
 				Rake::Task.define_task :compile => [:includes,
 													 cfg.nativeObjectPath(),
@@ -167,7 +167,7 @@ module Rakish
                 
                 # format object files name
 	                                 
-                mapstr = "#{cfg.nativeObjectPath()}/%n#{OBJEXT()}";
+                mapstr = "#{cfg.nativeObjectPath()}/%n#{objExt()}";
 
                 objs=FileList[];
                 files.each do |source|
@@ -206,7 +206,7 @@ module Rakish
 #					
 #			# rule for object file generation
 #			regex = 
-#				Regexp.new('^' + Regexp.escape(@nativeObjectPath) + '\/[^\/]+' + OBJEXT() + '\z');
+#				Regexp.new('^' + Regexp.escape(@nativeObjectPath) + '\/[^\/]+' + objExt() + '\z');
 #
 #			Rake::Task::create_rule( regex => [
 #				proc { |task_name| 
