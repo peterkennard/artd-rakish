@@ -37,7 +37,7 @@ module CTools
 	# and loads if possible an instance of a set of configured "CTools" 
 	# for the specified "nativeConfigName" configuration.
 	def self.loadConfiguredTools(strCfg)
-		
+
 		splitcfgs = strCfg.split('-');
 		platform  = VALID_PLATFORMS[splitcfgs[0].to_sym];
 			
@@ -47,6 +47,13 @@ module CTools
 		factory = LoadableModule.load(platform[:module]);
 		factory.getConfiguredTools(splitcfgs,strCfg);
 
+	end
+	def self.loadToolchain(moduleName, strConfig)
+	    if(moduleName == 'WindowsCppTools' || moduleName == 'WindowsCppTools')
+	        loadConfiguredTools(strConfig);
+	    else
+	        log.debug("unrecognized toolchain module \"#{moduleName}\"");
+	    end
 	end
 
 	def writeLinkref(cfg,baseName,targetName)
@@ -237,6 +244,10 @@ module CppProjectConfig
 	attr_reader :targetType
 	attr_reader :thirdPartyLibs
 
+	def cpp
+	    self
+	end
+
 #	attr_reader	:cflags  had this in old one for added VC flags.
 
  	addInitBlock do |pnt,opts|
@@ -250,6 +261,10 @@ module CppProjectConfig
 			@ctools = pnt.ctools;
 		end
  	end
+
+    def setToolchain(ctools)
+        @ctools = ctools;
+    end
 
     # temporary include directory built for compiling
     # where generated include files or links to the project sources
@@ -605,7 +620,12 @@ module CppProjectModule
 			return ret;
 		end
 
-		tools = CTools.loadConfiguredTools(config);
+        if(ctools)
+            tools = ctools;
+		else
+		    tools = CTools.loadConfiguredTools(config);
+        end
+
 		ret = @resolvedConfigs[config] = TargetConfig.new(self,config,tools);
 
 		if(defined? @cppConfigurator_)
@@ -618,8 +638,10 @@ end
 
 class BuildConfig
    # ensure added global project task dependencies
+    task :clean
     task :autogen 		=> [ :cleandepends, :includes, :vcproj ];
     task :cleanautogen 	=> [ :cleanincludes, :cleandepends, :vcprojclean ];
+    task :cleanAll      => [ :clean, :cleanautogen ];
     task :compile 		=> [ :includes ];
     task :depends		=> [ :includes ];
     task :build 		=> [ :compile ];
