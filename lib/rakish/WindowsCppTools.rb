@@ -1,7 +1,7 @@
 
 module Rakish
 
-LoadableModule.onLoaded(Module.new do
+    module WindowsCppTools
 
 	include Logger;
 
@@ -914,73 +914,69 @@ LoadableModule.onLoaded(Module.new do
 
 	end
 
+        def self.getConfiguredTools(cfgs,strCfg)
 
-	def self.getConfiguredTools(cfgs,strCfg)
-		
-		if(cfgs.length != 4) 
-			raise InvalidConfigError.new(strCfg, "must be 4 \"-\" separated elements");
-		end
+            if(cfgs.length != 4)
+                raise InvalidConfigError.new(strCfg, "must be 4 \"-\" separated elements");
+            end
 
-		error = false;		
-		compiler = nil
-		linkType = nil;
-		debugType = nil;
+            error = false;
+            compiler = nil
+            linkType = nil;
+            debugType = nil;
 
-		cfgs.each do |cfg|
-			cmp = VALID_COMPILERS[cfg];
-			if(cmp)
-				error = compiler;
-				compiler = cfg;
-				next
-			end
-			cmp = VALID_LINKTYPES[cfg];
-			if(cmp)
-				error = linkType;
-				linkType = cfg;
-				next
-			end
-			cmp = VALID_DEBUGTYPES[cfg];
-			if(cmp)
-				error = debugType;
-				debugType = cfg;
-				next
-			end
-		end
+            cfgs.each do |cfg|
+                cmp = VALID_COMPILERS[cfg];
+                if(cmp)
+                    error = compiler;
+                    compiler = cfg;
+                    next
+                end
+                cmp = VALID_LINKTYPES[cfg];
+                if(cmp)
+                    error = linkType;
+                    linkType = cfg;
+                    next
+                end
+                cmp = VALID_DEBUGTYPES[cfg];
+                if(cmp)
+                    error = debugType;
+                    debugType = cfg;
+                    next
+                end
+            end
 
-		if(error)
-			raise InvalidConfigError.new(strCfg, "element present more than once");
-		end
+            if(error)
+                raise InvalidConfigError.new(strCfg, "element present more than once");
+            end
+            if(!(compiler && linkType && debugType))
+                raise InvalidConfigError.new(strCfg, "invalid or missing element");
+            end
 
-		if(!(compiler && linkType && debugType))
-			raise InvalidConfigError.new(strCfg, "invalid or missing element");
-		end
+            # ensure order of elements is "standard"
+            cfgs[1] = compiler;
+            cfgs[2] = linkType;
+            cfgs[3] = debugType;
 
-		# ensure order of elements is "standard"
-		cfgs[1] = compiler;
-		cfgs[2] = linkType;
-		cfgs[3] = debugType;
+            platformBits = '32';
+            if(cfgs[0] =~ /\d+/)
+                platformType = $`;
+                platformBits = $&;
+            end
+            if(platformType === 'Win')
+                platformType = 'Windows';
+            end
 
-		platformBits = '32';
-		if(cfgs[0] =~ /\d+/)
-			platformType = $`;
-			platformBits = $&;
-		end
-		if(platformType === 'Win')
-			platformType = 'Windows';
-		end
-
-		args= {
-			:split=>cfgs,
-			:platformBits=>platformBits,
-			:platformType=>platformType,
-			:compiler=>compiler,
-			:linkType=>linkType,
-			:debugType=>debugType
-		}
-		return( Win32Tools.new(args));
-	#	log.debug { "config validated #{cfgs.join('-')}" };
-	end
-
-end);
-
+            args= {
+                :split=>cfgs,
+                :platformBits=>platformBits,
+                :platformType=>platformType,
+                :compiler=>compiler,
+                :linkType=>linkType,
+                :debugType=>debugType
+            }
+            log.debug { "config validated #{cfgs.join('-')}" };
+            return( Win32Tools.new(args));
+        end
+    end
 end  # Rakish

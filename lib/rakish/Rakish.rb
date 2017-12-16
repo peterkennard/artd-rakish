@@ -79,6 +79,12 @@ module Rakish
 	# output messages are formatted to include the file and line number where 
 	# log.[level] was invoked.
 
+    # add a search path to the ruby search path for this process unless it is already there
+    def self.addToRubySearchPath(dir)
+        toAdd =  File.expand_path(dir);
+        $LOAD_PATH.unshift(toAdd) unless $LOAD_PATH.include?(toAdd);
+    end
+
 	module Logger
 
 		@@_logger_ = ::Logger.new(STDOUT);
@@ -728,6 +734,7 @@ module Rakish
 		end
 	end
 
+	if 0
 	module LoadableModule
 		include Rakish::Logger
 
@@ -752,6 +759,7 @@ module Rakish
 		def self.onLoaded(retVal)
 			Thread.current[:loadReturn] = retVal;
 		end
+	end
 	end
 
 	public

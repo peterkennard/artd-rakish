@@ -40,12 +40,13 @@ module CTools
 
 		splitcfgs = strCfg.split('-');
 		platform  = VALID_PLATFORMS[splitcfgs[0].to_sym];
-			
+
 		unless platform
 			raise InvalidConfigError.new(strCfg, "unrecognized platform \"#{splitcfgs[0]}\"");
 		end
-		factory = LoadableModule.load(platform[:module]);
-		factory.getConfiguredTools(splitcfgs,strCfg);
+		mod = platform[:module];
+		require mod;
+		Rakish::WindowsCppTools.getConfiguredTools(splitcfgs,strCfg);
 
 	end
 	def self.loadToolchain(moduleName, strConfig)
