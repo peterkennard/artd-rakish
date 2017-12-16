@@ -142,11 +142,12 @@ module Rakish
                 cmdline = "\"#{GccPath}\" -pthread -shared -shared-libgcc -Wl,-soname,\"#{outpath}\" -o \"#{outpath}\" ";
 
 
-                    # add library search paths
-                    # eachof cfg.libpaths do |lpath|
-                    #	f.puts("-libpath:\"#{lpath}\"");
-                    # end
-
+                # add library search paths
+                # eachof cfg.libpaths do |lpath|
+                #	f.puts("-libpath:\"#{lpath}\"");
+                # end
+                
+                # seems to be needed to specify libraries as an absolute path
                 cmdline << "-L/ ";
 
                 # libraries               
@@ -185,16 +186,47 @@ module Rakish
             def doLinkApp(t)
 
                 cfg = t.config;
+                outpath = t.name;
 
-                log.debug("gcc LINK app action");
+                log.info("linking application #{outpath}");
+
+                cmdline = "\"#{GccPath}\" -pthread -shared -shared-libgcc  -o \"#{outpath}\" ";
+
+                # add library search paths
+                # eachof cfg.libpaths do |lpath|
+                #	f.puts("-libpath:\"#{lpath}\"");
+                # end
+
+                # seems to be needed to specify libraries as an absolute path
+                cmdline << "-L/ ";
 
                 # libraries               
                 libs=[]
                 libs << cfg.dependencyLibs
-                libs.flatten.each do |obj|
-                    f.puts("\"#{obj}\"");
-                    log.debug("dependency #{obj}");
+                libs.flatten.each do |lib|
+                    if(File.path_is_absolute?(lib))
+                        cmdline << "-l \":#{lib}\" ";
+                    else
+                        cmdline << "-l \"#{lib}\" ";
+                    end
                 end
+
+                # object files
+                objs=[]
+                objs << t.sources[:userobjs];
+                objs.flatten.each do |obj|
+                    obj = obj.to_s
+                    next unless obj.pathmap('%x') == '.o'
+                    cmdline += "\"#{obj}\" ";
+                end
+
+                # log.debug("\n cmdline = #{cmdline}\n");
+
+                system(cmdline);
+
+        # @${LD} -Wl,-X -shared -o $@  \
+        # $(filter-out ${FULL_LIBS}, $(filter %.so %.o,$^)) ${FULL_LIBS} ${XLIBS} \
+        # -Wl,-rpath=${LIB_PATH} -Wl,-soname=lib${TARGET}.so
 
             end
 
