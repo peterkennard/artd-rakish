@@ -21,15 +21,15 @@ module CTools
 		:Win64 => {
 			:module => "#{Rakish::MAKEDIR}/WindowsCppTools.rb",
 		},
-		:iOS => {
-			:module => "#{Rakish::MAKEDIR}/IOSCTools.rb",
-		},
-		:Linux32 => {
-			:module => "#{Rakish::MAKEDIR}/GCCCTools.rb",
-		},
-		:Linux64 => {
-			:module => "#{Rakish::MAKEDIR}/GCCCTools.rb",
-		},
+#		:iOS => {
+#			:module => "#{Rakish::MAKEDIR}/IOSCTools.rb",
+#		},
+#		:Linux32 => {
+#			:module => "#{Rakish::MAKEDIR}/GCCCTools.rb",
+#		},
+#		:Linux64 => {
+#			:module => "#{Rakish::MAKEDIR}/GCCCTools.rb",
+#		},
 	};
 
 	# parses and validates an unknown string configuration name 
@@ -53,7 +53,16 @@ module CTools
 	    if(moduleName == 'WindowsCppTools' || moduleName == 'WindowsCppTools')
 	        loadConfiguredTools(strConfig);
 	    else
-	        log.debug("unrecognized toolchain module \"#{moduleName}\"");
+            begin
+                require moduleName;
+                mod = Kernel.const_get(moduleName.to_s);
+
+                # eval(:Bob.to_s)
+
+            rescue
+                log.debug("unrecognized toolchain module \"#{moduleName}\"");
+            end
+             # Rakish::WindowsCppTools.getConfiguredTools(splitcfgs,strCfg);
 	    end
 	end
 
