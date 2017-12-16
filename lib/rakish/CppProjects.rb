@@ -14,54 +14,20 @@ module CTools
 	include Rakish::Logger
 	include Rakish::Util
 
-	VALID_PLATFORMS = { 
-		:Win32 => {
-			:module => "#{Rakish::MAKEDIR}/WindowsCppTools.rb",
-		},
-		:Win64 => {
-			:module => "#{Rakish::MAKEDIR}/WindowsCppTools.rb",
-		},
-#		:iOS => {
-#			:module => "#{Rakish::MAKEDIR}/IOSCTools.rb",
-#		},
-#		:Linux32 => {
-#			:module => "#{Rakish::MAKEDIR}/GCCCTools.rb",
-#		},
-#		:Linux64 => {
-#			:module => "#{Rakish::MAKEDIR}/GCCCTools.rb",
-#		},
-	};
-
 	# parses and validates an unknown string configuration name 
 	# of the format [TargetPlatform]-[Compiler]-(items specific to compiler type)
 	# and loads if possible an instance of a set of configured "CTools" 
 	# for the specified "nativeConfigName" configuration.
-	def self.loadConfiguredTools(strCfg)
 
-		splitcfgs = strCfg.split('-');
-		platform  = VALID_PLATFORMS[splitcfgs[0].to_sym];
-
-		unless platform
-			raise InvalidConfigError.new(strCfg, "unrecognized platform \"#{splitcfgs[0]}\"");
-		end
-		mod = platform[:module];
-		require mod;
-		Rakish::WindowsCppTools.getConfiguredTools(splitcfgs,strCfg);
-
-	end
 	def self.loadToolchain(moduleName,configName,args={})
-	    if(moduleName == 'WindowsCppTools' || moduleName == 'WindowsCppTools')
-	        loadConfiguredTools(configName);
-	    else
-            begin
-                require moduleName;
-                mod = Rakish.const_get(moduleName.to_s);
-		mod.getConfiguredTools(configName,args);
-            rescue
-                log.debug("unrecognized toolchain module \"#{moduleName}\"");
-            end
-             # Rakish::WindowsCppTools.getConfiguredTools(splitcfgs,strCfg);
-	    end
+        begin
+            require moduleName;
+            moduleName = moduleName.pathmap('%n');
+            mod = Rakish.const_get(moduleName.to_s);
+            mod.getConfiguredTools(configName,args);
+        rescue
+            log.debug("unrecognized toolchain module \"#{moduleName}\"");
+        end
 	end
 
 	def writeLinkref(cfg,baseName,targetName)
@@ -627,13 +593,7 @@ module CppProjectModule
 		if(ret = (@resolvedConfigs||={})[config])
 			return ret;
 		end
-
-        if(ctools)
-            tools = ctools;
-		else
-		    tools = CTools.loadConfiguredTools(config);
-        end
-
+        tools = ctools;
 		ret = @resolvedConfigs[config] = TargetConfig.new(self,config,tools);
 
 		if(defined? @cppConfigurator_)

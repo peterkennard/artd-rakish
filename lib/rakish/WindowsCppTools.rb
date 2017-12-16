@@ -914,69 +914,86 @@ module Rakish
 
 	end
 
-        def self.getConfiguredTools(cfgs,strCfg)
+	VALID_PLATFORMS = {
+		:Win32 => {
+			:module => "#{Rakish::MAKEDIR}/WindowsCppTools.rb",
+		},
+		:Win64 => {
+			:module => "#{Rakish::MAKEDIR}/WindowsCppTools.rb",
+		},
+	};
 
-            if(cfgs.length != 4)
-                raise InvalidConfigError.new(strCfg, "must be 4 \"-\" separated elements");
-            end
 
-            error = false;
-            compiler = nil
-            linkType = nil;
-            debugType = nil;
+    def self.getConfiguredTools(strCfg,args={})
 
-            cfgs.each do |cfg|
-                cmp = VALID_COMPILERS[cfg];
-                if(cmp)
-                    error = compiler;
-                    compiler = cfg;
-                    next
-                end
-                cmp = VALID_LINKTYPES[cfg];
-                if(cmp)
-                    error = linkType;
-                    linkType = cfg;
-                    next
-                end
-                cmp = VALID_DEBUGTYPES[cfg];
-                if(cmp)
-                    error = debugType;
-                    debugType = cfg;
-                    next
-                end
-            end
+		cfgs = strCfg.split('-');
+		platform  = VALID_PLATFORMS[cfgs[0].to_sym];
 
-            if(error)
-                raise InvalidConfigError.new(strCfg, "element present more than once");
-            end
-            if(!(compiler && linkType && debugType))
-                raise InvalidConfigError.new(strCfg, "invalid or missing element");
-            end
-
-            # ensure order of elements is "standard"
-            cfgs[1] = compiler;
-            cfgs[2] = linkType;
-            cfgs[3] = debugType;
-
-            platformBits = '32';
-            if(cfgs[0] =~ /\d+/)
-                platformType = $`;
-                platformBits = $&;
-            end
-            if(platformType === 'Win')
-                platformType = 'Windows';
-            end
-
-            args= {
-                :split=>cfgs,
-                :platformBits=>platformBits,
-                :platformType=>platformType,
-                :compiler=>compiler,
-                :linkType=>linkType,
-                :debugType=>debugType
-            }
-            log.debug { "config validated #{cfgs.join('-')}" };
-            return( Win32Tools.new(args));
+        if(cfgs.length != 4)
+            raise InvalidConfigError.new(strCfg, "must be 4 \"-\" separated elements");
         end
+
+		unless platform
+			raise InvalidConfigError.new(strCfg, "unrecognized platform \"#{splitcfgs[0]}\"");
+		end
+
+        error = false;
+        compiler = nil
+        linkType = nil;
+        debugType = nil;
+
+        cfgs.each do |cfg|
+            cmp = VALID_COMPILERS[cfg];
+            if(cmp)
+                error = compiler;
+                compiler = cfg;
+                next
+            end
+            cmp = VALID_LINKTYPES[cfg];
+            if(cmp)
+                error = linkType;
+                linkType = cfg;
+                next
+            end
+            cmp = VALID_DEBUGTYPES[cfg];
+            if(cmp)
+                error = debugType;
+                debugType = cfg;
+                next
+            end
+        end
+
+        if(error)
+            raise InvalidConfigError.new(strCfg, "element present more than once");
+        end
+        if(!(compiler && linkType && debugType))
+            raise InvalidConfigError.new(strCfg, "invalid or missing element");
+        end
+
+        # ensure order of elements is "standard"
+        cfgs[1] = compiler;
+        cfgs[2] = linkType;
+        cfgs[3] = debugType;
+
+        platformBits = '32';
+        if(cfgs[0] =~ /\d+/)
+            platformType = $`;
+            platformBits = $&;
+        end
+        if(platformType === 'Win')
+            platformType = 'Windows';
+        end
+
+        args= {
+            :split=>cfgs,
+            :platformBits=>platformBits,
+            :platformType=>platformType,
+            :compiler=>compiler,
+            :linkType=>linkType,
+            :debugType=>debugType
+        }
+        log.debug { "config validated #{cfgs.join('-')}" };
+        return( Win32Tools.new(args));
     end
+end # WindowsCppTools
 end  # Rakish
