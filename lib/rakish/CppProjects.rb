@@ -32,10 +32,9 @@ module CTools
         end
 	end
 
-	def writeLinkref(cfg,baseName,targetName)
-					
+	def writeLinkref(cfg,baseName,targetName)					
 		defpath = "#{cfg.nativeLibDir}/#{baseName}-#{cfg.nativeConfigName}.linkref"
-		reltarget = getRelativePath(targetName,cfg.nativeLibDir);
+        reltarget = getRelativePath(targetName,cfg.nativeLibDir);
 		File.open(defpath,'w') do |f|
 			f.puts("libs = [\'#{reltarget}\']")
 		end
@@ -43,7 +42,8 @@ module CTools
 
 	# real bodge for now need to clean this up somehow.
 	def loadLinkref(libdir,config,cfgName,baseName)
-		cd libdir, :verbose=>false do
+        # log.debug("load linkref for #{baseName} from #{libdir} there ? #{File.directory?(libdir)}");
+        cd libdir, :verbose=>false do
 			libdef = File.expand_path("#{baseName}-#{cfgName}.linkref");
 			begin
 				libpaths=nil
@@ -383,9 +383,9 @@ module CppProjectModule
 
 	LinkIncludeAction_ = lambda do |t|
 		config = t.config;
-		# if(config.verbose?)
+	    if(config.verbose?)
 			puts "generating #{t.name} from #{t.source}"
-		# end
+        end
 
 		destfile = t.name;
 		srcpath = config.getRelativePath(t.source,File.dirname(t.name));

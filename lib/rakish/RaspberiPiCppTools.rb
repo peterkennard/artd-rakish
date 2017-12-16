@@ -132,23 +132,35 @@ module Rakish
             end
             def doLinkDll(t)
 
+                cfg = t.config;
                 outpath = t.name;
+
+			    writeLinkref(cfg,cfg.targetBaseName,outpath);
+
+                log.info("linking shared lib #{outpath}");
+
                 cmdline = "\"#{GccPath}\" -pthread -shared -shared-libgcc -Wl,-soname,\"#{outpath}\" -o \"#{outpath}\" ";
+
 
                     # add library search paths
                     # eachof cfg.libpaths do |lpath|
                     #	f.puts("-libpath:\"#{lpath}\"");
                     # end
 
-                # libraries
-                libs=[]
+                cmdline << "-L/ ";
 
+                # libraries               
+                libs=[]
                 libs << cfg.dependencyLibs
-                libs.flatten.each do |obj|
-                    f.puts("\"#{obj}\"");
-                    log.debug("dependency #{obj}");
+                libs.flatten.each do |lib|
+                    if(File.path_is_absolute?(lib))
+                        cmdline << "-l \":#{lib}\" ";
+                    else
+                        cmdline << "-l \"#{lib}\" ";
+                    end
                 end
 
+                # object files
                 objs=[]
                 objs << t.sources[:userobjs];
                 objs.flatten.each do |obj|
@@ -158,7 +170,6 @@ module Rakish
                 end
 
                 # log.debug("\n cmdline = #{cmdline}\n");
-                log.info("linking shared lib #{outpath}");
 
                 system(cmdline);
 
@@ -172,7 +183,18 @@ module Rakish
                 t.config.ctools.doLinkApp(t)
             end
             def doLinkApp(t)
+
+                cfg = t.config;
+
                 log.debug("gcc LINK app action");
+
+                # libraries               
+                libs=[]
+                libs << cfg.dependencyLibs
+                libs.flatten.each do |obj|
+                    f.puts("\"#{obj}\"");
+                    log.debug("dependency #{obj}");
+                end
 
             end
 
