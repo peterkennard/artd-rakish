@@ -128,32 +128,39 @@ module Rakish
             end
 
 
-            def resolveAndAddLibs(cmdline, cfg) 
-                # add library search paths
-                # eachof cfg.libpaths do |lpath|
-                #	f.puts("-libpath:\"#{lpath}\"");
-                # end
+            def resolveAndAddLibs(cfg) 
                 
-                # seems we can't specify libraries as an absolute path
-      #         cmdline << "-L\"#{cfg.nativeLibDir}\" ";
+                cmdline = "";
+
+                # add library search paths
+                eachof cfg.libpaths do |lpath|
+                    log.debug("libpath:\"#{lpath}\"");
+                end
+                
+           #   cmdline += " \"-L#{cfg.nativeLibDir}/RaspberiPi-Debug\"";
+            cmdline += " \"-L#{cfg.nativeLibDir}\"";
 
                 # libraries               
-                testLibDir = Regexp.escape(cfg.nativeLibDir());
-
+                #  testPrefix = "#{cfg.nativeLibDir}/RaspberiPi-Debug/";
                 testPrefix = "#{cfg.nativeLibDir}/";
                 libs=[]
-                libs << cfg.dependencyLibs
+
+                libs << cfg.dependencyLibs  
                 libs.flatten.each do |lib|
-                    lib.strip!();
-
-
                     if(File.path_is_absolute?(lib))
-                        if(lib.start_with?(testPrefix)) 
-                            lib = lib.slice(testPrefix.length, lib.length - testPrefix.length);
+                        if(lib.start_with?(testPrefix))                                     
+                            lib = lib.slice(testPrefix.length, lib.length - testPrefix.length);                            
+                            cmdline += " \"-l:#{lib}\"";
+                            next
                         end      
+                        log.debug("warning: library #{lib} not in search paths absolute path specified");
+                        cmdline += " \"#{lib}\""; # note no -l for absolute path
+                    else
+                            cmdline += " \"-l#{lib}\"";
                     end
-                    cmdline += "-l \"#{lib}\" ";
                 end
+                # log.debug("link cmds\n\t\t #{cmdline}");
+                cmdline
             end
 
             @@linkDllAction = lambda do |t|
@@ -168,9 +175,7 @@ module Rakish
 
                 log.info("linking shared lib #{outpath}");
 
-                cmdline = "\"#{GccPath}\" -pthread -shared -shared-libgcc -Wl,-soname,\"#{outpath}\" -o \"#{outpath}\" ";
-
-                resolveAndAddLibs(cmdline,cfg);                
+                cmdline = "\"#{GccPath}\" -pthread -shared -shared-libgcc -Wl,--no-allow-shlib-undefined,-soname,\"#{outpath}\" -o \"#{outpath}\"";
 
                 # object files
                 objs=[]
@@ -178,8 +183,10 @@ module Rakish
                 objs.flatten.each do |obj|
                     obj = obj.to_s
                     next unless obj.pathmap('%x') == '.o'
-                    cmdline += "\"#{obj}\" ";
+                    cmdline += " \"#{obj}\"";
                 end
+
+                cmdline += resolveAndAddLibs(cfg);                
 
                 # log.debug("\n cmdline = #{cmdline}\n");
 
@@ -201,9 +208,9 @@ module Rakish
 
                 log.info("linking application #{outpath}");
 
-                cmdline = "\"#{GccPath}\" -pthread -shared -shared-libgcc  -o \"#{outpath}\" ";
+                cmdline = "\"#{GccPath}\" -pthread -shared -shared-libgcc -Wl,--no-allow-shlib-undefined -o \"#{outpath}\" ";
 
-                resolveAndAddLibs(cmdline,cfg);                
+                cmdline += resolveAndAddLibs(cfg);                
 
                 # object files
                 objs=[]
