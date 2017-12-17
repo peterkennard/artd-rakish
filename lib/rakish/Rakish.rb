@@ -1034,9 +1034,11 @@ module Rakish
 			relto ||= pwd
 			relto = File.expand_path(relto)
 			path = File.expand_path(path.to_s)
-			if( path =~ /^#{relto}\//)
-				return("./#{$'}")
-			end
+            if(path.start_with?("#{relto}/"))
+                reltolen = relto.length+1; 
+                path = path.slice(reltolen, path.length - reltolen);
+		        return("./#{path}")
+			end 
 
 			# puts("###  #{path} relto #{relto}") 
 

@@ -127,6 +127,35 @@ module Rakish
 
             end
 
+
+            def resolveAndAddLibs(cmdline, cfg) 
+                # add library search paths
+                # eachof cfg.libpaths do |lpath|
+                #	f.puts("-libpath:\"#{lpath}\"");
+                # end
+                
+                # seems we can't specify libraries as an absolute path
+      #         cmdline << "-L\"#{cfg.nativeLibDir}\" ";
+
+                # libraries               
+                testLibDir = Regexp.escape(cfg.nativeLibDir());
+
+                testPrefix = "#{cfg.nativeLibDir}/";
+                libs=[]
+                libs << cfg.dependencyLibs
+                libs.flatten.each do |lib|
+                    lib.strip!();
+
+
+                    if(File.path_is_absolute?(lib))
+                        if(lib.start_with?(testPrefix)) 
+                            lib = lib.slice(testPrefix.length, lib.length - testPrefix.length);
+                        end      
+                    end
+                    cmdline += "-l \"#{lib}\" ";
+                end
+            end
+
             @@linkDllAction = lambda do |t|
                 t.config.ctools.doLinkDll(t)
             end
@@ -141,25 +170,7 @@ module Rakish
 
                 cmdline = "\"#{GccPath}\" -pthread -shared -shared-libgcc -Wl,-soname,\"#{outpath}\" -o \"#{outpath}\" ";
 
-
-                # add library search paths
-                # eachof cfg.libpaths do |lpath|
-                #	f.puts("-libpath:\"#{lpath}\"");
-                # end
-                
-                # seems to be needed to specify libraries as an absolute path
-                cmdline << "-L/ ";
-
-                # libraries               
-                libs=[]
-                libs << cfg.dependencyLibs
-                libs.flatten.each do |lib|
-                    if(File.path_is_absolute?(lib))
-                        cmdline << "-l \":#{lib}\" ";
-                    else
-                        cmdline << "-l \"#{lib}\" ";
-                    end
-                end
+                resolveAndAddLibs(cmdline,cfg);                
 
                 # object files
                 objs=[]
@@ -192,24 +203,7 @@ module Rakish
 
                 cmdline = "\"#{GccPath}\" -pthread -shared -shared-libgcc  -o \"#{outpath}\" ";
 
-                # add library search paths
-                # eachof cfg.libpaths do |lpath|
-                #	f.puts("-libpath:\"#{lpath}\"");
-                # end
-
-                # seems to be needed to specify libraries as an absolute path
-                cmdline << "-L/ ";
-
-                # libraries               
-                libs=[]
-                libs << cfg.dependencyLibs
-                libs.flatten.each do |lib|
-                    if(File.path_is_absolute?(lib))
-                        cmdline << "-l \":#{lib}\" ";
-                    else
-                        cmdline << "-l \"#{lib}\" ";
-                    end
-                end
+                resolveAndAddLibs(cmdline,cfg);                
 
                 # object files
                 objs=[]
