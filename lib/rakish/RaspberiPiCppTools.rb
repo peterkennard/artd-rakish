@@ -90,7 +90,7 @@ module Rakish
                 cfig = t.config;
                 depname = objFile.pathmap('%X.d');
 
-                cmdline =   "\"#{GppPath}\"  -pthread -x c++ -std=c++11 -fpic  -MT\"#{depname}\" -MMD -MP -MF \"#{depname}\" -Wall -pedantic -c ";
+                cmdline =   "\"#{GppPath}\"  -g -pthread -x c++ -std=c++11 -fpic  -MT\"#{depname}\" -MMD -MP -MF \"#{depname}\" -Wall -pedantic -c ";
                 cmdline += " -o\"#{objFile}\"";
                 cmdline += getFormattedGccFlags(cfig);
                 cmdline += " \"#{cppFile}\"";
@@ -174,7 +174,7 @@ module Rakish
 
                 log.info("linking shared lib #{outpath}");
 
-                cmdline = "\"#{GppPath}\" -pthread -shared -shared-libgcc -Wl,--no-allow-shlib-undefined,-soname,\"#{outpath}\" -o \"#{outpath}\"";
+                cmdline = "\"#{GppPath}\" -g -pthread -shared -shared-libgcc -Wl,--no-allow-shlib-undefined,-soname,\"#{outpath}\" -o \"#{outpath}\"";
 
                 # object files
                 objs=[]
@@ -207,7 +207,7 @@ module Rakish
 
                 log.info("linking application #{outpath}");
 
-                cmdline = "\"#{GppPath}\" -pthread -shared -shared-libgcc -Wl,--no-allow-shlib-undefined -o \"#{outpath}\" ";
+               cmdline = "\"#{GppPath}\" -g -pthread -shared-libgcc -Wl,--no-allow-shlib-undefined -o \"#{outpath}\" ";
 
                 cmdline += resolveAndAddLibs(cfg);                
 
