@@ -529,12 +529,12 @@ module Rakish
 			log.info("\n#{cmdline}\n") if(cfig.verbose?)
 
 			included = Rakish::FileSet.new
-					
+
 			IO.popen(cmdline) do |output| 
 				while line = output.gets do
 					if line =~ /^Note: including file: +/
 						line = $'.strip.gsub(/\\/,'/')
-						next if( line =~ /^[^\/]+\/Program Files\/Microsoft /i )
+						next if( line =~ /^[^\/]+\/Program Files/i )
 						included << line
 						next
 					end
@@ -657,9 +657,9 @@ module Rakish
 					objs << t.sources[:autores];
 					objs.flatten.each do |obj|
 						obj = obj.to_s
-						next unless obj.pathmap('%x') == '.obj' 
+						next unless obj.pathmap('%x') == '.obj'
 						f.puts("\"#{obj}\"");
-					end			
+					end
 				end
 			rescue => e
 				log.error("error precessing: #{lnkfile} #{e}")			
