@@ -16,6 +16,7 @@ class Build
 		@projectsByModule={}
 		@projectsByFile={}  # each entry is an array of one or more projects
 		@configurationsByName={}
+        @registrationIndex_ = 0;
 
 		
 		task :resolve do |t|
@@ -62,6 +63,7 @@ class Build
 		@projects << p;
 		@projectsByModule[pname]=p;
 		(@projectsByFile[p.projectFile]||=[]).push(p);
+        @registrationIndex_ = @registrationIndex_ + 1;
 	end
 
 	def registerConfiguration(c) # :nodoc: internal used by configurations to register themselves when initialized
@@ -234,6 +236,8 @@ public
 	task :default		=> [ :build ];
 	task :rebuild 		=> [ :cleandepends, :depends, :clean, :build ];
 
+	attr_reader :registrationIndex
+
 	# returns the Rake task namespace for this project
 	attr_reader :myNamespace
 	alias 		:moduleName :myNamespace
@@ -380,6 +384,8 @@ public
                 @dependencies = @dependencies + (projs - @dependencies);
             end
 
+            @dependencies.sort_by!  { |dep| dep.registrationIndex }
+
 			# call instance initializer block inside local namespace and project's directory.
 			# and in the directory the defining file is contained in.
 			ns = Rake.application.in_namespace(@myNamespace) do
@@ -400,7 +406,7 @@ public
 
             # register this project after the initialization has loaded all 
 			# the other dependencies for proper dependency initialization order
-            @build.registerProject(self);
+            @registrationIndex = @build.registerProject(self);
 		end
 	end
 

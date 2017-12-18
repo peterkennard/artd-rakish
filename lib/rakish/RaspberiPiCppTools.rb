@@ -34,6 +34,7 @@ module Rakish
         # CPP  = ${GCC} -x c++ -E ${DEPINC}
 
             GccPath = '/usr/bin/gcc';
+            GppPath = '/usr/bin/g++';
 
             def initialize
                 @compileForSuffix = {};
@@ -89,7 +90,7 @@ module Rakish
                 cfig = t.config;
                 depname = objFile.pathmap('%X.d');
 
-                cmdline =   "\"#{GccPath}\"  -pthread -x c++ -std=c++11 -fpic  -MT\"#{depname}\" -MMD -MP -MF \"#{depname}\" -Wall -pedantic -c ";
+                cmdline =   "\"#{GppPath}\"  -pthread -x c++ -std=c++11 -fpic  -MT\"#{depname}\" -MMD -MP -MF \"#{depname}\" -Wall -pedantic -c ";
                 cmdline += " -o\"#{objFile}\"";
                 cmdline += getFormattedGccFlags(cfig);
                 cmdline += " \"#{cppFile}\"";
@@ -137,16 +138,14 @@ module Rakish
                     log.debug("libpath:\"#{lpath}\"");
                 end
                 
-           #   cmdline += " \"-L#{cfg.nativeLibDir}/RaspberiPi-Debug\"";
-            cmdline += " \"-L#{cfg.nativeLibDir}\"";
+                cmdline += " \"-L#{cfg.nativeLibDir}\"";
 
-                # libraries               
-                #  testPrefix = "#{cfg.nativeLibDir}/RaspberiPi-Debug/";
+                # add libraries to command line             
                 testPrefix = "#{cfg.nativeLibDir}/";
-                libs=[]
-
-                libs << cfg.dependencyLibs  
-                libs.flatten.each do |lib|
+                
+               # add exported libraries from dependencies 
+               # note revesing of order because these are provided least dependent to most
+               cfg.getOrderedLibs.flatten.each do |lib|
                     if(File.path_is_absolute?(lib))
                         if(lib.start_with?(testPrefix))                                     
                             lib = lib.slice(testPrefix.length, lib.length - testPrefix.length);                            
@@ -159,7 +158,7 @@ module Rakish
                             cmdline += " \"-l#{lib}\"";
                     end
                 end
-                # log.debug("link cmds\n\t\t #{cmdline}");
+                # log.debug("link cmds\n\n\t\t #{cmdline}\n\n");
                 cmdline
             end
 
@@ -175,7 +174,7 @@ module Rakish
 
                 log.info("linking shared lib #{outpath}");
 
-                cmdline = "\"#{GccPath}\" -pthread -shared -shared-libgcc -Wl,--no-allow-shlib-undefined,-soname,\"#{outpath}\" -o \"#{outpath}\"";
+                cmdline = "\"#{GppPath}\" -pthread -shared -shared-libgcc -Wl,--no-allow-shlib-undefined,-soname,\"#{outpath}\" -o \"#{outpath}\"";
 
                 # object files
                 objs=[]
@@ -208,7 +207,7 @@ module Rakish
 
                 log.info("linking application #{outpath}");
 
-                cmdline = "\"#{GccPath}\" -pthread -shared -shared-libgcc -Wl,--no-allow-shlib-undefined -o \"#{outpath}\" ";
+                cmdline = "\"#{GppPath}\" -pthread -shared -shared-libgcc -Wl,--no-allow-shlib-undefined -o \"#{outpath}\" ";
 
                 cmdline += resolveAndAddLibs(cfg);                
 

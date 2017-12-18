@@ -643,8 +643,7 @@ module Rakish
 					libs=[]
 						
 				    libs << @SDK_LIBS;
-				    libs << cfg.dependencyLibs
-					libs << cfg.libs
+				    libs << cfg.getOrderedLibs();
 					libs.flatten.each do |obj|
 						f.puts("\"#{obj}\"");
 					end
@@ -715,7 +714,6 @@ module Rakish
 	                    f.puts(" -manifest:no");
 	                end
 
-
 					# library search paths
 					eachof cfg.libpaths do |lpath|
 						f.puts("-libpath:\"#{lpath}\"");
@@ -733,8 +731,7 @@ module Rakish
 
 					libs=[]
 					libs << @SDK_LIBS;
-				    libs << cfg.dependencyLibs
-					libs << cfg.libs
+				    libs << cfg.getOrderedLibs();
 					libs.flatten.each do |obj|
 						f.puts("\"#{obj}\"");
 					end

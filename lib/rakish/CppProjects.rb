@@ -43,6 +43,7 @@ module CTools
 	# real bodge for now need to clean this up somehow.
 	def loadLinkref(libdir,config,cfgName,baseName)
         # log.debug("load linkref for #{baseName} from #{libdir} there ? #{File.directory?(libdir)}");
+
         cd libdir, :verbose=>false do
 			libdef = File.expand_path("#{baseName}-#{cfgName}.linkref");
 			begin
@@ -581,11 +582,16 @@ module CppProjectModule
 		def targetName
 			@targetName||="#{targetBaseName}";
 		end
+        
+        # get list of libraries built by and exported by dependency projects
+        # in dependency order from most dependent to least, and follow with
+        # libraries added in the current project
+        # TODO: dependency order not proper id it needs to sort them by "registration order"
+		def getOrderedLibs
 
-		def dependencyLibs
+        	libs=[]
 
-			libs=[]
-			project.dependencies.each do |dep|
+			project.dependencies.reverse_each do |dep|
 				if(defined? dep.outputsNativeLibrary)
 					if(dep.nativeLibDir)
 						ldef = ctools.loadLinkref(dep.nativeLibDir,self,configName,dep.moduleName);
@@ -597,6 +603,7 @@ module CppProjectModule
 				end
 			end
 
+            # add user specified lobraries after all dependency libraries.
 			if(thirdPartyLibs)
 				thirdPartyLibs.flatten.each do |tpl|
 					libpath = NIL;
@@ -605,14 +612,17 @@ module CppProjectModule
 					    tpl = tpl.pathmap('%f');
 					else
 					    puts("adding lib #{tpl}");
-					    libpath = "#{thirdPartyPath}/lib";
-					end
-					
-					ldef = ctools.loadLinkref(libpath,self,configName,tpl);
+                        libpath = "#{thirdPartyPath}/lib";
+                        unless(File.directory?(libpath))
+                            libs << tpl;
+                            next;
+                        end
+					end					
+				    ldef = ctools.loadLinkref(libpath,self,configName,tpl);
                     if(ldef != nil)
                         deflibs = ldef[:libs];
                         libs += deflibs if deflibs;
-					end
+				    end
 				end
 			end
 			libs
