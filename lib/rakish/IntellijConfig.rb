@@ -52,7 +52,7 @@ module Rakish
                 elsif(@tagPath === @@flagsPath)
                    optName = attributes['name'];
                    if(@compName == 'JavacSettings' && optName == 'ADDITIONAL_OPTIONS_STRING')
-                        config.javacFlags = attributes['value'];
+                        config.javacFlags = attrib  utes['value'];
                    end
                 end
             end

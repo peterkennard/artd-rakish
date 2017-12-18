@@ -251,17 +251,14 @@ public
 	# list of projects specified that this is dependent on ( not recursive - only direct dependencies )
 	attr_reader :dependencies
 
-	# Get intermediate output directory for this module common to all configurations
-	def nativeObjDir
-		@nativeObjDir||="#{getAnyAbove(:nativeObjDir)}/#{moduleName()}";
+    # folder to output native object and intermediate files to for this module
+	def moduleObjDir
+		@moduleObjDir||="#{getAnyAbove(:moduleObjDir)}/#{moduleName()}";
 	end
 
-	# Get directory containing the file for this project
-	attr_property :projectObjectPath
-
-	# Get configuration specific intermediate output directory
-	def nativeObjectPath
-		@nativeObjectPath||="#{nativeObjDir()}/#{nativeConfigName()}";
+	# Get configuration specific native intermediate object directory
+	def moduleConfiguredObjDir
+		@moduleConfiguredObjDir||="#{moduleObjDir()}/#{nativeConfigName()}";
 	end
 
 	# return self for inheriting PropertyBag configurations

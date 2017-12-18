@@ -148,7 +148,7 @@ module CTools
     def createCompileTasks(files,cfg)                
         # format object files name
 	                                 
-        mapstr = "#{cfg.nativeObjectPath()}/%n#{objExt()}";
+        mapstr = "#{cfg.moduleConfiguredObjDir()}/%n#{objExt()}";
 
         objs=FileList[];
         files.each do |source|
@@ -160,17 +160,17 @@ module CTools
     end
 	
 	def initCompileTask(cfg)
-		cfg.project.addCleanFiles("#{cfg.nativeObjectPath()}/*#{objExt()}");
+		cfg.project.addCleanFiles("#{cfg.moduleConfiguredObjDir()}/*#{objExt()}");
 		Rake::Task.define_task :compile => [:includes,
-											cfg.nativeObjectPath(),
+											cfg.moduleConfiguredObjDir(),
 											:depends]
 	end	
 
  	def initDependsTask(cfg) # :nodoc:
                
 		# create dependencies file by concatenating all .raked files				
-		tsk = file "#{cfg.nativeObjectPath()}/depends.rb" => [ :includes, cfg.nativeObjectPath() ] do |t|
-			cd(cfg.nativeObjectPath(),:verbose=>false) do
+		tsk = file "#{cfg.moduleConfiguredObjDir()}/depends.rb" => [ :includes, cfg.moduleConfiguredObjDir() ] do |t|
+			cd(cfg.moduleConfiguredObjDir(),:verbose=>false) do
 				File.open('depends.rb','w') do |out|
 					out.puts("# puts \"loading #{t.name}\"");
 				end
@@ -181,12 +181,12 @@ module CTools
 			end
 		end
 		# build and import the consolidated dependencies file
-		task :depends => [ "#{cfg.nativeObjectPath()}/depends.rb" ] do |t|
-			load("#{cfg.nativeObjectPath()}/depends.rb")
+		task :depends => [ "#{cfg.moduleConfiguredObjDir()}/depends.rb" ] do |t|
+			load("#{cfg.moduleConfiguredObjDir()}/depends.rb")
 		end		
 		task :cleandepends do
-			depname = "#{cfg.nativeObjectPath()}/depends.rb";
-			deleteFiles("#{cfg.nativeObjectPath()}/*.raked");
+			depname = "#{cfg.moduleConfiguredObjDir()}/depends.rb";
+			deleteFiles("#{cfg.moduleConfiguredObjDir()}/*.raked");
 
 			# if there is no task defined for the 'raked' file then create a dummy
 			# that dos nothing so the prerequisites resolve - this is the case where the
@@ -403,7 +403,7 @@ module CppProjectModule
 	# starts executing tasks
 
 	def doCppPreBuild()
-        addIncludePaths( [ nativeObjectPath(),buildIncludeDir() ] );
+        addIncludePaths( [ moduleConfiguredObjDir(),buildIncludeDir() ] );
         @cppBuildConfig = resolveConfiguration(nativeConfigName());
         resolveConfiguredTasks();
         if(@projectId)
@@ -423,7 +423,7 @@ module CppProjectModule
         if(cfg.dependencyFilesUpdated)
             tools = cfg.ctools
             objs = t.sources;
-            cd(cfg.nativeObjectPath(),:verbose=>false) do
+            cd(cfg.moduleConfiguredObjDir(),:verbose=>false) do
                 File.open('depends.rb','w') do |out|
                     out.puts("# puts \"loading #{t.name}\"");
                 end
@@ -460,7 +460,7 @@ module CppProjectModule
 		updateDepTsk.sources = objs;
 		compileTsk.enhance(updateDepTsk);
 
-		unless tsk = Rake.application.lookup("#{@nativeObjDir}/depends.rb")
+		unless tsk = Rake.application.lookup("#{@moduleObjDir}/depends.rb")
             tsk = tools.initDependsTask(self)
  		end
 
@@ -472,7 +472,7 @@ module CppProjectModule
 		tsk.enhance(raked);
 
 		@objs = objs;
-		ensureDirectoryTask(nativeObjectPath());
+		ensureDirectoryTask(moduleConfiguredObjDir());
 
 		## link tasks
 		tsk = tools.createLinkTask(objs,@cppBuildConfig);

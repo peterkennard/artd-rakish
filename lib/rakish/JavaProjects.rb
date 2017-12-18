@@ -363,8 +363,8 @@ protected
             # to cover for windows command line length restriction write to file if too long.
             commandLength = cmdline.length;
             if(commandLength > 30000)
-                FileUtils.mkdir_p(nativeObjDir());
-                argFilePath = "#{nativeObjDir()}/javacArgs.txt";
+                FileUtils.mkdir_p(moduleObjDir());
+                argFilePath = "#{moduleObjDir()}/javacArgs.txt";
                 File.open(argFilePath,'w') do |fout|
                     fout.write(cmdline.slice(cmdFileOffset,commandLength - cmdFileOffset));
                 end
