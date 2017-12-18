@@ -63,6 +63,7 @@ module Rakish
                     end
 
                     cfl += " -D\"ARTD_PLATFORM=Linux32\"";
+                    cfl += " -D\"ARTD_DEBUG\"";
 
                     # format CPP macro defs
                     cfig.cppDefines.each do |k,v|
