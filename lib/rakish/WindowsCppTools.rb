@@ -875,18 +875,17 @@ module Rakish
 					
 					targetName = "#{cfg.binDir()}/#{cfg.targetName}.dll";
 
-					#LIBS_DEP_WINDOWS := $(subst $(THIRD_PARTY_PATH),$(THIRD_PARTY_PATH),$(THIRD_PARTY_LIB_FILES) $(SPECIFIC_LIBS))
-					#$(TARGET_FILE): $(OBJS) $(STATIC_LIB_FILES) $(AUTORESOURCES_OBJ) $(LIBS_DEP_WINDOWS)
-
 					resobjs = getAutoResourcesObjs(cfg)
 						
 					mapfile = targetName.pathmap("%X.map");
 					pdbfile = targetName.pathmap("%X.pdb");
-					implib = "#{cfg.binDir()}/#{cfg.targetName}.lib";
-						
+					libdir = "#{cfg.nativeLibDir()}/#{cfg.configName}";
+					implib = "#{libdir}/#{cfg.targetName}.lib";
+					ensureDirectoryTask(libdir);
+
 					cfg.project.addCleanFiles(mapfile,pdbfile,implib);
 
-					doLink = Rake::FileTask.define_task targetName => resobjs, &@@linkDllAction;
+					doLink = Rake::FileTask.define_task targetName => [ libdir, resobjs], &@@linkDllAction;
 					doLink.sources = { 
 						:userobjs=>objs,
 						:autores=>resobjs, 

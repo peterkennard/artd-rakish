@@ -1,6 +1,8 @@
 myPath = File.dirname(File.expand_path(__FILE__));
 require "#{myPath}/RakishProject.rb"
 
+include Rake::DSL
+
 module Rakish
 
     # :nodoc: legacy only looked at in the
@@ -87,16 +89,18 @@ module CTools
 		end
 				
         # only touch file if new file differs from old one
-		if(textFilesDiffer(outName,tempfile)) 
+
+		if(!File.exists?(outName) || textFilesDiffer(outName,tempfile))
             # @#$#@$#@ messed up. set time of new file ahead by one second.
             # seems rake time resolution is low enough that the comparison often says 
             # times are equal between depends files and depends.rb.
             FileUtils.mv(tempfile, outName, :force=>true);
             time = Time.at(Time.new.to_f + 1.0);
             File.utime(time,time,outName);
+            task.config.dependencyFilesUpdated = true;
 		else
 			FileUtils.rm(tempfile, :force=>true);
-		end	
+		end
 	end
 
 
@@ -162,7 +166,7 @@ module CTools
 											:depends]
 	end	
 
-	def initDependsTask(cfg) # :nodoc:		
+ 	def initDependsTask(cfg) # :nodoc:
                
 		# create dependencies file by concatenating all .raked files				
 		tsk = file "#{cfg.nativeObjectPath()}/depends.rb" => [ :includes, cfg.nativeObjectPath() ] do |t|
@@ -355,6 +359,7 @@ module CppProjectConfig
 
 end
 
+
 module CppProjectModule
     include CppProjectConfig
 
@@ -413,6 +418,29 @@ module CppProjectModule
         end
 	end
 
+    def self.doUpdateDepends(t)
+        cfg = t.config;
+        if(cfg.dependencyFilesUpdated)
+            tools = cfg.ctools
+            objs = t.sources;
+            cd(cfg.nativeObjectPath(),:verbose=>false) do
+                File.open('depends.rb','w') do |out|
+                    out.puts("# puts \"loading #{t.name}\"");
+                end
+                objs.each do |obj|
+                    raked = obj.pathmap('%n.raked');
+                    if(File.exists?(raked))
+                        system "cat \'#{raked}\' >> depends.rb"
+                    end
+                end
+           end
+        end
+    end
+
+	UpdateDependsAction_ = lambda do |t|
+        doUpdateDepends(t);
+    end
+
 	def resolveConfiguredTasks()
 
 		cfg = @cppBuildConfig
@@ -420,13 +448,19 @@ module CppProjectModule
 
         objs = tools.createCompileTasks(getSourceFiles(),cfg);
 
-		unless tsk = Rake.application.lookup("#{@myNamespace}:compile") && @cppCompileTaskInitialized
+		unless compileTsk = Rake.application.lookup("#{@myNamespace}:compile") && @cppCompileTaskInitialized
 			cppCompileTaskInitialized = true;
-			tsk = tools.initCompileTask(self);
+			compileTsk = tools.initCompileTask(self);
 		end
-		tsk.enhance(objs)
+		compileTsk.enhance(objs)
 
- 		unless tsk = Rake.application.lookup("#{@nativeObjDir}/depends.rb")
+
+		updateDepTsk = Rake::Task.define_unique_task &UpdateDependsAction_;
+		updateDepTsk.config = cfg;
+		updateDepTsk.sources = objs;
+		compileTsk.enhance(updateDepTsk);
+
+		unless tsk = Rake.application.lookup("#{@nativeObjDir}/depends.rb")
             tsk = tools.initDependsTask(self)
  		end
 
@@ -444,10 +478,8 @@ module CppProjectModule
 		tsk = tools.createLinkTask(objs,@cppBuildConfig);
 		if(tsk)
 			outdir = tsk[:linkTask].name.pathmap('%d');
-log.debug("outdir is #{outdir}");
 			ensureDirectoryTask(outdir);
 			ensureDirectoryTask(cfg.binDir);
-
 			task :build => [ :compile, outdir, cfg.binDir, tsk[:setupTasks], tsk[:linkTask] ].flatten
 
 		end
@@ -524,6 +556,7 @@ log.debug("outdir is #{outdir}");
 		attr_reader 	:libpaths
 		attr_reader 	:libs
 		attr_accessor   :targetName
+		attr_accessor   :dependencyFilesUpdated
 
 		def initialize(pnt, cfgName, tools)
 			super(pnt);
