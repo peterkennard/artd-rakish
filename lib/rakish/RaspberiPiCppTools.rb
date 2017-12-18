@@ -217,7 +217,7 @@ module Rakish
                 objs.flatten.each do |obj|
                     obj = obj.to_s
                     next unless obj.pathmap('%x') == '.o'
-                    cmdline += "\"#{obj}\" ";
+                    cmdline += " \"#{obj}\"";
                 end
 
                 # log.debug("\n cmdline = #{cmdline}\n");
