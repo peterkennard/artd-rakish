@@ -1,31 +1,31 @@
 require 'rakish/CppProjects.rb'
 
 module Rakish
-	module RaspberiPiCppTools
-		
-		class RaspiTools
-			include CTools
+    module RaspberiPiCppTools
 
-			# extension for pre linked object files
-			# for consumers of CTools toolchain
-			def objExt
-				'.o'
-			end	
-			# extension for static library files
-			# for consumers of CTools toolchain
-			def libExt
-				'.a'
-			end
-			# extension for dynamic library files
-			# for consumers of CTools toolchain
-			def dllExt
-				'.so'
-			end
-			# extension for executable files
-			# for consumers of CTools toolchain
-			def exeExt
-				''
-			end
+        class RaspiTools
+            include CTools
+
+            # extension for pre linked object files
+            # for consumers of CTools toolchain
+            def objExt
+                '.o'
+            end
+            # extension for static library files
+            # for consumers of CTools toolchain
+            def libExt
+                '.a'
+            end
+            # extension for dynamic library files
+            # for consumers of CTools toolchain
+            def dllExt
+                '.so'
+            end
+            # extension for executable files
+            # for consumers of CTools toolchain
+            def exeExt
+                ''
+            end
 
         # CC   = ${GCC}
         # CXX  = ${GCC} -x c++
@@ -73,72 +73,72 @@ module Rakish
             end
 
 
-			def addCompileAction(suff,action)
-				@compileForSuffix[suff] = action;
-			end
+            def addCompileAction(suff,action)
+                @compileForSuffix[suff] = action;
+            end
 
-			@@compileCPPAction = lambda do |t|
-				t.config.ctools.doCompileCpp(t)
-			end
-			@@compileCAction = @@compileCPPAction;
+            @@compileCPPAction = lambda do |t|
+                t.config.ctools.doCompileCpp(t)
+            end
+            @@compileCAction = @@compileCPPAction;
 
-			def doCompileCpp(t)
+            def doCompileCpp(t)
 
-				cppFile = t.source;
-				objFile = t.name;
-				cfig = t.config;
-				depname = objFile.pathmap('%X.d');
+                cppFile = t.source;
+                objFile = t.name;
+                cfig = t.config;
+                depname = objFile.pathmap('%X.d');
 
-				cmdline =   "\"#{GccPath}\"  -pthread -x c++ -std=c++11 -fpic  -MT\"#{depname}\" -MMD -MP -MF \"#{depname}\" -Wall -pedantic -c ";
-				cmdline += " -o\"#{objFile}\"";
-				cmdline += getFormattedGccFlags(cfig);
-				cmdline += " \"#{cppFile}\"";
-				# log.debug("\n\t#{cmdline}");
-				log.info cppFile.pathmap('%f');
+                cmdline =   "\"#{GccPath}\"  -pthread -x c++ -std=c++11 -fpic  -MT\"#{depname}\" -MMD -MP -MF \"#{depname}\" -Wall -pedantic -c ";
+                cmdline += " -o\"#{objFile}\"";
+                cmdline += getFormattedGccFlags(cfig);
+                cmdline += " \"#{cppFile}\"";
+                # log.debug("\n\t#{cmdline}");
+                log.info cppFile.pathmap('%f');
 
-				IO.popen(cmdline) do |output| 						
-					while line = output.gets do
-						log.info line.strip!
-					end
-				end
-	
-				included = Rakish::FileSet.new
+                IO.popen(cmdline) do |output|
+                    while line = output.gets do
+                        log.info line.strip!
+                    end
+                end
 
-				File.open(depname) do |file|
-					file.each_line do |line| 
-						line.strip!
-						if line.end_with?(':')						
-							line.sub!(':','');
-							# line = line[0...(line.length-1)];							
-							included << line
-						end
-					end
-				end
-				
-				depfile = depname.ext('.raked');
-				updateDependsFile(t,depfile,included);
+                included = Rakish::FileSet.new
 
-			end
+                File.open(depname) do |file|
+                    file.each_line do |line|
+                        line.strip!
+                        if line.end_with?(':')
+                            line.sub!(':','');
+                            # line = line[0...(line.length-1)];
+                            included << line
+                        end
+                    end
+                end
 
-			@@buildLibAction = lambda do |t|
-				t.config.ctools.doBuildLib(t)
-			end
-			def doBuildLib(t)
+                depfile = depname.ext('.raked');
+                updateDependsFile(t,depfile,included);
 
-			end
+            end
 
-			@@linkDllAction = lambda do |t|
-				t.config.ctools.doLinkDll(t)
-			end
-			def doLinkDll(t)
+            @@buildLibAction = lambda do |t|
+                t.config.ctools.doBuildLib(t)
+            end
+            def doBuildLib(t)
 
-				outpath = t.name;
-				cmdline = "\"#{GccPath}\" -pthread -shared -shared-libgcc -Wl,-soname,\"#{outpath}\" -o \"#{outpath}\" ";
-					
-					# add library search paths
-					# eachof cfg.libpaths do |lpath|
-					#	f.puts("-libpath:\"#{lpath}\"");
-					# end
+            end
+
+            @@linkDllAction = lambda do |t|
+                t.config.ctools.doLinkDll(t)
+            end
+            def doLinkDll(t)
+
+                outpath = t.name;
+                cmdline = "\"#{GccPath}\" -pthread -shared -shared-libgcc -Wl,-soname,\"#{outpath}\" -o \"#{outpath}\" ";
+
+                    # add library search paths
+                    # eachof cfg.libpaths do |lpath|
+                    #	f.puts("-libpath:\"#{lpath}\"");
+                    # end
 
                 # libraries
                 libs=[]
@@ -149,123 +149,123 @@ module Rakish
                     log.debug("dependency #{obj}");
                 end
 
-				objs=[]
-				objs << t.sources[:userobjs];
-				objs.flatten.each do |obj|
-					obj = obj.to_s
-					next unless obj.pathmap('%x') == '.o' 
-					cmdline += "\"#{obj}\" ";
-				end
+                objs=[]
+                objs << t.sources[:userobjs];
+                objs.flatten.each do |obj|
+                    obj = obj.to_s
+                    next unless obj.pathmap('%x') == '.o'
+                    cmdline += "\"#{obj}\" ";
+                end
 
-	    		# log.debug("\n cmdline = #{cmdline}\n");
+                # log.debug("\n cmdline = #{cmdline}\n");
                 log.info("linking shared lib #{outpath}");
 
-    			system(cmdline);
+                system(cmdline);
 
         # @${LD} -Wl,-X -shared -o $@  \
         # $(filter-out ${FULL_LIBS}, $(filter %.so %.o,$^)) ${FULL_LIBS} ${XLIBS} \
         # -Wl,-rpath=${LIB_PATH} -Wl,-soname=lib${TARGET}.so
 
-			end
+            end
 
-			@@linkAppAction = lambda do |t|
-				t.config.ctools.doLinkApp(t)
-			end
-			def doLinkApp(t)
-				log.debug("gcc LINK app action");
+            @@linkAppAction = lambda do |t|
+                t.config.ctools.doLinkApp(t)
+            end
+            def doLinkApp(t)
+                log.debug("gcc LINK app action");
 
             end
 
-			# for consumers of CTools toolchain
-			def getCompileActionForSuffix(suff)
-				@compileForSuffix[suff]
-			end
+            # for consumers of CTools toolchain
+            def getCompileActionForSuffix(suff)
+                @compileForSuffix[suff]
+            end
 
-			# for consumers of CTools toolchain
-			def initCompileTask(cfg)
-				ensureDirectoryTask(cfg.moduleConfiguredObjDir);
-				cfg.project.addCleanFiles("#{cfg.moduleConfiguredObjDir}/*#{objExt()}",
-									     "#{cfg.moduleConfiguredObjDir}/*.d"
-									    );
-				Rake::Task.define_task :compile => [:includes,
-												cfg.moduleConfiguredObjDir,
-												:depends]
-			end	
+            # for consumers of CTools toolchain
+            def initCompileTask(cfg)
+                ensureDirectoryTask(cfg.moduleConfiguredObjDir);
+                cfg.project.addCleanFiles("#{cfg.moduleConfiguredObjDir}/*#{objExt()}",
+                                         "#{cfg.moduleConfiguredObjDir}/*.d"
+                                        );
+                Rake::Task.define_task :compile => [:includes,
+                                                cfg.moduleConfiguredObjDir,
+                                                :depends]
+            end
 
-			@@resolveLinkAction_ = lambda do |t|
-			end
+            @@resolveLinkAction_ = lambda do |t|
+            end
 
-			# for consumers of CTools toolchain
-			def createLinkTask(objs,cfg)
-	
-				case(cfg.targetType)
-				
-					when 'APP'
+            # for consumers of CTools toolchain
+            def createLinkTask(objs,cfg)
 
-						targetName = "#{cfg.binDir()}/#{cfg.targetName}";
-					
-	#					resobjs = getAutoResourcesObjs(cfg)
-	#					mapfile = targetName.pathmap("%X.map");
-	#					pdbfile = targetName.pathmap("%X.pdb");
-	#					cfg.project.addCleanFiles(mapfile,pdbfile);
+                case(cfg.targetType)
 
-						doLink = Rake::FileTask.define_task targetName => [], &@@linkAppAction;
-						doLink.sources = { 
-							:userobjs=>objs,
-	#						:autores=>resobjs, 
-	#						:mapfile=>mapfile,
-	#						:pdbfile=>pdbfile,
-						}
-	
-					when 'LIB'
-					
-						targetName = "#{cfg.nativeLibDir()}/#{cfg.targetName}.a";
-						doLink = Rake::FileTask.define_task targetName, 
-								&@@buildLibAction;
-			
-					when 'DLL'
-					
-						targetName = "#{cfg.nativeLibDir()}/#{cfg.configName}/lib#{cfg.targetName}.so";
+                    when 'APP'
 
-						# resobjs = getAutoResourcesObjs(cfg)
-						
-						# mapfile = targetName.pathmap("%X.map");
-						# pdbfile = targetName.pathmap("%X.pdb");
-						# implib = "#{cfg.binDir()}/#{cfg.targetName}.lib";
-						
-						# cfg.project.addCleanFiles(mapfile,pdbfile,implib);
+                        targetName = "#{cfg.binDir()}/#{cfg.targetName}";
 
-						doLink = Rake::FileTask.define_task targetName => [], &@@linkDllAction;
-						doLink.sources = { 
-							:userobjs=>objs,
-							# :autores=>resobjs, 
-							# :mapfile=>mapfile,
-							# :pdbfile=>pdbfile,
-							# :implib=>implib
-						}
+    #					resobjs = getAutoResourcesObjs(cfg)
+    #					mapfile = targetName.pathmap("%X.map");
+    #					pdbfile = targetName.pathmap("%X.pdb");
+    #					cfg.project.addCleanFiles(mapfile,pdbfile);
 
-					else
-						log.info("unsupported target type #{cfg.targetType}");
-						return(false);
-				end
+                        doLink = Rake::FileTask.define_task targetName => [], &@@linkAppAction;
+                        doLink.sources = {
+                            :userobjs=>objs,
+    #						:autores=>resobjs,
+    #						:mapfile=>mapfile,
+    #						:pdbfile=>pdbfile,
+                        }
 
-				cfg.project.addCleanFiles(targetName);
+                    when 'LIB'
 
-				doLink.config = cfg;
-				doLink.enhance(objs);
+                        targetName = "#{cfg.nativeLibDir()}/#{cfg.targetName}.a";
+                        doLink = Rake::FileTask.define_task targetName,
+                                &@@buildLibAction;
 
-				# create a "setup" task to resolve everything and set up the link.
-				tsk = task "#{cfg.targetName}.#{cfg.targetType}.resolve", &@@resolveLinkAction_;
-				tsk.config = doLink; 
+                    when 'DLL'
 
-				{ :setupTasks=>tsk, :linkTask=>doLink } # note this returns a hash !!
-			end
-		end
+                        targetName = "#{cfg.nativeLibDir()}/#{cfg.configName}/lib#{cfg.targetName}.so";
+
+                        # resobjs = getAutoResourcesObjs(cfg)
+
+                        # mapfile = targetName.pathmap("%X.map");
+                        # pdbfile = targetName.pathmap("%X.pdb");
+                        # implib = "#{cfg.binDir()}/#{cfg.targetName}.lib";
+
+                        # cfg.project.addCleanFiles(mapfile,pdbfile,implib);
+
+                        doLink = Rake::FileTask.define_task targetName => [], &@@linkDllAction;
+                        doLink.sources = {
+                            :userobjs=>objs,
+                            # :autores=>resobjs,
+                            # :mapfile=>mapfile,
+                            # :pdbfile=>pdbfile,
+                            # :implib=>implib
+                        }
+
+                    else
+                        log.info("unsupported target type #{cfg.targetType}");
+                        return(false);
+                end
+
+                cfg.project.addCleanFiles(targetName);
+
+                doLink.config = cfg;
+                doLink.enhance(objs);
+
+                # create a "setup" task to resolve everything and set up the link.
+                tsk = task "#{cfg.targetName}.#{cfg.targetType}.resolve", &@@resolveLinkAction_;
+                tsk.config = doLink;
+
+                { :setupTasks=>tsk, :linkTask=>doLink } # note this returns a hash !!
+            end
+        end
  
-		def self.getConfiguredTools(configName,args={})
-			return(RaspiTools.new());
-		end
+        def self.getConfiguredTools(configName,args={})
+            return(RaspiTools.new());
+        end
 
-	end
+    end
 
 end
