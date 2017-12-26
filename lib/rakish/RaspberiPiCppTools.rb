@@ -27,50 +27,50 @@ module Rakish
 				''
 			end
 
-# CC   = ${GCC}
-# CXX  = ${GCC} -x c++
-# AS   = as
-# LD   = cc -pthread
-# CPP  = ${GCC} -x c++ -E ${DEPINC}
+        # CC   = ${GCC}
+        # CXX  = ${GCC} -x c++
+        # AS   = as
+        # LD   = cc -pthread
+        # CPP  = ${GCC} -x c++ -E ${DEPINC}
 
-			GccPath = '/usr/bin/gcc';
+            GccPath = '/usr/bin/gcc';
 
-			def initialize
-				@compileForSuffix = {};
+            def initialize
+                @compileForSuffix = {};
 
-				addCompileAction('.cpp', @@compileCPPAction);
-				addCompileAction('.c', @@compileCAction);
-			end 
+                addCompileAction('.cpp', @@compileCPPAction);
+                addCompileAction('.c', @@compileCAction);
+            end
 
-		# will format and cache into the config the /I and /D and other constant
-		# compiler flags for the specific configuration and cache it in the configuration
-		def getFormattedGccFlags(cfig)
-											
-			unless(cfl = cfig.getMy(:gccFlags_))			
-				# if not cached build command line string
-				cfl = ""; 
-				
-				if(false)		
-					cfig.cflags.each do |cf|
-						cfl += (' ' + cf)
-					end
-				end
+            # will format and cache into the config the /I and /D and other constant
+            # compiler flags for the specific configuration and cache it in the configuration
+            def getFormattedGccFlags(cfig)
 
-				# format include paths
-				cfig.includePaths.each do |dir| 
-					cfl += " -I \"#{dir}\"";
-				end
+                unless(cfl = cfig.getMy(:gccFlags_))
+                    # if not cached build command line string
+                    cfl = "";
 
-				cfl += " -D\"ARTD_PLATFORM=Linux32\"";
+                    if(false)
+                        cfig.cflags.each do |cf|
+                            cfl += (' ' + cf)
+                        end
+                    end
 
-				# format CPP macro defs
-				cfig.cppDefines.each do |k,v| 
-					cfl += " -D\"#{k}#{v ? '='+v : ''}\""
-				end
-				cfig.set(:gccFlags_,cfl)
-			end
-			cfl					
-		end
+                    # format include paths
+                    cfig.includePaths.each do |dir|
+                        cfl += " -I \"#{dir}\"";
+                    end
+
+                    cfl += " -D\"ARTD_PLATFORM=Linux32\"";
+
+                    # format CPP macro defs
+                    cfig.cppDefines.each do |k,v|
+                        cfl += " -D\"#{k}#{v ? '='+v : ''}\""
+                    end
+                    cfig.set(:gccFlags_,cfl)
+                end
+                cfl
+            end
 
 
 			def addCompileAction(suff,action)
@@ -131,8 +131,7 @@ module Rakish
 				t.config.ctools.doLinkDll(t)
 			end
 			def doLinkDll(t)
-				log.debug("gcc LINK dll action");
-				
+
 				outpath = t.name;
 				cmdline = "\"#{GccPath}\" -pthread -shared -shared-libgcc -Wl,-soname,\"#{outpath}\" -o \"#{outpath}\" ";
 					
@@ -140,7 +139,16 @@ module Rakish
 					# eachof cfg.libpaths do |lpath|
 					#	f.puts("-libpath:\"#{lpath}\"");
 					# end
-					
+
+                # libraries
+                libs=[]
+
+                libs << cfg.dependencyLibs
+                libs.flatten.each do |obj|
+                    f.puts("\"#{obj}\"");
+                    log.debug("dependency #{obj}");
+                end
+
 				objs=[]
 				objs << t.sources[:userobjs];
 				objs.flatten.each do |obj|
@@ -149,15 +157,24 @@ module Rakish
 					cmdline += "\"#{obj}\" ";
 				end
 
-			log.debug("\n cmdline = #{cmdline}\n");
+	    		# log.debug("\n cmdline = #{cmdline}\n");
+                log.info("linking shared lib #{outpath}");
 
-			system(cmdline);
+    			system(cmdline);
 
-    # @${LD} -Wl,-X -shared -o $@  \
-    # $(filter-out ${FULL_LIBS}, $(filter %.so %.o,$^)) ${FULL_LIBS} ${XLIBS} \
-    # -Wl,-rpath=${LIB_PATH} -Wl,-soname=lib${TARGET}.so
+        # @${LD} -Wl,-X -shared -o $@  \
+        # $(filter-out ${FULL_LIBS}, $(filter %.so %.o,$^)) ${FULL_LIBS} ${XLIBS} \
+        # -Wl,-rpath=${LIB_PATH} -Wl,-soname=lib${TARGET}.so
 
 			end
+
+			@@linkAppAction = lambda do |t|
+				t.config.ctools.doLinkApp(t)
+			end
+			def doLinkApp(t)
+				log.debug("gcc LINK app action");
+
+            end
 
 			# for consumers of CTools toolchain
 			def getCompileActionForSuffix(suff)
