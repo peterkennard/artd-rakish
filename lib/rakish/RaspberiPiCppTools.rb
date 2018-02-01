@@ -62,8 +62,9 @@ module Rakish
                         cfl += " -I \"#{dir}\"";
                     end
 
-                    cfl += " -D\"ARTD_PLATFORM=Linux32\"";
-                    cfl += " -D\"ARTD_DEBUG\"";
+                #  "ARTD_PLATFORMTYPE=#{@platformType}",
+                    cfl += " -D\"ARTD_PLATFORMBITS=32\" -D\"ARTD_DEBUGTYPE=Debug\"";
+				# "ARTD_LINKAGETYPE=#{@linkType}"
 
                     # format CPP macro defs
                     cfig.cppDefines.each do |k,v|
@@ -91,7 +92,7 @@ module Rakish
                 cfig = t.config;
                 depname = objFile.pathmap('%X.d');
 
-                cmdline =   "\"#{GppPath}\"  -g -pthread -x c++ -std=c++11 -fpic  -MT\"#{depname}\" -MMD -MP -MF \"#{depname}\" -Wall -pedantic -c ";
+                cmdline =   "\"#{GppPath}\"  -g -pthread -x c++ -std=c++11 -fpic -MT\"#{depname}\" -MMD -MP -MF \"#{depname}\" -Wall -pedantic -c ";
                 cmdline += " -o\"#{objFile}\"";
                 cmdline += getFormattedGccFlags(cfig);
                 cmdline += " \"#{cppFile}\"";
@@ -175,7 +176,7 @@ module Rakish
 
                 log.info("linking shared lib #{outpath}");
 
-                cmdline = "\"#{GppPath}\" -g -pthread -shared -shared-libgcc -Wl,--no-allow-shlib-undefined,-soname,\"#{outpath}\" -o \"#{outpath}\"";
+                cmdline = "\"#{GppPath}\" -g -pthread -shared -shared-libgcc -Wl,-E,--no-allow-shlib-undefined,-soname,\"#{outpath}\" -o \"#{outpath}\"";
 
                 # object files
                 objs=[]
@@ -208,7 +209,7 @@ module Rakish
 
                 log.info("linking application #{outpath}");
 
-               cmdline = "\"#{GppPath}\" -g -pthread -shared-libgcc -Wl,--no-allow-shlib-undefined -o \"#{outpath}\" ";
+               cmdline = "\"#{GppPath}\" -g -pthread -shared-libgcc -Wl,-E,--no-allow-shlib-undefined -o \"#{outpath}\"";
 
                 cmdline += resolveAndAddLibs(cfg);                
 

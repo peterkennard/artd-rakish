@@ -590,6 +590,7 @@ module CppProjectModule
 		def getOrderedLibs
 
         	libs=[]
+            libs << @libs;            
 
 			project.dependencies.reverse_each do |dep|
 				if(defined? dep.outputsNativeLibrary)
@@ -604,7 +605,8 @@ module CppProjectModule
 			end
 
             # add user specified lobraries after all dependency libraries.
-			if(thirdPartyLibs)
+
+            if(thirdPartyLibs)
 				thirdPartyLibs.flatten.each do |tpl|
 					libpath = NIL;
 					if(File.path_is_absolute?(tpl))
