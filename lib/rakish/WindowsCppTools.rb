@@ -987,7 +987,7 @@ module Rakish
             :linkType=>linkType,
             :debugType=>debugType
         }
-        log.debug { "config validated #{cfgs.join('-')}" };
+        # log.debug { "config validated #{cfgs.join('-')}" };
         return( Win32Tools.new(args));
     end
 end # WindowsCppTools

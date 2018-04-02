@@ -318,7 +318,7 @@ module Rake
 	  # see Rake.Task as this overrides it's method
 	  # to flatten dependencies so they can be provided as
 	  # nested arrays or arguments
-	  def enhance(args,&b)
+	  def enhance(*args,&b)
 		# instead of |=
 		@prerequisites = [@prerequisites,args].flatten if args
 		@actions << b if block_given?

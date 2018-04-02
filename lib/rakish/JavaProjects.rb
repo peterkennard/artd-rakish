@@ -136,7 +136,7 @@ module JarBuilderModule
    	    def doBuildJarAction(t) # :nodoc:
             cfg = t.config;
 
-            log.info("creating #{t.name}") if cfg.verbose
+            log.  o("creating #{t.name}") if cfg.verbose
 
             # delete old jar file and liberate space ? jar when creating clears old file
             # FileUtils.rm_f t.name;
