@@ -320,7 +320,13 @@ module Rake
 	  # nested arrays or arguments
 	  def enhance(*args,&b)
 		# instead of |=
-		@prerequisites = [@prerequisites,args].flatten if args
+		if(args)
+		    args.flatten!
+            args.map! do |e|
+                (e=~/^:/)?"rake#{e}":e
+            end
+		    @prerequisites = [@prerequisites,args].flatten
+		end
 		@actions << b if block_given?
 		self
 	  end
