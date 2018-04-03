@@ -325,7 +325,7 @@ module Rake
             args.map! do |e|
                 (e=~/^:/)?"rake#{e}":e
             end
-		    @prerequisites = [@prerequisites,args].flatten
+		    @prerequisites = @prerequisites.concat(args);
 		end
 		@actions << b if block_given?
 		self
