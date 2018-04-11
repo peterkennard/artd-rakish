@@ -275,6 +275,23 @@ protected
             end
         end
 
+        def getProjectOutputClasspaths(*moduleNames)
+
+            paths = [];
+            names = moduleNames.flatten;
+            names.each do |name|
+                proj = nil;
+                begin
+                    proj = Rakish.projectByName(name);
+                    paths << proj.java.outputClasspath;
+                rescue => e
+                    log.error { "#{moduleName} - failure getting classpath for #{name}" }
+                    log.error { e } if(proj);
+                end
+            end
+            paths
+        end
+
         # Resolve all jars in the class path in the jarSearchPath and relative to the owning projects folder
         # returns the resolved classPaths
         def resolveClassPaths()
