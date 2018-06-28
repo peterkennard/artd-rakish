@@ -237,10 +237,15 @@ protected
         # options:
         #
         # [:generated] if true, part or all of this directory or it's contents will not exist until after a prerequisite target to the :compile task has built it's contents.
+        # [:copyResources] if false will NOT copy any resource files from the source roots, only compiled java files.
+        #
         def addSourceRoots(*roots)
             opts = (roots.last.is_a?(Hash) ? roots.pop : {})
             roots.flatten!
             (@javaSourceDirs_||=FileSet.new).include(roots);
+            if(opts[:copyResources] == false)
+                @noResources = true;
+            end
             if(opts[:generated])
                 unless(opts[:noClean])
                     task :cleanautogen do
@@ -258,6 +263,9 @@ protected
             @javaSourceDirs_||=[File.join(projectDir,'src')];
         end
 
+        def noResources
+            @noResources
+        end
 
         # Adds output classpaths from other java project modules to the classpath set for
         # this build configuration
@@ -410,10 +418,12 @@ protected
                         files = FileList.new
                         files.include("#{root}/**/*.java");
                         srcFiles.addFileTree(config.outputClasspath, root, files );
-                        files = FileList.new
-                        files.include("#{root}/**/*");
-                        files.exclude("#{root}/**/*.java");
-                        copyFiles.addFileTree(config.outputClasspath, root, files);
+                        unless config.noResources
+                            files = FileList.new
+                            files.include("#{root}/**/*");
+                            files.exclude("#{root}/**/*.java");
+                            copyFiles.addFileTree(config.outputClasspath, root, files);
+                        end
                     end
 
                       # add sources we know about
