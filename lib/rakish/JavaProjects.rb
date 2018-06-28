@@ -219,6 +219,8 @@ protected
 
             @myProject = proj; # cache this
             @docOutputDir="#{buildDir}/javadoc/#{moduleName}/api";
+            @excludeResources = [ '**/*.java' ];
+
         end
 
         # the project this is attached to
@@ -237,14 +239,15 @@ protected
         # options:
         #
         # [:generated] if true, part or all of this directory or it's contents will not exist until after a prerequisite target to the :compile task has built it's contents.
-        # [:copyResources] if false will NOT copy any resource files from the source roots, only compiled java files.
+        # [:excludeFiles] patterns for files to exclude from copying into the output area. (resources)
         #
         def addSourceRoots(*roots)
             opts = (roots.last.is_a?(Hash) ? roots.pop : {})
             roots.flatten!
             (@javaSourceDirs_||=FileSet.new).include(roots);
-            if(opts[:copyResources] == false)
-                @noResources = true;
+            # TOD: make these proerties of each root entry
+            if(opts[:excludeFiles])
+                @excludeResources << opts[:excludeFiles];
             end
             if(opts[:generated])
                 unless(opts[:noClean])
@@ -263,8 +266,8 @@ protected
             @javaSourceDirs_||=[File.join(projectDir,'src')];
         end
 
-        def noResources
-            @noResources
+        def excludeResources
+            @excludeResources
         end
 
         # Adds output classpaths from other java project modules to the classpath set for
@@ -418,12 +421,12 @@ protected
                         files = FileList.new
                         files.include("#{root}/**/*.java");
                         srcFiles.addFileTree(config.outputClasspath, root, files );
-                        unless config.noResources
-                            files = FileList.new
-                            files.include("#{root}/**/*");
-                            files.exclude("#{root}/**/*.java");
-                            copyFiles.addFileTree(config.outputClasspath, root, files);
+                        files = FileList.new
+                        files.include("#{root}/**/*");
+                        config.excludeResources.flatten.each do |pat|
+                            files.exclude("#{root}/#{pat}");
                         end
+                        copyFiles.addFileTree(config.outputClasspath, root, files);
                     end
 
                       # add sources we know about
