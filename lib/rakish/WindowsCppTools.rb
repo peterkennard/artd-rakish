@@ -472,11 +472,9 @@ module Rakish
 				cfl = @CPP_OPTIONS;
 				cfl += @CPP_WARNINGS;
 				
-				if(false)		
-					cfig.cflags.each do |cf|
-						cfl += (' ' + cf)
-					end
-				end
+                cfig.cflags.each do |cf|
+                    cfl += (' ' + cf)
+                end
 
 				# format include paths
 				cfig.includePaths.each do |dir| 
@@ -635,7 +633,7 @@ module Rakish
 	                end
 
 					# library search paths
-					eachof cfg.libpaths do |lpath|
+					eachof cfg.libpaths.flatten do |lpath|
 						f.puts("-libpath:\"#{lpath}\"");
 					end
 							
@@ -715,7 +713,7 @@ module Rakish
 	                end
 
 					# library search paths
-					eachof cfg.libpaths do |lpath|
+					eachof cfg.libpaths.flatten do |lpath|
 						f.puts("-libpath:\"#{lpath}\"");
 					end
 

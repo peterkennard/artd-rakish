@@ -372,6 +372,15 @@ module CppProjectModule
         @cppCompileTaskInitialized = false;
     end
 
+    def addCFlags(flags)
+        @cflags||=[];
+        @cflags << flags;
+    end
+
+    def cflags
+        @cflags||[];
+    end
+
 	VCProjBuildAction_ = lambda do |t|
         require "#{Rakish::MAKEDIR}/VcprojBuilder.rb"
         VcprojBuilder.onVcprojTask(t.config);
