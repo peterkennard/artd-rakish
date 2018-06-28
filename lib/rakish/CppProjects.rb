@@ -548,13 +548,12 @@ module CppProjectModule
 	end
 
 
-	# define a configurator to load a configuration for a specific ( string )
-	# configruation
-
-	def setupCppConfig(args={}, &b)
+	# define a configurator for the linker configuration
+	def setupLinkConfig(args={}, &b)
 		@targetType = args[:targetType];
 		@cppConfigurator_ = b;
 	end
+    alias :setupCppConfig :setupLinkConfig
 
 	class TargetConfig < BuildConfig
 		include CppProjectConfig
