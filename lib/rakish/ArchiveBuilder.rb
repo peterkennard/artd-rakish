@@ -100,7 +100,7 @@ module Rakish
         def addZipContents(archivePath,*filters)
 
             if(filters.length < 1)
-               filters=['*'];
+               filters=['**/*'];
             end
             entry = {};
             entry[:destDir]=('.');
@@ -110,7 +110,6 @@ module Rakish
         end
 
         def loadTempDir(dir) # :nodoc: TODO "the "####" and '#' flag thing is messy maybe :type in entry ??
-
 
             archiveContents_.each do |entry|
 
@@ -131,7 +130,6 @@ module Rakish
                     #                   but not "a/foo" or "a/b/foo"
 
                     cmd = "\"#{unzipPath}\" -q \"#{spl[0]}\" \"#{entry[:files].join("\" \"")}\" -x \"META-INF/*\" -d \"#{dir}\"";
-
                     execLogged(cmd, :verbose=>verbose?);
 
                 else

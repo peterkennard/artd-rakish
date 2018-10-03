@@ -1195,8 +1195,13 @@ module Rakish
         #
         def self.findInBinPath(name)
             @@binpath||=SearchPath.new(ENV['PATH']);
-            @@binpath.findFile(name,@@binPathOpts_);
-        end
+            ret = @@binpath.findFile(name,@@binPathOpts_);
+			log.debug("searh for \"#{name}\" found \"#{ret}\"");
+			unless ret 
+			   log.debug("Path is #{ENV['PATH']}");
+			end
+			ret
+		end
 
 		# Create a single simple file task to process source to dest
 		#
