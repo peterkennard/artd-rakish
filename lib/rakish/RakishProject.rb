@@ -212,6 +212,7 @@ public
 				# as in: export (task => [prereq] do |t| { blah blah });
 				name.actions << b;
 			end
+			name.config||=self;
             name = name.to_s().sub("#{myNamespace}:",'').to_sym;
         else
         	# TODO: look up actual task and set exported to it for return value.

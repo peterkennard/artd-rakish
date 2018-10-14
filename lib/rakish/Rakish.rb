@@ -740,37 +740,100 @@ module Rakish
 		end
 	end
 
-	if 0
-	module LoadableModule
-		include Rakish::Logger
+    public
 
-		@@loadedByFile_ = {};
+    # Create task that finds an existing set of files with wildcards and
+    # checks timestamps on the files.
+    # currently it is never "out of date" as it doesn't have a target
+    # the file set is evaluated and resolved when the timestamp is checked.
+    # so if the directory or files are created or updated by a prior prerequisite
+    # this will supply the up to date timestamp.
+    #
+    # it uses additional hash arguments beyond the rake dependencies assigned to the name
+    # so you can't use these symbols for the name itself.
+    #
+    # :basedir => string, the directory to search for the
+    #    the default is '.'
+    # :files => a single string or an array of the files to find relative to the :basedir
+    #    the default is '*'
+    # example:
+    #
+    # fileset_task :nameOfTask => [prerequisites], :files=>['*.sh','*.py'], :basedir=>'scripts';
+    #
+    class FileSetTask < Rake::Task
 
-		def self.load(fileName)
-			fileName = File.expand_path(fileName);
-			mod = @@loadedByFile_[fileName];
-			return mod if mod;
-			begin			
-				Thread.current[:loadReturn] = nil;
-				Kernel.load(fileName);
-				mod = Thread.current[:loadReturn];
-				@@loadedByFile_[fileName] = mod if(mod);
-			rescue => e
-				log.error { e };
-				mod = nil;
-			end
-			Thread.current[:loadReturn] = nil;
-			mod
-		end
-		def self.onLoaded(retVal)
-			Thread.current[:loadReturn] = retVal;
-		end
-	end
-	end
+        # Is this image build needed?  Yes if it doesn't exist, or if its time stamp
+        # is out of date.
+        def needed?
+            ret = out_of_date? Time.now
+            log.debug("#{name} needed #{ret}");
+            ret
+        end
 
-	public
+        # Time stamp for task.
+        def timestamp
+            resolveFiles
+            unless @timestamp
+                ts = Rake::EARLY;
+                @fileset.each do |f|
+                    ft = File.mtime(f);
+                    ts = ft if(ft > ts)
+                end
+                @timestamp = ts;
+            end
+            # log.debug("#{name} @timestamp #{@timestamp}");
+            @timestamp
+        end
 
+        private
 
+        def resolveFiles
+            unless @fileset
+                FileUtils.cd data[:basedir] do
+                    @fileset = FileSet.new(data[:files]);
+                end
+            end
+        end
+
+        # Are there any prerequisites with a later time than the given time stamp?
+        def out_of_date?(stamp)
+            @prerequisites.any? do |n|
+                application[n, @scope].timestamp >stamp;
+            end
+        end
+    end
+
+    class << self
+        # convenience method like Rake::task for fileset_task
+        def fileset_task(*args,&block)
+            name = args[0];
+            last = args.last;
+            basedir = '.';
+            files = '*';
+            if(last.is_a?(Hash))
+                basedir = last[:basedir] || basedir;
+                files = last[:files] || files;
+                if(last == name)
+                    if(last.size > 1)
+                        log.debug("keys are \"#{last.keys}\"");
+                        args[0] = { name.keys[0] => name.values[0] }
+                    end
+                else
+                    args.pop
+                end
+            end
+
+         #   log.debug("args \"#{args}\"");
+         #   log.debug("basedir \"#{basedir}\"");
+         #   log.debug("files \"#{files}\"");
+
+            tsk = FileSetTask.define_task(*args, &block);
+            tsk.data = { :basedir=>basedir, :files=>files };
+
+          #  log.debug("created FileSet task #{tsk}");
+            tsk
+        end
+    end
 	# a bunch of utility functions used by Projects and configurations
 	module Util
 		include ::Rake::DSL
@@ -806,6 +869,11 @@ module Rakish
         # convenience method like Rake::task
         def task(*args,&block)
             Rake::Task.define_task(*args, &block)
+        end
+
+        # convenience method like Rake::task
+        def fileset_task(*args,&block)
+            Rakish::fileset_task(*args, &block)
         end
 
 		# Like each but checks for null and if object doesn't respond to each
