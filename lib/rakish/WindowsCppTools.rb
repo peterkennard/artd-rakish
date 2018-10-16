@@ -756,8 +756,8 @@ module Rakish
 		end
 		def doMakeManifest(t)
 			log.info("Generating #{File.basename(t.name)}");
-			data = t.data;
-			cp(@defaultManifest, data[:txt],:verbose => false)
+			data = t.createArgs[:manifestTxt];
+			cp(@defaultManifest, data,:verbose => false)
 			File.open(t.name,'w') do |f|
 				f.puts "#include <windows.h>"						
 				if(@BASELINKAGE === 'Dynamic' && t.config.isLibrary)
@@ -804,10 +804,9 @@ module Rakish
 					# manifest resource
 					cfg.project.addCleanFiles(manifest_rc,manifest_txt);
 												
-					tsk = Rake::FileTask.define_task manifest_rc => [ cfg.moduleConfiguredObjDir, cfg.projectFile, @defaultManifest ]
+					tsk = Rake::FileTask.define_task manifest_rc => [ cfg.moduleConfiguredObjDir, cfg.projectFile, @defaultManifest ] :manifestTxt=>manifest_txt
 					tsk.enhance &@@makeManifestAction;
 					tsk.config = cfg
-					tsk.data = { :txt=>manifest_txt }
 				end
 				rcobjs <<= tsk
 			end	

@@ -345,13 +345,6 @@ module Rake
 	  # optional "config" field on Rake Task objects
 	  attr_accessor :config
 	  
-	  rake_extension('data') do
-		# note commented because RDoc does not parse this
-		# attr_accessor :data
-	  end
-	  # optional "per instance" field on Rake Task objects
-	  attr_accessor :data
-
 	  rake_extension('createArgs') do
 	  end
       def createArgs
@@ -840,7 +833,6 @@ module Rakish
 
         def resolveFiles
             unless @fileset
-                log.debug("createArgs are #{createArgs}");
                 basedir = createArgs[:baseDir]||'.';
                 files = createArgs[:files]||'*';
                 FileUtils.cd basedir do
@@ -902,7 +894,7 @@ module Rakish
 
         # convenience method like Rake::task
         def fileset_task(*args,&block)
-            Rakish::fileset_task(*args, &block)
+            Rakish::FileSetTask.define_task(*args, &block)
         end
 
 		# Like each but checks for null and if object doesn't respond to each
