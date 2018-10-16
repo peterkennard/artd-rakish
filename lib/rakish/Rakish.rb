@@ -227,30 +227,67 @@ module Rake
 		end
 	end
 
-
-
-
     # Rake::TaskManager extensions
 	module TaskManager
 
-	   # Two difference here:
-	   # flattening of dependency lists
-	   # so arguments can be arrays of arrays
-	   # and it will recognize a leading ':' as an indicator of global root namespace scope
-	   # in additon to "rake:"
-	   def resolve_args(args)
-		 if args.last.is_a?(Hash)
-		   deps = args.pop
-		   ret = resolve_args_with_dependencies(args, deps)
-		   ret[2].flatten!
-		   ret[2].map! do |e|
-		     (e=~/^:/)?"rake#{e}":e
-		   end
-		   ret
-		 else
-		   resolve_args_without_dependencies(args)
-		 end
-	   end
+        # Two difference here:
+        # flattening of dependency lists
+        # so arguments can be arrays of arrays
+        # and it will recognize a leading ':' as an indicator of global root namespace scope
+        # in additon to "rake:"
+        def resolve_args(args)
+            if args.last.is_a?(Hash)
+                deps = args.pop
+                ret = resolve_args_with_dependencies(args, deps)
+                ret[2].flatten!
+                ret[2].map! do |e|
+                    (e=~/^:/)?"rake#{e}":e
+                end
+                ret
+            else
+                resolve_args_without_dependencies(args)
+            end
+        end
+
+        alias_method :old_define_task, :define_task
+
+        # thie will parse additional "reat time" arguments passed into a task in the form of additional
+        # hash entries to the primary "named argument list" non of these keys may be arrays.
+        # or be the same ast the task name
+        def define_task(task_class, *args, &block)
+
+            createArgs = nil;
+            last = args.last;
+            if(last.is_a?(Hash))
+                if(last == args[0]) # only a hash
+                    if(last.size > 1)
+                        name = last.keys[0];
+                        # replace hash from args with only the name and dependencies
+                        # delete the first key and remainder goes into createArgs
+                        args[0] = { name => last.delete(name) }
+                        createArgs = last;
+                    end
+                else # name and a hash
+                    unless last.empty?
+                        name = last.keys[0];
+                        if(name.is_a? Array)
+                            # replace hash from args with only the arrayKey and command line argument list
+                            # delete the first key, remainder goes into createArgs if not empty
+                            args[1] = { name => last.delete(name) }
+                            createArgs = last unless last.empty?;
+                        else
+                            args.pop # it is our added arguments
+                            createArgs = last;
+                        end
+                    end
+                end
+            end
+            tsk = old_define_task(task_class, *args, &block);
+            tsk.createArgs = createArgs if createArgs
+            tsk
+        end
+
+
 	end
 
     # Rake::Application extensions
@@ -309,11 +346,20 @@ module Rake
 	  attr_accessor :config
 	  
 	  rake_extension('data') do
-		# note commented because RDoc does not parse this 
+		# note commented because RDoc does not parse this
 		# attr_accessor :data
 	  end
 	  # optional "per instance" field on Rake Task objects
 	  attr_accessor :data
+
+	  rake_extension('createArgs') do
+	  end
+      def createArgs
+        @createArgs||={};
+      end
+      def createArgs=(aHash)
+        @createArgs||=aHash # can only assign once !!!
+      end
 
 	  # see Rake.Task as this overrides it's method
 	  # to flatten dependencies so they can be provided as
@@ -353,6 +399,11 @@ module Rake
 	  end
 
 	  class << self
+
+        def usesCreatArgs
+            false
+        end
+
 		# define a task with a unique anonymous name
 		# does not handle :name=>[] dependencies because the generated name is
 		# not known at the time of this declaratation
@@ -766,7 +817,7 @@ module Rakish
         # is out of date.
         def needed?
             ret = out_of_date? Time.now
-            log.debug("#{name} needed #{ret}");
+            # log.debug("#{name} needed #{ret}");
             ret
         end
 
@@ -789,8 +840,11 @@ module Rakish
 
         def resolveFiles
             unless @fileset
-                FileUtils.cd data[:basedir] do
-                    @fileset = FileSet.new(data[:files]);
+                log.debug("createArgs are #{createArgs}");
+                basedir = createArgs[:baseDir]||'.';
+                files = createArgs[:files]||'*';
+                FileUtils.cd basedir do
+                    @fileset = FileSet.new(files);
                 end
             end
         end
@@ -806,32 +860,7 @@ module Rakish
     class << self
         # convenience method like Rake::task for fileset_task
         def fileset_task(*args,&block)
-            name = args[0];
-            last = args.last;
-            basedir = '.';
-            files = '*';
-            if(last.is_a?(Hash))
-                basedir = last[:basedir] || basedir;
-                files = last[:files] || files;
-                if(last == name)
-                    if(last.size > 1)
-                        log.debug("keys are \"#{last.keys}\"");
-                        args[0] = { name.keys[0] => name.values[0] }
-                    end
-                else
-                    args.pop
-                end
-            end
-
-         #   log.debug("args \"#{args}\"");
-         #   log.debug("basedir \"#{basedir}\"");
-         #   log.debug("files \"#{files}\"");
-
             tsk = FileSetTask.define_task(*args, &block);
-            tsk.data = { :basedir=>basedir, :files=>files };
-
-          #  log.debug("created FileSet task #{tsk}");
-            tsk
         end
     end
 	# a bunch of utility functions used by Projects and configurations
