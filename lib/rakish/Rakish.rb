@@ -227,69 +227,6 @@ module Rake
 		end
 	end
 
-    # Rake::TaskManager extensions
-	module TaskManager
-
-        # Two difference here:
-        # flattening of dependency lists
-        # so arguments can be arrays of arrays
-        # and it will recognize a leading ':' as an indicator of global root namespace scope
-        # in additon to "rake:"
-        def resolve_args(args)
-            if args.last.is_a?(Hash)
-                deps = args.pop
-                ret = resolve_args_with_dependencies(args, deps)
-                ret[2].flatten!
-                ret[2].map! do |e|
-                    (e=~/^:/)?"rake#{e}":e
-                end
-                ret
-            else
-                resolve_args_without_dependencies(args)
-            end
-        end
-
-        alias_method :old_define_task, :define_task
-
-        # thie will parse additional "reat time" arguments passed into a task in the form of additional
-        # hash entries to the primary "named argument list" non of these keys may be arrays.
-        # or be the same ast the task name
-        def define_task(task_class, *args, &block)
-
-            createArgs = nil;
-            last = args.last;
-            if(last.is_a?(Hash))
-                if(last == args[0]) # only a hash
-                    if(last.size > 1)
-                        name = last.keys[0];
-                        # replace hash from args with only the name and dependencies
-                        # delete the first key and remainder goes into createArgs
-                        args[0] = { name => last.delete(name) }
-                        createArgs = last;
-                    end
-                else # name and a hash
-                    unless last.empty?
-                        name = last.keys[0];
-                        if(name.is_a? Array)
-                            # replace hash from args with only the arrayKey and command line argument list
-                            # delete the first key, remainder goes into createArgs if not empty
-                            args[1] = { name => last.delete(name) }
-                            createArgs = last unless last.empty?;
-                        else
-                            args.pop # it is our added arguments
-                            createArgs = last;
-                        end
-                    end
-                end
-            end
-            tsk = old_define_task(task_class, *args, &block);
-            tsk.createArgs = createArgs if createArgs
-            tsk
-        end
-
-
-	end
-
     # Rake::Application extensions
 	class Application
 
@@ -347,12 +284,14 @@ module Rake
 	  
 	  rake_extension('createArgs') do
 	  end
+
       def createArgs
         @createArgs||={};
       end
       def createArgs=(aHash)
         @createArgs||=aHash # can only assign once !!!
       end
+
 
 	  # see Rake.Task as this overrides it's method
 	  # to flatten dependencies so they can be provided as
@@ -420,7 +359,66 @@ module Rake
 		end
 	end
 
+    # Rake::TaskManager extensions
 	module TaskManager
+
+        # Two difference here:
+        # flattening of dependency lists
+        # so arguments can be arrays of arrays
+        # and it will recognize a leading ':' as an indicator of global root namespace scope
+        # in additon to "rake:"
+        def resolve_args(args)
+            if args.last.is_a?(Hash)
+                deps = args.pop
+                ret = resolve_args_with_dependencies(args, deps)
+                ret[2].flatten!
+                ret[2].map! do |e|
+                    (e=~/^:/)?"rake#{e}":e
+                end
+                ret
+            else
+                resolve_args_without_dependencies(args)
+            end
+        end
+
+        alias_method :rake_define_task, :define_task
+
+        # Thie will parse additional "task creat time" arguments passed into a task when defined in the form
+        # of additional hash entries to the primary "named argument list" non of these keys may be arrays.
+        # or be the same ast the task name
+        def define_task(task_class, *args, &block)
+
+            createArgs = nil;
+            last = args.last;
+            if(last.is_a?(Hash))
+                if(last == args[0]) # only a hash
+                    if(last.size > 1)
+                        name = last.keys[0];
+                        # replace hash from args with only the name and dependencies
+                        # delete the first key and remainder goes into createArgs
+                        args[0] = { name => last.delete(name) }
+                        createArgs = last;
+                    end
+                else # name and a hash
+                    unless last.empty?
+                        name = last.keys[0];
+                        if(name.is_a? Array)
+                            # replace hash from args with only the arrayKey and command line argument list
+                            # delete the first key, remainder goes into createArgs if not empty
+                            args[1] = { name => last.delete(name) }
+                            createArgs = last unless last.empty?;
+                        else
+                            args.pop # it is our added arguments
+                            createArgs = last;
+                        end
+                    end
+                end
+            end
+            tsk = rake_define_task(task_class, *args, &block);
+            tsk.createArgs = createArgs if createArgs
+            tsk
+        end
+
 
 		if(RUBY_VERSION =~ /^2./)
 			def _trc  # :nodoc:
@@ -432,6 +430,7 @@ module Rake
 			end
 		end
 		private :_trc
+
 
 		# Directory tasks are always in root list so this should be a bit faster
 		rake_extension('directory_task_defined?') do

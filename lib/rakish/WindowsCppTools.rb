@@ -804,7 +804,7 @@ module Rakish
 					# manifest resource
 					cfg.project.addCleanFiles(manifest_rc,manifest_txt);
 												
-					tsk = Rake::FileTask.define_task manifest_rc => [ cfg.moduleConfiguredObjDir, cfg.projectFile, @defaultManifest ] :manifestTxt=>manifest_txt
+					tsk = Rake::FileTask.define_task manifest_rc => [ cfg.moduleConfiguredObjDir, cfg.projectFile, @defaultManifest ], :manifestTxt=>manifest_txt
 					tsk.enhance &@@makeManifestAction;
 					tsk.config = cfg
 				end

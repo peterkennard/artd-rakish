@@ -1,0 +1,37 @@
+
+
+0.9.10.beta
+
+-   definiteitely some bugfixes in the heat of getting projects to build.
+
+-   Some cleanup on the CppProjects module
+
+-   Added RaspberiPiCppTools for building C,C++ code on the Raspberi Pi.
+
+-   Added rakish Rakish::SearchPath to facilitate finding executables in the current PATH or items in the classpath
+    or other paths.
+
+-   Added BuildConfig#findInPath to Rakish::ProjectConfig
+
+-   Added experimental "createArgs" to Rake::Task to allow setting named values in a Task at "define_task" time.
+    Since the added args can not be the same as the task name, using a prefix on the keys of '@' or '$' is a good way
+    of preventing conflicts as these are not typically used as task names. This feature requires ruby 1.9.x+ to work.
+
+    examples:
+
+    task :withCreateArgs, :arg0=>'val0', :arg1=>val1 ... do   end
+    task :withCreateArgs=>[ :deps ], :arg0=>'val0', :arg1=>val1 ... do   end
+    task :withCreateArgs,  [ :commandLineArg, ... ], :arg0=>'val0', :arg1=>val1 ... do   end
+    task :withCreateArgs,  [ :commandLineArg, ... ]=>[ :deps ], :arg0=>'val0', :arg1=>val1 ... do   end
+
+    removed the "Task#data" method as the "Task#createArgs" now substitutes and this was only used in one place in the
+    windows C compiler tools manifest builder task.
+
+-   Added Rakish::FileSetTask to check timestamps on a collection of files specified with wildcards but not have them
+    added as prerequisites.  The wildcards are evaluated the first time the timestamp is checked which is when a task with
+    a dependency on it checks it's dependencies.  The wildcards are specified at instantiation time.
+
+    This to handle executing a task if any of the files found have been touched.
+
+-   Added fileset_task convenience method ro Rakish::Utils
+
