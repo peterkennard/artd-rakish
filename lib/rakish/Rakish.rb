@@ -383,42 +383,26 @@ module Rake
 
         alias_method :rake_define_task, :define_task
 
-        # Thie will parse additional "task creat time" arguments passed into a task when defined in the form
-        # of additional hash entries to the primary "named argument list" non of these keys may be arrays.
-        # or be the same ast the task name
-        def define_task(task_class, *args, &block)
+        # Thie will add additional "task creat time" arguments passed into a task when defined in the form
+        # :$@=>{ :createArg1=>'1', :createArg2=>'2' ... }
+        # They are retrieved from the task as taskInstance.createArgs[:createArg1] etc, at any
+        # time after the task is defined.
 
-            createArgs = nil;
+        def define_task(task_class, *args, &block)
             last = args.last;
             if(last.is_a?(Hash))
-                if(last == args[0]) # only a hash
-                    if(last.size > 1)
-                        name = last.keys[0];
-                        # replace hash from args with only the name and dependencies
-                        # delete the first key and remainder goes into createArgs
-                        args[0] = { name => last.delete(name) }
-                        createArgs = last;
-                    end
-                else # name and a hash
-                    unless last.empty?
-                        name = last.keys[0];
-                        if(name.is_a? Array)
-                            # replace hash from args with only the arrayKey and command line argument list
-                            # delete the first key, remainder goes into createArgs if not empty
-                            args[1] = { name => last.delete(name) }
-                            createArgs = last unless last.empty?;
-                        else
-                            args.pop # it is our added arguments
-                            createArgs = last;
-                        end
-                    end
+                extOpts=last[:$@]
+                if extOpts
+                    createArgs=extOpts;
+                    last.delete(:$@)
+                    args.pop if last.empty?;
+                    tsk = rake_define_task(task_class, *args, &block);
+                    tsk.createArgs=extOpts;
+                    return tsk
                 end
             end
-            tsk = rake_define_task(task_class, *args, &block);
-            tsk.createArgs = createArgs if createArgs
-            tsk
+            rake_define_task(task_class, *args, &block);
         end
-
 
 		if(RUBY_VERSION =~ /^2./)
 			def _trc  # :nodoc:

@@ -35,3 +35,16 @@
 
 -   Added fileset_task convenience method ro Rakish::Utils
 
+0.9.11.beta
+
+-   Buyers remorse on createArgs it now uses only one named argument :$@
+    This makes life a lot simpler and more future proof in case later versions of rake use
+    additional named aruments
+
+    examples:
+
+    task :withCreateArgs, :$@=>{ :arg0=>'val0', :arg1=>val1 ...}  do   end
+    task :withCreateArgs=>[ :deps ], :$@=>{ :arg0=>'val0', :arg1=>val1 ...}  do   end
+    task :withCreateArgs,  [ :commandLineArg, ... ], :$@=>{ :arg0=>'val0', :arg1=>val1 ...}  do   end
+    task :withCreateArgs,  [ :commandLineArg, ... ]=>[ :deps ], :$@=>{ :arg0=>'val0', :arg1=>val1 ...}  do   end
+
