@@ -48,3 +48,6 @@
     task :withCreateArgs,  [ :commandLineArg, ... ], :$@=>{ :arg0=>'val0', :arg1=>val1 ...}  do   end
     task :withCreateArgs,  [ :commandLineArg, ... ]=>[ :deps ], :$@=>{ :arg0=>'val0', :arg1=>val1 ...}  do   end
 
+0.9.12.beta
+
+-   Added binary script to return path to auxilliary files used in ant scripts and other places.

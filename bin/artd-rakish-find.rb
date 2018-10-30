@@ -2,8 +2,18 @@
 
 args = ARGV;
 
-if(args[0] === 'exec-rake.bat')
-    puts File.expand_path("#{ENV['ARTD_TOOLS']}exec-rake.bat");
-elsif(args[0] === 'call-rake.xml')
-    puts "#{File.expand_path(File.dirname(__FILE__))}/artd-rakish-bin/call-rake.xml";
+if(args[0])
+    path = "#{File.expand_path(File.dirname(__FILE__))}/artd-rakish-bin/#{args[0]}";
+    if(File.exists?(path))
+        puts path;
+        exit 0
+    end
+    if(ENV['ARTD_TOOLS'])  # only will be found on windows when executed with artd-shell
+        path = File.expand_path("#{ENV['ARTD_TOOLS']}exec-rake.bat");
+        if(File.exists?(path))
+            puts path;
+            exit 0
+        end
+    end
 end
+
