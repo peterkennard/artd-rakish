@@ -1,5 +1,5 @@
 myDir = File.dirname(__FILE__);
-require "#{myDir}/build-optionis.rb"
+require "#{myDir}/build-options.rb"
 
 include Rakish::Util
 
