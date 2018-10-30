@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="rake-targets" default="">
 
-    <condition property="exec.shell">
+    <condition property="exec.shell" value="artd-shell.bat">
         <os family="windows"/>
     </condition>
+    <condition property="exec.shell" value="/bin/bash">
+        <os family="unix"/>
+    </condition>
 
-    <exec executable="artd-shell.bat" outputproperty="rake.ant.xml">
+    <exec executable="${exec.shell}" outputproperty="rake.ant.xml">
         <arg value="-c"/>
         <arg value="artd-rakish-find.rb call-rake.xml"/>
     </exec>
