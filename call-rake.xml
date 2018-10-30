@@ -48,9 +48,9 @@
             </macrodef>
         </sequential>
         <sequential if:set="os.linux">
-            <!-- this is only if we are using rvm ruby versioni manager -->
+            <!-- in this case rake needs to be in the system path -->
             <property name="rake.exec.path"
-                      value="/usr/share/rvm/gems/${env.RUBY_VERSION}@global/wrappers/rake" />
+                      value="rake" />
             <macrodef name="call-rake">
                 <attribute name="file" default="./rakefile.rb"/>
                 <attribute name="target" default="_not_set_" />
