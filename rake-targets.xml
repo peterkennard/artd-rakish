@@ -1,7 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="rake-targets" default="">
 
-    <import file="./call-rake.xml" />
+    <exec executable="artd-shell.bat" outputproperty="rake.ant.xml">
+        <arg value="-c"/>
+        <arg value="artd-rakish-find.rb call-rake.xml"/>
+    </exec>
+
+    <import file="${rake.ant.xml}" />
 
     <target name="cleanAll" description="delete output directory">
         <call-rake target="cleanAll" />

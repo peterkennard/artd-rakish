@@ -16,9 +16,11 @@ Gem::Specification.new do |s|
       s.cert_chain  = [ certPath ];
       s.signing_key = privateKeyPath;
   end
+  s.executables << 'artd-rakish-find.rb'
 
   s.files       =  FileList.new(["lib/rakish.rb",
                                   "lib/rakish/*",
+                                  "bin/**/*",
 								  "doc/*"
                    ]).to_a();
   s.extra_rdoc_files = [

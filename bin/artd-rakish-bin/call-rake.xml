@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="call-rake" default="" xmlns:if="ant:if" >
 
-	<dirname property="my.directory" file="${ant.file.call-rake}"/>
+	<dirname property="my.directory" file="/bin/artd-rakish-bin/call-rake.xml"/>
 	<dirname property="jsdk.home" file="${java.home}"/>
 
 	<condition property="os.windows">
@@ -15,8 +15,12 @@
 
     <macrodef name="createOsMacros">
         <sequential if:set="os.windows">
-            <property name="rake.exec.path"
-                      value="${my.directory}\..\..\third-party\tools\exec-rake.bat" />
+
+            <exec executable="artd-shell.bat" outputproperty="rake.exec.path">
+                <arg value="-c"/>
+                <arg value="artd-rakish-find.rb exec-rake.bat"/>
+            </exec>
+
             <macrodef name="call-rake">
                 <attribute name="file" default="./rakefile.rb"/>
                 <attribute name="target" default="_not_set_" />
