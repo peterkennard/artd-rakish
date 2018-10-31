@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="rake-targets" default="">
 
-    <!--
     <condition property="exec.shell" value="artd-shell.bat">
         <os family="windows"/>
     </condition>
@@ -11,14 +10,15 @@
 
     <exec executable="${exec.shell}" outputproperty="rake.ant.xml">
         <arg value="-c"/>
-        <arg value="artd-rakish-find call-rake.xml"/>
+        <arg value="artd-rakish-find.rb call-rake.xml"/>
     </exec>
 
-    -->
 
-    <exec executable="artd-rakish-find.rb" outputproperty="rake.ant.xml">
+    <!--
+    <exec executable="artd-rakish-find.bat" outputproperty="rake.ant.xml">
         <arg value="call-rake.xml"/>
     </exec>
+    -->
 
     <import file="${rake.ant.xml}" />
 
