@@ -18,7 +18,6 @@
     <exec executable="artd-rakish-find" outputproperty="rake.ant.xml">
         <arg value="call-rake.xml"/>
     </exec>
-
     <import file="${rake.ant.xml}" />
 
     <target name="cleanAll" description="delete output directory">
