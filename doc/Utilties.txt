@@ -1,0 +1,34 @@
+
+==Binary Utilities and Support files.
+
+===artd-rakish-find
+
+This is a utilty to find a non-ruby support file packaged with this gem.  It was needed
+to handle finding files when managed by the rvm package manger and other systems.
+
+It will return the full path via stdout to the location of the support files if found in the gem.
+
+On windows in my installation it will return via stdout only if piped so it doesn't spawn a
+command shell window - an annoyance with windows !!
+
+ie:
+
+    $ artd-rakish-find call-rake.xml > foo
+    $ type foo
+    D:/artd/third-party/tools/Ruby193/lib/ruby/gems/1.9.1/gems/rakish-0.9.12.beta/bin/artd-rakish-bin/call-rake.xml
+
+===call-rake.xml
+
+This is an ant script the XML file used as follows on linux or windows to facilitate calling rake tasks from ant scripts:
+
+    <?xml version="1.0" encoding="UTF-8"?>
+    <project name="rake-targets" default="">
+        <exec executable="artd-rakish-find" outputproperty="rake.ant.xml">
+            <arg value="call-rake.xml"/>
+        </exec>
+        <import file="${rake.ant.xml}" />
+
+        <target name="subdirTest" description="test required subprojects">
+            <call-rake file="./test/subdir-test/rakefile.rb" target="subdir-test:test"/>
+        </target>
+    </project>

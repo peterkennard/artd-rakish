@@ -1,15 +1,15 @@
 
 = Rakish - Build system user guide
 
-
 :include:doc/RakishOverview.html
 
 ===See why I did it at the end if curious.
 
 :include:doc/SimpleJavaSamples.txt
 
+:include:doc/Utilties.txt
+
 :include:doc/WhyIDidIt.txt
 
 :include:doc/ToDoItems.txt
-
 

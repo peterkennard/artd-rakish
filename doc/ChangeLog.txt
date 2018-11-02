@@ -50,4 +50,8 @@
 
 0.9.12.beta
 
--   Added binary script to return path to auxilliary files used in ant scripts and other places.
+-   Added binary script to return path to auxilliary support files used in ant scripts and other places that are
+    contained in this gem.
+
+-   Added call-rake.xml ant script for use in spawning calls to rake from intellij managed, and general,
+    ant scripts.

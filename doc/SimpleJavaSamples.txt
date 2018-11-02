@@ -55,13 +55,20 @@ The JavaProjectModule does export some standard targets :compile, :javadoc, :dis
             cfg.resourceDir = "#{cfg.buildDir}/production/.orlando";
 
             # Java configuration items.
+            java = cfg.java;
 
             cfg.java_home = ENV['JAVA_HOME'];
             cfg.ant_home = ENV['ANT_HOME'] || '/usr/share/ant';
+
             # cfg.catalina_home = ENV['CATALINA_HOME'] || '/usr/share/tomcat7';
-            java = cfg.java;
             java.addJarSearchPath("#{myDir}/third-party-jars");
             java.addClassPaths( 'log4j-1.2.17.jar' ); # everything will inherit this
+
+            if(cfg.intellij) # we are running this from an intellij UI
+                java.addJavacFlags(cfg.intellij.javacFlags);
+            else
+                java.addJavacFlags("-Xlint:unchecked -encoding ISO-8859-1");
+            end
 
             # tomcat deployment options
 
