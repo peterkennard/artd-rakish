@@ -16,9 +16,8 @@
     <macrodef name="createOsMacros">
         <sequential if:set="os.windows">
 
-            <exec executable="artd-shell.bat" outputproperty="rake.exec.path">
-                <arg value="-c"/>
-                <arg value="artd-rakish-find.rb exec-rake.bat"/>
+            <exec executable="artd-rakish-find" outputproperty="rake.exec.path">
+                <arg value="exec-rake.bat"/>
             </exec>
 
             <macrodef name="call-rake">
