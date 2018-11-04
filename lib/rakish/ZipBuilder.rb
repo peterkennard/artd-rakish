@@ -20,7 +20,7 @@ module ZipBuilderModule
 
     public
 
-   	    def doBuildZipAction(t) # :nodoc:
+   	    def doBuildZipAction(t,args) # :nodoc:
 
             cfg = t.config;
 
@@ -60,7 +60,7 @@ module ZipBuilderModule
             end
         end
 
-        @@buildZipAction_ = ->(t) do
+        @@buildZipAction_ = ->(t,args) do
             t.config.doBuildZipAction(t);
         end
 

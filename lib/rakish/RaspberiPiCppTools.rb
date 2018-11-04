@@ -248,7 +248,7 @@ module Rakish
                                                 :depends]
             end
 
-            @@resolveLinkAction_ = lambda do |t|
+            @@resolveLinkAction_ = lambda do |t,args|
             end
 
             # for consumers of CTools toolchain

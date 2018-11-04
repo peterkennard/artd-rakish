@@ -116,7 +116,7 @@ module CTools
 		[]
 	end
 
-	@@doNothingAction_ = lambda do |t|
+	@@doNothingAction_ = lambda do |t,args|
 		log.debug("attempting to compile #{t.source} into\n    #{t}\n    in #{File.expand_path('.')}");
 	end
 
@@ -381,21 +381,21 @@ module CppProjectModule
         @cflags||[];
     end
 
-	VCProjBuildAction_ = lambda do |t|
+	VCProjBuildAction_ = lambda do |t,args|
         require "#{Rakish::MAKEDIR}/VcprojBuilder.rb"
         VcprojBuilder.onVcprojTask(t.config);
 	end
 
-	VCProjCleanAction_ = lambda do |t|
+	VCProjCleanAction_ = lambda do |t,args|
         require "#{Rakish::MAKEDIR}/VcprojBuilder.rb"
         VcprojBuilder.onVcprojCleanTask(t.config);
 	end
 
-	LinkIncludeAction_ = lambda do |t|
+	LinkIncludeAction_ = lambda do |t,args|
 		config = t.config;
-	    if(config.verbose?)
+		if(config.verbose?)
 			puts "generating #{t.name} from #{t.source}"
-        end
+		end
 
 		destfile = t.name;
 		srcpath = config.getRelativePath(t.source,File.dirname(t.name));
@@ -445,8 +445,8 @@ module CppProjectModule
 		end
 	end
 
-	UpdateDependsAction_ = lambda do |t|
-        	doUpdateDepends(t) if(t.config.dependencyFilesUpdated)
+	UpdateDependsAction_ = lambda do |t,args|
+		doUpdateDepends(t) if(t.config.dependencyFilesUpdated)
 	end
 
 	def resolveConfiguredTasks()

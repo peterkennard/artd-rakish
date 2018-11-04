@@ -490,12 +490,12 @@ module Rakish
 			cfl					
 		end
 
-		@@compileCPPAction = lambda do |t|
+		@@compileCPPAction = lambda do |t,args|
 			t.config.ctools.doCompileCpp(t)
 		end
 		@@compileCAction = @@compileCPPAction;
 
-		@@compileRCAction = lambda do |t|
+		@@compileRCAction = lambda do |t,args|
 			t.config.ctools.doCompileRc(t)
 		end
 
@@ -556,7 +556,7 @@ module Rakish
 		end	
 
 
-		@@buildLibAction = lambda do |t|
+		@@buildLibAction = lambda do |t,args|
 			t.config.ctools.doBuildLib(t)
 		end
 		def doBuildLib(t)
@@ -595,7 +595,7 @@ module Rakish
 			system( cmdline );
 		end
 
-		@@linkDllAction = lambda do |t|
+		@@linkDllAction = lambda do |t,args|
 			t.config.ctools.doLinkDll(t)
 		end
 		def doLinkDll(t)
@@ -682,7 +682,7 @@ module Rakish
 			#endif
 		end
 
-		@@linkAppAction = lambda do |t|
+		@@linkAppAction = lambda do |t,args|
 			t.config.ctools.doLinkApp(t)
 		end
 		def doLinkApp(t)
@@ -751,7 +751,7 @@ module Rakish
 
 		end
 
-		@@makeManifestAction = lambda do |t|
+		@@makeManifestAction = lambda do |t,args|
 			t.config.tools.doMakeManifest(t)
 		end
 		def doMakeManifest(t)
@@ -835,7 +835,7 @@ module Rakish
 			return(resobjs)
 		end
 
-		@@resolveLinkAction_ = lambda do |t|
+		@@resolveLinkAction_ = lambda do |t,args|
 		end
 
 		def createLinkTask(objs,cfg)
