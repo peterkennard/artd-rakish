@@ -104,9 +104,10 @@ module CTools
 		end
 
         # to be overridden by specific toolchains for link target configurations
-        def createLinkConfig(parent,configName)
-		    CppProjectModule.TargetConfig.new(parent,config,self);
-        end
+		def createLinkConfig(parent,configName)
+			CppProjectModule.TargetConfig.new(parent,config,self);
+		end
+
 	end
 
 
@@ -366,7 +367,6 @@ module CppProjectConfig
 
 end
 
-
 module CppProjectModule
   include CppProjectConfig
 
@@ -559,47 +559,68 @@ module CppProjectModule
 	end
   alias :setupCppConfig :setupLinkConfig
 
-	class TargetConfig < BuildConfig
-		include CppProjectConfig
 
-		attr_reader		:configName
-		attr_accessor   :targetName
-		attr_accessor	:targetBaseName
-		attr_reader 	:libpaths
-		attr_reader 	:libs
-		attr_accessor   :dependencyFilesUpdated
+	# for a specifc named configuraton, resolves the configration and loads it with the
+	# the project's specified values.
 
-		def initialize(pnt, cfgName, tools)
-			super(pnt);
-			@libpaths=[]; # ???
-			@libs=[];
-			@configName = cfgName;
-			@ctools = tools;
-			@targetBaseName = pnt.moduleName;
-			# @manifestFile = pnt.manifestFile;
-			tools.ensureConfigOptions(self);
-		end
+  def resolveConfiguration(config)
 
-		def addLibPaths(*lpaths)
-			@libpaths << lpaths
-		end
+    if(ret = (@resolvedConfigs||={})[config])
+      return ret;
+    end
+    tools = ctools;
+    ret = @resolvedConfigs[config] = tools.createLinkConfig(self,config);
 
-		def addLibs(*l)
-			l.flatten.each do |lib|
-				lib = File.expand_path(lib) if(lib =~ /\.\//);
-				@libs << lib
-			end
-		end
+    if(defined? @cppConfigurator_)
+      @cppConfigurator_.call(ret);
+    end
+    ret
+  end
 
-		def targetName
-			@targetName||="#{targetBaseName}";
-		end
-        
+end
+
+module CTools
+  class TargetConfig < BuildConfig
+    include CppProjectConfig
+
+    attr_reader		:configName
+    attr_accessor :targetName
+    attr_accessor	:targetBaseName
+    attr_reader 	:libpaths
+    attr_reader 	:libs
+    attr_accessor :dependencyFilesUpdated
+
+    def initialize(pnt, cfgName, tools)
+      super(pnt);
+      @libpaths=[]; # ???
+      @libs=[];
+      @configName = cfgName;
+      @ctools = tools;
+      @targetBaseName = pnt.moduleName;
+      # @manifestFile = pnt.manifestFile;
+      tools.ensureConfigOptions(self);
+    end
+
+    def addLibPaths(*lpaths)
+      @libpaths << lpaths
+    end
+
+    def addLibs(*l)
+      l.flatten.each do |lib|
+        lib = File.expand_path(lib) if(lib =~ /\.\//);
+        @libs << lib
+      end
+    end
+
+    def targetName
+      @targetName||="#{targetBaseName}";
+    end
+
     # get list of libraries built by and exported by dependency projects
     # in dependency order from most dependent to least, and follow with
     # libraries added in the current project
     # TODO: dependency order not proper id it needs to sort them by "registration order"
-		def getOrderedLibs
+    def getOrderedLibs
 
       libs=[]
       libs << @libs;
@@ -614,7 +635,7 @@ module CppProjectModule
             end
           end
         end
-			end
+      end
 
       # add user specified lobraries after all dependency libraries.
 
@@ -654,25 +675,8 @@ module CppProjectModule
     end
 
   end
+end # end module CTools
 
-	# for a specifc named configuraton, resolves the configration and loads it with the
-	# the project's specified values.
-
-  def resolveConfiguration(config)
-
-    if(ret = (@resolvedConfigs||={})[config])
-      return ret;
-    end
-    tools = ctools;
-    ret = @resolvedConfigs[config] = tools.createLinkConfig(self,config);
-
-    if(defined? @cppConfigurator_)
-      @cppConfigurator_.call(ret);
-    end
-    ret
-  end
-
-end
 
 class BuildConfig
   # ensure added global project task dependencies
