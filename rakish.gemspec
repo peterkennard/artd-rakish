@@ -3,7 +3,7 @@ require 'rake'
 
 Gem::Specification.new do |s|
   s.name        = 'rakish'
-  s.version     = '0.9.12.beta'
+  s.version     = '0.9.13.beta'
   s.summary     = "Rakish build support gem"
   s.description = "Rakish Rake build system built on top of Rake for managing large scale projects with lots of modules."
   s.authors     = ["Peter Kennard"]

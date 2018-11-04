@@ -55,3 +55,9 @@
 
 -   Added call-rake.xml ant script for use in spawning calls to rake from intellij managed, and general,
     ant scripts.
+
+0.9.13.beta
+
+- added second "args" arcument to all action lambdas for strict argument count checking
+  in ruby 2.0+
+  
