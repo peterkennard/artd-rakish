@@ -363,23 +363,23 @@ end
 
 
 module CppProjectModule
-    include CppProjectConfig
+  include CppProjectConfig
 
-    addInitBlock do
-        t = task :preBuild do
-            doCppPreBuild
-        end
-        @cppCompileTaskInitialized = false;
+  addInitBlock do
+    t = task :preBuild do
+      doCppPreBuild
     end
+    @cppCompileTaskInitialized = false;
+  end
 
-    def addCFlags(flags)
-        @cflags||=[];
-        @cflags << flags;
-    end
+  def addCFlags(flags)
+    @cflags||=[];
+    @cflags << flags;
+  end
 
-    def cflags
-        @cflags||[];
-    end
+  def cflags
+    @cflags||[];
+  end
 
 	VCProjBuildAction_ = lambda do |t,args|
         require "#{Rakish::MAKEDIR}/VcprojBuilder.rb"
@@ -520,12 +520,11 @@ module CppProjectModule
 		end
 	end
 
-
-    # asd a project local include directory so files will be listed
-    def addLocalIncludeDir(idir)
-        @cppLocalIncludeDirs_ ||= [];
-        @cppLocalIncludeDirs_ << idir;
-    end
+  # add a project local include directory so files will be listed
+  def addLocalIncludeDir(idir)
+    @cppLocalIncludeDirs_ ||= [];
+    @cppLocalIncludeDirs_ << idir;
+  end
 
 	# get all include files for generated projects
 	def getIncludeFiles()
@@ -553,7 +552,7 @@ module CppProjectModule
 		@targetType = args[:targetType];
 		@cppConfigurator_ = b;
 	end
-    alias :setupCppConfig :setupLinkConfig
+  alias :setupCppConfig :setupLinkConfig
 
 	class TargetConfig < BuildConfig
 		include CppProjectConfig
@@ -591,95 +590,95 @@ module CppProjectModule
 			@targetName||="#{targetBaseName}";
 		end
         
-        # get list of libraries built by and exported by dependency projects
-        # in dependency order from most dependent to least, and follow with
-        # libraries added in the current project
-        # TODO: dependency order not proper id it needs to sort them by "registration order"
+    # get list of libraries built by and exported by dependency projects
+    # in dependency order from most dependent to least, and follow with
+    # libraries added in the current project
+    # TODO: dependency order not proper id it needs to sort them by "registration order"
 		def getOrderedLibs
 
-        	libs=[]
-            libs << @libs;            
+      libs=[]
+      libs << @libs;
 
-			project.dependencies.reverse_each do |dep|
-				if(defined? dep.outputsNativeLibrary)
-					if(dep.nativeLibDir)
-						ldef = ctools.loadLinkref(dep.nativeLibDir,self,configName,dep.moduleName);
-						if(ldef != nil)
-							deflibs = ldef[:libs];
-							libs += deflibs if deflibs;
-						end
-                    end
-				end
+      project.dependencies.reverse_each do |dep|
+        if(defined? dep.outputsNativeLibrary)
+          if(dep.nativeLibDir)
+            ldef = ctools.loadLinkref(dep.nativeLibDir,self,configName,dep.moduleName);
+            if(ldef != nil)
+              deflibs = ldef[:libs];
+              libs += deflibs if deflibs;
+            end
+          end
+        end
 			end
 
-            # add user specified lobraries after all dependency libraries.
+      # add user specified lobraries after all dependency libraries.
 
-            if(thirdPartyLibs)
-				thirdPartyLibs.flatten.each do |tpl|
-					libpath = NIL;
-					if(File.path_is_absolute?(tpl))
-					    libpath = tpl.pathmap('%d');
-					    tpl = tpl.pathmap('%f');
-					else
-					    puts("adding lib #{tpl}");
-                        libpath = "#{thirdPartyPath}/lib";
-                        unless(File.directory?(libpath))
-                            libs << tpl;
-                            next;
-                        end
-					end					
-				    ldef = ctools.loadLinkref(libpath,self,configName,tpl);
-                    if(ldef != nil)
-                        deflibs = ldef[:libs];
-                        libs += deflibs if deflibs;
-				    end
-				end
-			end
-			libs
-		end
-
-		def objectFiles
-			[]
-		end
-
-        def setManifest(file)
-            @manifestFile = File.expand_path(file);
+      if(thirdPartyLibs)
+        thirdPartyLibs.flatten.each do |tpl|
+          libpath = NIL;
+          if(File.path_is_absolute?(tpl))
+            libpath = tpl.pathmap('%d');
+            tpl = tpl.pathmap('%f');
+          else
+            puts("adding lib #{tpl}");
+            libpath = "#{thirdPartyPath}/lib";
+            unless(File.directory?(libpath))
+              libs << tpl;
+              next;
+            end
+          end
+          ldef = ctools.loadLinkref(libpath,self,configName,tpl);
+          if(ldef != nil)
+            deflibs = ldef[:libs];
+            libs += deflibs if deflibs;
+          end
         end
-        def manifestFile
-            @manifestFile
-        end
+      end
+      libs
+    end
 
-	end
+    def objectFiles
+      []
+    end
+
+    def setManifest(file)
+      @manifestFile = File.expand_path(file);
+    end
+    def manifestFile
+      @manifestFile
+    end
+
+  end
 
 	# for a specifc named configuraton, resolves the configration and loads it with the
 	# the project's specified values.
 
 	def resolveConfiguration(config)
 
-		if(ret = (@resolvedConfigs||={})[config])
-			return ret;
-		end
-        tools = ctools;
-		ret = @resolvedConfigs[config] = TargetConfig.new(self,config,tools);
+    if(ret = (@resolvedConfigs||={})[config])
+      return ret;
+    end
+    tools = ctools;
+    ret = @resolvedConfigs[config] = TargetConfig.new(self,config,tools);
 
-		if(defined? @cppConfigurator_)
-			@cppConfigurator_.call(ret);
-		end
-		ret
-	end
+    if(defined? @cppConfigurator_)
+      @cppConfigurator_.call(ret);
+    end
+    ret
+  end
 
 end
 
 class BuildConfig
-   # ensure added global project task dependencies
-    task :clean
-    task :autogen 		=> [ :cleandepends, :includes, :vcproj ];
-    task :cleanautogen 	=> [ :cleanincludes, :cleandepends, :vcprojclean ];
-    task :cleanAll      => [ :clean, :cleanautogen ];
-    task :compile 		=> [ :includes ];
-    task :depends		=> [ :includes ];
-    task :build 		=> [ :compile ];
-    task :rebuild 		=> [ :build, :autogen, :compile ];
+  # ensure added global project task dependencies
+  task :clean
+  task :autogen 		=> [ :cleandepends, :includes, :vcproj ];
+  task :cleanautogen 	=> [ :cleanincludes, :cleandepends, :vcprojclean ];
+  task :cleanAll      => [ :clean, :cleanautogen ];
+  task :compile 		=> [ :includes ];
+  task :depends		=> [ :includes ];
+  task :build 		=> [ :compile ];
+  task :rebuild 		=> [ :build, :autogen, :compile ];
 end
 
 # Create a new project
