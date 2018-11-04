@@ -102,13 +102,12 @@ module CTools
 		else
 			FileUtils.rm(tempfile, :force=>true);
 		end
-
-        # to be overridden by specific toolchains for link target configurations
-		def createLinkConfig(parent,configName)
-			CppProjectModule.TargetConfig.new(parent,config,self);
-		end
-
 	end
+
+    # to be overridden by specific toolchains for link target configurations
+    def createLinkConfig(parent,configName)
+        TargetConfig.new(parent,configName,self);
+    end
 
 
 	## Overidables for specific toolsets to use or supply
