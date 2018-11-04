@@ -602,10 +602,10 @@ module Rakish
 					
 			# link a dynamic library
 			cfg = t.config;
-				
+
 			log.info("linking #{File.basename(t.name)}")
 			deleteFile(t.name);
-			writeLinkref(cfg,cfg.targetBaseName,t.sources[:implib]);
+			writeLinkref(cfg,cfg.targetBaseName,t.createArgs[:implib]);
 
 			lnkfile = t.name.pathmap("#{cfg.moduleConfiguredObjDir()}/%f.response");
 
@@ -620,9 +620,9 @@ module Rakish
                 manifest ||= @defaultManifest;
 
 				File.open(lnkfile,'w') do |f|
-					f.puts("-map:\"#{t.sources[:mapfile]}\"");
-					f.puts("-pdb:\"#{t.sources[:pdbfile]}\"");
-					f.puts("-implib:\"#{t.sources[:implib]}\"");
+					f.puts("-map:\"#{t.createArgs[:mapfile]}\"");
+					f.puts("-pdb:\"#{t.createArgs[:pdbfile]}\"");
+					f.puts("-implib:\"#{t.createArgs[:implib]}\"");
 					f.puts("-DLL #{@LINK_OPTS}");
 
 	                if(manifest)
@@ -650,8 +650,8 @@ module Rakish
 							
 					# object files
 					objs=[]
-					objs << t.sources[:userobjs];
-					objs << t.sources[:autores];
+					objs << t.createArgs[:userobjs];
+					objs << t.createArgs[:autores];
 					objs.flatten.each do |obj|
 						obj = obj.to_s
 						next unless obj.pathmap('%x') == '.obj'
@@ -701,8 +701,8 @@ module Rakish
 
 				File.open(lnkfile,'w') do |f|
 					f.puts("-out:\"#{t.name}\"");
-					f.puts("-map:\"#{t.sources[:mapfile]}\"");
-					f.puts("-pdb:\"#{t.sources[:pdbfile]}\"");							
+					f.puts("-map:\"#{t.createArgs[:mapfile]}\"");
+					f.puts("-pdb:\"#{t.createArgs[:pdbfile]}\"");
 					f.puts("#{@LINK_OPTS}");
 
 	                if(manifest)
@@ -719,8 +719,8 @@ module Rakish
 
 					# object files
 					objs=[]
-					objs << t.sources[:userobjs];
-					objs <<= t.sources[:autores];
+					objs << t.createArgs[:userobjs];
+					objs <<= t.createArgs[:autores];
 					objs.flatten.each do |obj|
 						obj = obj.to_s
 						next unless obj.pathmap('%x') == '.obj' 
@@ -851,14 +851,15 @@ module Rakish
 					pdbfile = targetName.pathmap("%X.pdb");
 					cfg.project.addCleanFiles(mapfile,pdbfile);
 
-					doLink = Rake::FileTask.define_task targetName => resobjs, &@@linkAppAction;
-					doLink.sources = { 
-						:userobjs=>objs,
-						:autores=>resobjs, 
-						:mapfile=>mapfile,
-						:pdbfile=>pdbfile,
+					taskArgs = {
+							:userobjs=>objs,
+							:autores=>resobjs,
+							:mapfile=>mapfile,
+							:pdbfile=>pdbfile,
 					}
-	
+
+					doLink = Rake::FileTask.define_task targetName => resobjs, :$@=>taskArgs, &@@linkAppAction;
+
 				when 'LIB'
 					
 					targetName = "#{cfg.nativeLibDir()}/#{cfg.targetName}.lib";
@@ -869,8 +870,7 @@ module Rakish
 					
 					targetName = "#{cfg.binDir()}/#{cfg.targetName}.dll";
 
-					resobjs = getAutoResourcesObjs(cfg)
-						
+					resobjs = getAutoResourcesObjs(cfg);
 					mapfile = targetName.pathmap("%X.map");
 					pdbfile = targetName.pathmap("%X.pdb");
 					libdir = "#{cfg.nativeLibDir()}/#{cfg.configName}";
@@ -879,14 +879,15 @@ module Rakish
 
 					cfg.project.addCleanFiles(mapfile,pdbfile,implib);
 
-					doLink = Rake::FileTask.define_task targetName => [ libdir, resobjs], &@@linkDllAction;
-					doLink.sources = { 
-						:userobjs=>objs,
-						:autores=>resobjs, 
-						:mapfile=>mapfile,
-						:pdbfile=>pdbfile,
-						:implib=>implib
+					taskArgs = {
+							:userobjs=>objs,
+							:autores=>resobjs,
+							:mapfile=>mapfile,
+							:pdbfile=>pdbfile,
+							:implib=>implib
 					}
+
+					doLink = Rake::FileTask.define_task targetName => [ libdir, resobjs], :$@=>taskArgs, &@@linkDllAction;
 
 				else
 					log.info("unsupported target type #{cfg.targetType}");

@@ -60,4 +60,3 @@
 
 - added second "args" arcument to all action lambdas for strict argument count checking
   in ruby 2.0+
-  
