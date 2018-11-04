@@ -102,6 +102,11 @@ module CTools
 		else
 			FileUtils.rm(tempfile, :force=>true);
 		end
+
+        # to be overridden by specific toolchains for link target configurations
+        def createLinkConfig(parent,configName)
+		    CppProjectModule.TargetConfig.new(parent,config,self);
+        end
 	end
 
 
@@ -120,7 +125,7 @@ module CTools
 		log.debug("attempting to compile #{t.source} into\n    #{t}\n    in #{File.expand_path('.')}");
 	end
 
-	# return the approriate compile action to creat an object files from
+	# return the approriate compile action to creat an object file from
 	# a source file with the specified suffix.
 	# nil if not action is available in this toolset. 
 	def getCompileActionForSuffix(suff)
@@ -558,10 +563,10 @@ module CppProjectModule
 		include CppProjectConfig
 
 		attr_reader		:configName
+		attr_accessor   :targetName
 		attr_accessor	:targetBaseName
 		attr_reader 	:libpaths
 		attr_reader 	:libs
-		attr_accessor   :targetName
 		attr_accessor   :dependencyFilesUpdated
 
 		def initialize(pnt, cfgName, tools)
@@ -653,13 +658,13 @@ module CppProjectModule
 	# for a specifc named configuraton, resolves the configration and loads it with the
 	# the project's specified values.
 
-	def resolveConfiguration(config)
+  def resolveConfiguration(config)
 
     if(ret = (@resolvedConfigs||={})[config])
       return ret;
     end
     tools = ctools;
-    ret = @resolvedConfigs[config] = TargetConfig.new(self,config,tools);
+    ret = @resolvedConfigs[config] = tools.createLinkConfig(self,config);
 
     if(defined? @cppConfigurator_)
       @cppConfigurator_.call(ret);
