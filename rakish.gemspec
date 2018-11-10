@@ -8,7 +8,7 @@ Gem::Specification.new do |s|
 
   unsignedGem = (ENV['RAKISH_UNSIGNED'] === '1' && File.exists?(privateKeyPath));
 
-  versionNumber = '0.9.13';
+  versionNumber = '0.9.14';
 
   s.name        = 'rakish'
   s.summary     = "Rakish build support gem"
