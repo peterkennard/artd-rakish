@@ -3,10 +3,16 @@ require 'rake'
 
 Gem::Specification.new do |s|
 
-  privateKeyPath = File.expand_path("~/.ssh/gem-private_key.pem");
-  certPath = File.expand_path("#{File.join(myDir,"certs/peterk@artd.com.pem")}");
+puts("checking if key exists")
 
-  unsignedGem = (ENV['RAKISH_UNSIGNED'] === '1' && File.exists?(privateKeyPath));
+  privateKeyPath = File.expand_path("~/.ssh/gem-private_key.pem");
+
+  certPath = File.expand_path("#{myDir}/certs/peterk@artd.com.pem}");
+
+  unsignedGem = (ENV['RAKISH_UNSIGNED'] === '1' || (!File.exists?(privateKeyPath)));
+
+puts("unsignedGem \"#{unsignedGem}\" #{unsignedGem === true}\"")
+
 
   versionNumber = '0.9.14';
 
@@ -17,11 +23,12 @@ Gem::Specification.new do |s|
   s.email       = 'peterk@livingwork.com'
 
   unless(unsignedGem)
+      puts("making signed gem");
       if($0 =~ /gem\z/)
         s.cert_chain  = [ certPath ];
         s.signing_key = privateKeyPath;
       else
-        unsignedGem = nil;
+        unsignedGem = false;
       end
   end
 
