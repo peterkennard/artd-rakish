@@ -1,4 +1,32 @@
+0.9.14.beta
 
+- changed RakishProject#moduleName to projectName
+
+0.9.13.beta
+
+- added second "args" arcument to all action lambdas for strict argument count checking
+  in ruby 2.0+
+
+0.9.12.beta
+
+-   Added binary script to return path to auxilliary support files used in ant scripts and other places that are
+    contained in this gem.
+
+-   Added call-rake.xml ant script for use in spawning calls to rake from intellij managed, and general,
+    ant scripts.
+
+0.9.11.beta
+
+-   Buyers remorse on createArgs it now uses only one named argument :$@
+    This makes life a lot simpler and more future proof in case later versions of rake use
+    additional named aruments
+
+    examples:
+
+    task :withCreateArgs, :$@=>{ :arg0=>'val0', :arg1=>val1 ...}  do   end
+    task :withCreateArgs=>[ :deps ], :$@=>{ :arg0=>'val0', :arg1=>val1 ...}  do   end
+    task :withCreateArgs,  [ :commandLineArg, ... ], :$@=>{ :arg0=>'val0', :arg1=>val1 ...}  do   end
+    task :withCreateArgs,  [ :commandLineArg, ... ]=>[ :deps ], :$@=>{ :arg0=>'val0', :arg1=>val1 ...}  do   end
 
 0.9.10.beta
 
@@ -35,28 +63,3 @@
 
 -   Added fileset_task convenience method ro Rakish::Utils
 
-0.9.11.beta
-
--   Buyers remorse on createArgs it now uses only one named argument :$@
-    This makes life a lot simpler and more future proof in case later versions of rake use
-    additional named aruments
-
-    examples:
-
-    task :withCreateArgs, :$@=>{ :arg0=>'val0', :arg1=>val1 ...}  do   end
-    task :withCreateArgs=>[ :deps ], :$@=>{ :arg0=>'val0', :arg1=>val1 ...}  do   end
-    task :withCreateArgs,  [ :commandLineArg, ... ], :$@=>{ :arg0=>'val0', :arg1=>val1 ...}  do   end
-    task :withCreateArgs,  [ :commandLineArg, ... ]=>[ :deps ], :$@=>{ :arg0=>'val0', :arg1=>val1 ...}  do   end
-
-0.9.12.beta
-
--   Added binary script to return path to auxilliary support files used in ant scripts and other places that are
-    contained in this gem.
-
--   Added call-rake.xml ant script for use in spawning calls to rake from intellij managed, and general,
-    ant scripts.
-
-0.9.13.beta
-
-- added second "args" arcument to all action lambdas for strict argument count checking
-  in ruby 2.0+
