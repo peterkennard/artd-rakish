@@ -21,7 +21,7 @@ Rakish.Project(
     task :test => [ ':subdir1:test', ':subdir2:test', ':subdir3:test' ] do |t|
         log.debug("executing subdir test");
         dependencies.each do |dep|
-            log.debug("loaded dependency #{dep.moduleName}");
+            log.debug("loaded dependency #{dep.projectName}");
         end
     end
 

@@ -207,7 +207,7 @@ EOTEXT
 		indent = "";
 		proj = cppProject;
 		projectUuid = proj.projectId;
-		projectName = proj.moduleName;
+		projectName = proj.projectName;
 		
 		rakeCommand = vcprojRelative(File.join(proj.thirdPartyPath,'tools/exec-rake.bat'));
 		rakeFile = vcprojRelative(proj.projectFile);
@@ -224,9 +224,9 @@ EOTEXT
 	def writeVCProjFiles(proj)
 		@cppProject = proj;
 
-		defpath = File.join(proj.vcprojDir, proj.moduleName + '-rake.vcxproj'); 
+		defpath = File.join(proj.vcprojDir, proj.projectName + '-rake.vcxproj');
 		filpath = "#{defpath}.filters"
-		tempPath = File.join(proj.vcprojDir, proj.moduleName + '.temp');
+		tempPath = File.join(proj.vcprojDir, proj.projectName + '.temp');
 		
 		puts(" creating vcproj in #{defpath}")
 		begin
@@ -256,7 +256,7 @@ EOTEXT
 	end
 	
 	def VcprojBuilder.onVcprojCleanTask(proj)
-		defpath = File.join(proj.vcprojDir, proj.moduleName + '-rake.vcxproj'); 
+		defpath = File.join(proj.vcprojDir, proj.projectName + '-rake.vcxproj');
 		filpath = "#{defpath}.filters";
 		proj.addCleanFiles(defpath,filpath);		
 	end 

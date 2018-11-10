@@ -56,7 +56,7 @@ class Build
 	end
 	
 	def registerProject(p) # :nodoc: internal used by projects to register themselves wheninitialized
-		pname = p.moduleName;
+		pname = p.projectName;
 		if(@projectsByModule[pname])
 			raise("Error: project \"#{pname}\" already registered")
 		end
@@ -241,7 +241,7 @@ public
 
 	# returns the Rake task namespace for this project
 	attr_reader :myNamespace
-	alias 		:moduleName :myNamespace
+	alias 		:projectName :myNamespace
 
 	# full path of the file containing this project
 	attr_reader :projectFile
@@ -258,7 +258,7 @@ public
 
     # folder to output native object and intermediate files to for this module
 	def moduleObjDir
-		@moduleObjDir||="#{getAnyAbove(:moduleObjDir)}/#{moduleName()}";
+		@moduleObjDir||="#{getAnyAbove(:moduleObjDir)}/#{projectName()}";
 	end
 
 	# Get configuration specific native intermediate object directory

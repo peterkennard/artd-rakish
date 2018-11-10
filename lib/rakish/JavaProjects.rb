@@ -218,7 +218,7 @@ protected
             super(proj.getAnyAbove(:java),proj);
 
             @myProject = proj; # cache this
-            @docOutputDir="#{buildDir}/javadoc/#{moduleName}/api";
+            @docOutputDir="#{buildDir}/javadoc/#{projectName}/api";
             @excludeResources = [ '**/*.java' ];
 
         end
@@ -227,7 +227,7 @@ protected
         attr_reader :myProject
 
         # the path javadoc output is written to.
-        #  this defaults to "#{buildDir}/javadoc/#{moduleName}/api"
+        #  this defaults to "#{buildDir}/javadoc/#{projectName}/api"
         attr_accessor :docOutputDir
 
         def export(t,&b) # :nodoc:
@@ -272,31 +272,31 @@ protected
 
         # Adds output classpaths from other java project modules to the classpath set for
         # this build configuration
-        def addProjectOutputClasspaths(*moduleNames)
-            names = moduleNames.flatten;
+        def addProjectOutputClasspaths(*projectNames)
+            names = projectNames.flatten;
             names.each do |name|
                 proj = nil;
                 begin
                     proj = Rakish.projectByName(name);
                     addClassPaths(proj.java.outputClasspath);
                 rescue => e
-                    log.error { "#{moduleName} - failure loading classpath for #{name}" }
+                    log.error { "#{projectName} - failure loading classpath for #{name}" }
                     log.error { e } if(proj);
                 end
             end
         end
 
-        def getProjectOutputClasspaths(*moduleNames)
+        def getProjectOutputClasspaths(*projectNames)
 
             paths = [];
-            names = moduleNames.flatten;
+            names = projectNames.flatten;
             names.each do |name|
                 proj = nil;
                 begin
                     proj = Rakish.projectByName(name);
                     paths << proj.java.outputClasspath;
                 rescue => e
-                    log.error { "#{moduleName} - failure getting classpath for #{name}" }
+                    log.error { "#{projectName} - failure getting classpath for #{name}" }
                     log.error { e } if(proj);
                 end
             end
@@ -326,11 +326,11 @@ protected
         end
 
         def outputClasspath
-            @outputClasspath||="#{buildDir()}/production/#{moduleName()}";
+            @outputClasspath||="#{buildDir()}/production/#{projectName()}";
         end
 
         def tempFilePath
-            @tempFilePath||="#{buildDir()}/temp/#{moduleName()}";
+            @tempFilePath||="#{buildDir()}/temp/#{projectName()}";
         end
 
         def doCompileJava(t) # :nodoc:
@@ -560,7 +560,7 @@ protected
             jarBuilder = createJarBuilder();
             jarBuilder.addDirectory(java.outputClasspath());
 
-            jarPath = opts[:name]||"#{binDir()}/#{moduleName}.jar";
+            jarPath = opts[:name]||"#{binDir()}/#{projectName}.jar";
             jarPath = jarPath.pathmap("%X.jar");
 
             jarTask = jarBuilder.jarTask(jarPath);

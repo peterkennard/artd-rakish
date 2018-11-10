@@ -21,14 +21,14 @@ module CTools
 	# and loads if possible an instance of a set of configured "CTools" 
 	# for the specified "nativeConfigName" configuration.
 
-	def self.loadToolchain(moduleName,configName,args={})
+	def self.loadToolchain(projectName,configName,args={})
         begin
-            require moduleName;
-            moduleName = moduleName.pathmap('%n');
-            mod = Rakish.const_get(moduleName.to_s);
+            require projectName;
+            projectName = projectName.pathmap('%n');
+            mod = Rakish.const_get(projectName.to_s);
             mod.getConfiguredTools(configName,args);
         rescue
-            log.debug("unrecognized toolchain module \"#{moduleName}\"");
+            log.debug("unrecognized toolchain module \"#{projectName}\"");
         end
 	end
 
@@ -595,7 +595,7 @@ module CTools
       @libs=[];
       @configName = cfgName;
       @ctools = tools;
-      @targetBaseName = pnt.moduleName;
+      @targetBaseName = pnt.projectName;
       # @manifestFile = pnt.manifestFile;
       tools.ensureConfigOptions(self);
     end
@@ -627,7 +627,7 @@ module CTools
       project.dependencies.reverse_each do |dep|
         if(defined? dep.outputsNativeLibrary)
           if(dep.nativeLibDir)
-            ldef = ctools.loadLinkref(dep.nativeLibDir,self,configName,dep.moduleName);
+            ldef = ctools.loadLinkref(dep.nativeLibDir,self,configName,dep.projectName);
             if(ldef != nil)
               deflibs = ldef[:libs];
               libs += deflibs if deflibs;

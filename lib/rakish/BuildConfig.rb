@@ -105,7 +105,7 @@ module BuildConfigModule
 
     # folder to output native intermedite and object files to.
     # config defaults to (buildDir)/obj
-    # in a project module defaults to the value set in th (configValue)/(moduleName)
+    # in a project module defaults to the value set in th (configValue)/(projectName)
 	def moduleObjDir
 		@moduleObjDir||=getAnyAbove(:moduleObjDir)||"#{buildDir()}/obj";
 	end

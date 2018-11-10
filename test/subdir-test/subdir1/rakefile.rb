@@ -8,10 +8,10 @@ Rakish.Project(
  	]
 ) do |s|
 
-	log.debug("init #{moduleName} test !!");
+	log.debug("init #{projectName} test !!");
 	
     task :test do |t|
-        log.debug("executing #{moduleName} test");
+        log.debug("executing #{projectName} test");
     end
 
 end
