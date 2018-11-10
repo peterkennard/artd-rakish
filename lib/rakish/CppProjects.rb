@@ -492,7 +492,7 @@ module CppProjectModule
 			outdir = tsk[:linkTask].name.pathmap('%d');
 			ensureDirectoryTask(outdir);
 			ensureDirectoryTask(cfg.binDir);
-			task :build => [ :compile, outdir, cfg.binDir, tsk[:setupTasks], tsk[:linkTask] ].flatten
+			task :build => [ :compile, outdir, cfg.binDir, tsk[:setupTasks], tsk[:linkTask] ]
 
 		end
 
