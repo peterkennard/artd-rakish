@@ -2,20 +2,37 @@ myDir = File.expand_path(File.dirname(__FILE__));
 require 'rake'
 
 Gem::Specification.new do |s|
+
+  privateKeyPath = File.expand_path("~/.ssh/gem-private_key.pem");
+  certPath = File.expand_path("#{File.join(myDir,"certs/peterk@artd.com.pem")}");
+
+  unsignedGem = (ENV['RAKISH_UNSIGNED'] === '1' && File.exists?(privateKeyPath));
+
+  versionNumber = '0.9.13';
+
   s.name        = 'rakish'
-  s.version     = '0.9.13.beta'
   s.summary     = "Rakish build support gem"
   s.description = "Rakish Rake build system built on top of Rake for managing large scale projects with lots of modules."
   s.authors     = ["Peter Kennard"]
   s.email       = 'peterk@livingwork.com'
 
-  privateKeyPath = File.expand_path("~/.ssh/gem-private_key.pem");
-  certPath = File.expand_path("#{File.join(myDir,"certs/peterk@artd.com.pem")}");
-
-  if($0 =~ /gem\z/ && File.exists?(privateKeyPath))
-      s.cert_chain  = [ certPath ];
-      s.signing_key = privateKeyPath;
+  unless(unsignedGem)
+      if($0 =~ /gem\z/)
+        s.cert_chain  = [ certPath ];
+        s.signing_key = privateKeyPath;
+      else
+        unsignedGem = nil;
+      end
   end
+
+  if(unsignedGem)
+    s.version     = "#{versionNumber}.test"
+  else
+    s.version     = "#{versionNumber}.beta"
+  end
+
+  puts("building gem \"#{s.version}.gem\"");
+
   s.executables << 'artd-rakish-find'
 
   s.files       =  FileList.new(["lib/rakish.rb",

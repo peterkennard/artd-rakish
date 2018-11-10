@@ -22,25 +22,36 @@ module OS
   end
 end
 
-gemspec = Gem::Specification::load("#{myDir}/rakish.gemspec");
-
-task :default do 
+task :default do
 end
 
 task :buildGem do |t|
 	cd myDir do
+	    ENV['RAKISH_UNSIGNED']='0';
 		system("gem build rakish.gemspec");
 	end
 end
 
-task :pushGem do |t|
+task :buildUnsignedGem do |t|
 	cd myDir do
+	    ENV['RAKISH_UNSIGNED']='1';
+		system("gem build rakish.gemspec");
+	end
+end
+
+task :pushGem => [:buildGem] do |t|
+	cd myDir do
+	    ENV['RAKISH_UNSIGNED']='0';
 		system("gem push rakish-#{gemspec.version}.gem");
 	end
 end
 
-task :installGem => [:buildGem] do |t|
+task :installGem => [:buildUnsignedGem] do |t|
 	cd myDir do
+
+	    ENV['RAKISH_UNSIGNED']='1';
+        gemspec = Gem::Specification::load("#{myDir}/rakish.gemspec");
+
 		userstr = OS.windows? ? "" : "--user-install"
 		system("gem install --local --pre #{userstr} rakish-#{gemspec.version}.gem");
 	end
