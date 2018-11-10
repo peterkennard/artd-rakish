@@ -11,9 +11,6 @@ puts("checking if key exists")
 
   unsignedGem = (ENV['RAKISH_UNSIGNED'] === '1' || (!File.exists?(privateKeyPath)));
 
-puts("unsignedGem \"#{unsignedGem}\" #{unsignedGem === true}\"")
-
-
   versionNumber = '0.9.14';
 
   s.name        = 'rakish'
@@ -23,10 +20,10 @@ puts("unsignedGem \"#{unsignedGem}\" #{unsignedGem === true}\"")
   s.email       = 'peterk@livingwork.com'
 
   unless(unsignedGem)
-      puts("making signed gem");
+      puts("building signed gem");
       if($0 =~ /gem\z/)
         s.cert_chain  = [ certPath ];
-        s.signing_key = privateKeyPath;
+        s.signing_kesy = privateKeyPath;
       else
         unsignedGem = false;
       end
