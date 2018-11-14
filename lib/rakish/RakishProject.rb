@@ -55,14 +55,14 @@ class Build
 	end
 	
 	def registerProject(p) # :nodoc: internal used by projects to register themselves wheninitialized
-		pname = p.projectName;
-		if(@projectsByModule[pname])
-			raise("Error: project \"#{pname}\" already registered")
-		end
-		@projects << p;
-		@projectsByModule[pname]=p;
-		(@projectsByFile[p.projectFile]||=[]).push(p);
-        @registrationIndex_ = @registrationIndex_ + 1;
+    pname = p.projectName;
+    if(@projectsByModule[pname])
+      raise("Error: project \"#{pname}\" already registered")
+    end
+    @projects << p;
+    @projectsByModule[pname]=p;
+    (@projectsByFile[p.projectFile]||=[]).push(p);
+    @registrationIndex_ = @registrationIndex_ + 1;
 	end
 
 	def registerConfiguration(c) # :nodoc: internal used by configurations to register themselves when initialized
@@ -90,39 +90,39 @@ class Build
 	def loadProjects(*args) # :nodoc: knternal called by RakishProject to load dependencies.
 
     opts = (Hash === args.last) ? args.pop : {}
-		rakefiles = FileSet.new(args);
-		projs=[];
-		FileUtils.cd File.expand_path(pwd) do;
-			namespace ':' do
-				lastpath = '';
-                begin
-                    rakefiles.each do |path|
-                        lastpath = path;
-                        projdir = nil;
+    rakefiles = FileSet.new(args);
+    projs=[];
+    FileUtils.cd File.expand_path(pwd) do;
+    namespace ':' do
+      lastpath = '';
+      begin
+        rakefiles.each do |path|
+          lastpath = path;
+          projdir = nil;
 
-                        if(File.directory?(path))
-                            projdir = path;
-                            path = File.join(projdir,'rakefile.rb');
-                        else
-                            projdir = File.dirname(path);
-                        end
+          if(File.directory?(path))
+            projdir = path;
+            path = File.join(projdir,'rakefile.rb');
+          else
+            projdir = File.dirname(path);
+          end
 
-                        unless(opts[:optional] && (!File.exist?(path)))
-                            FileUtils.cd(projdir) do
-                                if(require(path))
-                                    #	puts "project #{path} loaded" if verbose?
-                                end
-                            end
-                            projs |= @projectsByFile[path];
-                        end
-                    end
-                rescue LoadError => e
-                    log.error("#{e}");
-                    raise e;
-                end
-			end # namespace
-		end # cd
-		projs
+          unless(opts[:optional] && (!File.exist?(path)))
+            FileUtils.cd(projdir) do
+              if(require(path))
+                #	puts "project #{path} loaded" if verbose?
+              end
+            end
+            projs |= @projectsByFile[path];
+          end
+        end
+      rescue LoadError => e
+        log.error("#{e}");
+        raise e;
+      end
+    end # namespace
+    end # cd
+    projs
 	end
 end
 
@@ -167,8 +167,8 @@ class ProjectBase < BuildConfig
 		:vcproj,
 		:vcprojclean
 	].each do |gt|
-	    @@globalTargets.add(gt);
-		task gt;
+    @@globalTargets.add(gt);
+    task gt;
 	end
 
 protected
@@ -180,22 +180,22 @@ protected
 	    Rake::Task.define_task(*args, &block).setProjectScope(self);
 	end
 
-    # Create a FileTask which will execute all actions in the directory and namespace of this project
-    # it will only set the project scope ONCE upon the first call
-    def fileInDir(*args, &block)
-        Rake::FileTask.define_task(*args, &block).setProjectScope(self);
-    end
+  # Create a FileTask which will execute all actions in the directory and namespace of this project
+  # it will only set the project scope ONCE upon the first call
+  def fileInDir(*args, &block)
+    Rake::FileTask.define_task(*args, &block).setProjectScope(self);
+  end
 
-    # Called before user supplied initializer block is executed
-    # in the project's directory and namespace
-    def initProject(args) #
-    end
+  # Called before user supplied initializer block is executed
+  # in the project's directory and namespace
+  def initProject(args) #
+  end
 
 public
 
 	# When called from within a project, exports a namespace internal task to
 	# a global task by the same name as the task within the projects namespace.
-	# not safe if called on a task outside the project's namespace
+	# Not safe if called on a task outside the project's namespace
 	# returns the task that is exported if the input argument is a task.
 	# example:
 	#    exportedTask = export task :aTask => [ :prerequisite ] do |t|
@@ -204,33 +204,33 @@ public
 	def export(name, &b)
 
 		exported = name;
-	    if(name.is_a? Rake::Task)
-			if(block_given?)
-				# this to cover for ruby argument parsing and precidence
-				# so you don't have to add parentheses around the task declaraton
-				# as in: export (task => [prereq] do |t| { blah blah });
-				name.actions << b;
-			end
-			name.config||=self;
-            name = name.to_s().sub("#{myNamespace}:",'').to_sym;
-        else
-        	# TODO: look up actual task and set exported to it for return value.
-        	name = name.to_sym;
-        	exported = nil
-	    end
+    if(name.is_a? Rake::Task)
+      if(block_given?)
+        # this to cover for ruby argument parsing and precidence
+        # so you don't have to add parentheses around the task declaraton
+        # as in: export (task => [prereq] do |t| { blah blah });
+        name.actions << b;
+      end
+      name.config||=self;
+      name = name.to_s().sub("#{myNamespace}:",'').to_sym;
+    else
+      # TODO: look up actual task and set exported to it for return value.
+      name = name.to_sym;
+      exported = nil
+    end
 
-		if(exported.is_a? Rake::FileTask)
-			log.warn("attempt to export FileTask #{name.name}");
-			return exported;
-		end
+    if(exported.is_a? Rake::FileTask)
+      log.warn("attempt to export FileTask #{name.name}");
+      return exported;
+    end
 
-	    @exported_ ||= Set.new;
-        if(@exported_.add?(name))
-			namespace(':') do
-				task name;
-			end
-		end
-		return(exported);
+    @exported_ ||= Set.new;
+    if(@exported_.add?(name))
+      namespace(':') do
+        task name;
+      end
+    end
+    return(exported);
 	end
 
 	task :default		=> [ :build ];
@@ -328,86 +328,86 @@ public
 
 	def initialize(args={},&block) # :nodoc:
 
-		# derive path to file declaring this project - from loaded file that
-		# called this initializer
+    # derive path to file declaring this project - from loaded file that
+    # called this initializer
 
-		@build = Rakish.build
+    @build = Rakish.build
 
-		myFile = nil
-        regex = Regexp.new(Regexp.escape(File.dirname(__FILE__)));
-		caller.each do |clr|
-			unless(clr =~ regex)
-				clr =~ /\:\d/
-				myFile = $`;
-                break;
-			end
-		end
+    myFile = nil
+    regex = Regexp.new(Regexp.escape(File.dirname(__FILE__)));
+    caller.each do |clr|
+      unless(clr =~ regex)
+        clr =~ /\:\d/
+        myFile = $`;
+        break;
+      end
+    end
 
-		# if(clr =~ /:in `<top \(required\)>'$/)
-		#		$` =~ /:\d+$/
-		#		myFile = File.expand_path($`)
-		#		break
-		# end
+    # if(clr =~ /:in `<top \(required\)>'$/)
+    #		$` =~ /:\d+$/
+    #		myFile = File.expand_path($`)
+    #		break
+    # end
 
-		fileDependencies = args[:dependsUpon] || Array.new;
-        optionalFileDependencies = args[:dependsOptionallyUpon];
+    fileDependencies = args[:dependsUpon] || Array.new;
+    optionalFileDependencies = args[:dependsOptionallyUpon];
 
-		parent = @build.configurationByName(args[:config]);
+    parent = @build.configurationByName(args[:config]);
 
-		@projectFile = myFile
-		@projectDir  = File.dirname(myFile)
-		@projectId 	 = args[:id]
+    @projectFile = myFile
+    @projectDir  = File.dirname(myFile)
+    @projectId 	 = args[:id]
 
-		name 	= args[:name];
-		name ||= @projectDir.pathmap('%n') # namespace = projName for this Module
-		projName = name;
-		package = args[:package];
-		if(package)
-			projName = "#{package}-#{name}";
-		end
-		@myNamespace = projName
-		@myName 	= name;
-		@myPackage 	= package;
+    name 	= args[:name];
+    name ||= @projectDir.pathmap('%n') # namespace = projName for this Module
+    projName = name;
+    package = args[:package];
+    if(package)
+      projName = "#{package}-#{name}";
+    end
+    @myNamespace = projName
+    @myName 	= name;
+    @myPackage 	= package;
 
-		cd @projectDir, :verbose=>verbose? do
+    cd @projectDir, :verbose=>verbose? do
 
-			# load all project files this is dependent on relative to this project's directory
-			begin
-				@dependencies = @build.loadProjects(*fileDependencies);
-			rescue LoadError => e
-				log.error("requred dependency not found in #{myFile}: #{e}");
-				raise e
-			end
+      # load all project files this is dependent on relative to this project's directory
+      begin
+        @dependencies = @build.loadProjects(*fileDependencies);
+      rescue LoadError => e
+        log.error("requred dependency not found in #{myFile}: #{e}");
+        raise e
+      end
 
-			if(optionalFileDependencies)
-				projs = @build.loadProjects(*optionalFileDependencies, :optional=>TRUE);
-				@dependencies = @dependencies + (projs - @dependencies);
-			end
+      if(optionalFileDependencies)
+        projs = @build.loadProjects(*optionalFileDependencies, :optional=>TRUE);
+        @dependencies = @dependencies + (projs - @dependencies);
+      end
 
-			@dependencies.sort_by!  { |dep| dep.registrationIndex }
+      @dependencies.sort_by!  { |dep| dep.registrationIndex }
 
-			# call instance initializer block inside local namespace and project's directory.
-			# and in the directory the defining file is contained in.
-			ns = Rake.application.in_namespace(@myNamespace) do
+      # call instance initializer block inside local namespace and project's directory.
+      # and in the directory the defining file is contained in.
+      ns = Rake.application.in_namespace(@myNamespace) do
 
-                # initialize properties from the parent configuration and initialize included modules.
-                super(parent,args) {}
+        # initialize properties from the parent configuration and initialize included modules.
+        super(parent,args) {}
 
-				if(RUBY_VERSION =~ /^2./)
-					@myNamespace = Rake.application.current_scope.path;
-				else
-					@myNamespace = "#{Rake.application.current_scope.join(':')}"
-				end
+        if(RUBY_VERSION =~ /^2./)
+          @myNamespace = Rake.application.current_scope.path;
+        else
+          @myNamespace = "#{Rake.application.current_scope.join(':')}"
+        end
 
-		        initProject(args);
-				instance_eval(&block) if block;
-				
-			end
+        initProject(args);
+        instance_eval(&block) if block;
 
-			# register this project after the initialization has loaded all
-			# the other dependencies for proper dependency initialization order
-			@registrationIndex = @build.registerProject(self);
-		end
+      end
+
+      # register this project after the initialization has loaded all
+      # the other dependencies for proper dependency initialization order
+      @registrationIndex = @build.registerProject(self);
+    end
 	end
 
 	# link global tasks to this project's tasks if they are defined and set as exported
@@ -444,18 +444,18 @@ public
 	# called after initializers on all projects and before rake
 	# starts executing tasks
 	def preBuild # :nodoc:
-		cd @projectDir, :verbose=>verbose? do
-			tname = "#{@myNamespace}:preBuild"
-			ns = Rake.application.in_namespace(@myNamespace) do
-				log.info("pre building #{@myNamespace}");
-                # optional project pre build task
-                doPreBuild = Rake.application.lookup(tname);
-                doPreBuild.invoke if doPreBuild;
-            end
-		end
+    cd @projectDir, :verbose=>verbose? do
+      tname = "#{@myNamespace}:preBuild"
+      ns = Rake.application.in_namespace(@myNamespace) do
+        log.info("pre building #{@myNamespace}");
+        # optional project pre build task
+        doPreBuild = Rake.application.lookup(tname);
+        doPreBuild.invoke if doPreBuild;
+      end
+    end
 	end
 
-	# show projects scope for debuggin purposes.
+	# show projects scope for debugging purposes.
 	def showScope(here='') # :nodoc:
 		log.info("#{here}  #{@myNamespace} ns = :#{currentNamespace}");
 	end
@@ -481,39 +481,39 @@ protected
 
 def self.getProjectClass(opts={})
 
-    # get the base project type to extend the class from
-    # and get list of explicit modules to include
-    # eliminate duplicate modules, and sort the list.
+  # get the base project type to extend the class from
+  # and get list of explicit modules to include
+  # eliminate duplicate modules, and sort the list.
 
-    extends = opts[:extends]||ProjectBase;
+  extends = opts[:extends]||ProjectBase;
 
-    # if no explicit inclusions just return the class
-    return(extends) unless(included=opts[:includes]);
+  # if no explicit inclusions just return the class
+  return(extends) unless(included=opts[:includes]);
 
-    included.flatten!
-    if included.length > 1
-        # TODO: maybe get a list of all included modules and generate a hash
-        # TODO: but this likely not needed or won't make things faster
-        # TODO: not sure how ruby's string keys for hashes work.
-        included = Set.new(included).to_a();
-        included.sort! do |a,b|
-            a.to_s <=> b.to_s
-        end
+  included.flatten!
+  if included.length > 1
+    # TODO: maybe get a list of all included modules and generate a hash
+    # TODO: but this likely not needed or won't make things faster
+    # TODO: not sure how ruby's string keys for hashes work.
+    included = Set.new(included).to_a();
+    included.sort! do |a,b|
+      a.to_s <=> b.to_s
     end
-    key=[extends,included] # key is explicit definition of class
+  end
+  key=[extends,included] # key is explicit definition of class
 
-    # if we already have created a class for the specific included set use it
-    unless projClass = @@projectClassesByIncluded_[key]
-        # otherwise create a new class and include the requested modules
-        # log.debug("new class including [#{included.join(',')}]");
-        projClass = Class.new(extends) do
-            included.each do |i|
-                include i;
-            end
-        end
-        @@projectClassesByIncluded_[key] = projClass;
+  # if we already have created a class for the specific included set use it
+  unless projClass = @@projectClassesByIncluded_[key]
+    # otherwise create a new class and include the requested modules
+    # log.debug("new class including [#{included.join(',')}]");
+    projClass = Class.new(extends) do
+      included.each do |i|
+        include i;
+      end
     end
-    projClass;
+    @@projectClassesByIncluded_[key] = projClass;
+  end
+  projClass;
 end
 
 public
@@ -535,15 +535,15 @@ public
 # Rake namespace of the new project (project scope), and called in the project instance's context
 
 def self.Project(args={},&b)
-    baseIncludes = args[:baseIncludes];
-    if(baseIncludes)
-        includes=[baseIncludes]
-        if(args[:includes])
-            includes << opts[:includes]
-        end
-        args[:includes]=includes
+  baseIncludes = args[:baseIncludes];
+  if(baseIncludes)
+    includes=[baseIncludes]
+    if(args[:includes])
+      includes << opts[:includes]
     end
-    getProjectClass(args).new(args,&b)
+    args[:includes]=includes
+  end
+  getProjectClass(args).new(args,&b)
 end
 
 # initialize the build application instance
