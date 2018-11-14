@@ -16,18 +16,17 @@ class Build
 		@projectsByModule={}
 		@projectsByFile={}  # each entry is an array of one or more projects
 		@configurationsByName={}
-        @registrationIndex_ = 0;
+    @registrationIndex_ = 0;
 
-		
 		task :resolve do |t|
-		    if(defined? Rakish::GlobalConfig.instance.nativeConfigName)
-			    log.info "Starting build. for #{Rakish::GlobalConfig.instance.nativeConfigName}\""
+		  if(defined? Rakish::GlobalConfig.instance.nativeConfigName)
+			  log.info "Starting build. for #{Rakish::GlobalConfig.instance.nativeConfigName}\""
 			else
 			#	if(Rakish::GlobalConfig.instance)
 			#		Rakish::GlobalConfig.instance.nativeConfigName() = "not set";
 			#	end
-                log.info "Starting build.";
-            end
+				log.info "Starting build.";
+			end
 			@projects.each do |p|
 				p.preBuild
 				p.resolveExports
@@ -46,7 +45,7 @@ class Build
 		true
 	end
 	
-	# Called when the rake invocation of thie Rakish::Build is complete.
+	# Called when the rake invocation of this Rakish::Build is complete.
 	# Prints a log.info message of the time taken to execute this invocation of 'rake'.
 	def onComplete 
 		dtime = Time.new.to_f - @startTime.to_f;		
@@ -71,13 +70,13 @@ class Build
 			raise("Error: configuration \"#{c.name}\" already registered");
 		end
 		@configurationsByName[c.name]=c;
-    end
+  end
 
-    # Retrieve an initialized Rakish.Configuration[link:./Rakish.html#method-c-Configuration] by name.
-    # If name is nil retrieves the 'root' configuration
-    def configurationByName(name)
-        @configurationsByName[name||'root']
-    end
+  # Retrieve an initialized Rakish.Configuration[link:./Rakish.html#method-c-Configuration] by name.
+  # If name is nil retrieves the 'root' configuration
+  def configurationByName(name)
+    @configurationsByName[name||'root']
+  end
 
 	# Retrieve a Rakish.Project[link:./Rakish.html#method-c-Project] by the project name, nil if not found.
 	def projectByName(name)
@@ -90,7 +89,7 @@ class Build
 
 	def loadProjects(*args) # :nodoc: knternal called by RakishProject to load dependencies.
 
-        opts = (Hash === args.last) ? args.pop : {}
+    opts = (Hash === args.last) ? args.pop : {}
 		rakefiles = FileSet.new(args);
 		projs=[];
 		FileUtils.cd File.expand_path(pwd) do;
@@ -380,12 +379,12 @@ public
 				raise e
 			end
 
-            if(optionalFileDependencies)
-                projs = @build.loadProjects(*optionalFileDependencies, :optional=>TRUE);
-                @dependencies = @dependencies + (projs - @dependencies);
-            end
+			if(optionalFileDependencies)
+				projs = @build.loadProjects(*optionalFileDependencies, :optional=>TRUE);
+				@dependencies = @dependencies + (projs - @dependencies);
+			end
 
-            @dependencies.sort_by!  { |dep| dep.registrationIndex }
+			@dependencies.sort_by!  { |dep| dep.registrationIndex }
 
 			# call instance initializer block inside local namespace and project's directory.
 			# and in the directory the defining file is contained in.
@@ -405,9 +404,9 @@ public
 				
 			end
 
-            # register this project after the initialization has loaded all 
+			# register this project after the initialization has loaded all
 			# the other dependencies for proper dependency initialization order
-            @registrationIndex = @build.registerProject(self);
+			@registrationIndex = @build.registerProject(self);
 		end
 	end
 

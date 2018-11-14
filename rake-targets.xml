@@ -20,6 +20,8 @@
     </exec>
     <import file="${rake.ant.xml}" />
 
+    <property environment="env" />
+
     <target name="cleanAll" description="delete output directory">
         <call-rake target="cleanAll" />
     </target>
@@ -30,6 +32,10 @@
 
     <target name="subdirTest" description="test required subprojects">
         <call-rake file="./test/subdir-test/rakefile.rb" target="subdir-test:test"/>
+    </target>
+
+    <target name="echoProperties" description="dunp properties to console">
+        <echoproperties/>
     </target>
 
 </project>
