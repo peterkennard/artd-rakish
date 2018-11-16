@@ -1,5 +1,7 @@
 0.9.14.beta
 
+- Configuration initializer now called in directory of declaring file.
+
 - changed RakishProject#moduleName to projectName
 
 0.9.13.beta

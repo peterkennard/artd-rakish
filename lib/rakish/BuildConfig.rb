@@ -165,9 +165,9 @@ class GlobalConfig < BuildConfig
 		end
 	end
 
-   	def buildDir=(val)
-   	    @buildDir=val;
-   	end
+	def buildDir=(val)
+		@buildDir=val;
+	end
 
 	def initialize(*args, &b)
 
@@ -188,36 +188,48 @@ class GlobalConfig < BuildConfig
 
 		super(nil,{}) {}
 
-		enableNewFields() do |cfg|
-
-			enableNewFields(&b);
-
-			enableNewFields(&@initGlobalPaths) if @initGlobalPaths;
-
-			@buildDir ||= ENV['RakishBuildRoot']||"#{Rake.original_dir}/build";
-			@buildDir = File.expand_path(@buildDir);
-
-			config = nil;
-			if(HOSTTYPE =~ /Macosx/)
-				defaultConfig = "iOS-gcc-fat-Debug";
-			else
-				defaultConfig = "Win32-VC10-MD-Debug";
+		declaringFile = nil
+		regex = Regexp.new(Regexp.escape(File.dirname(__FILE__)));
+		caller.each do |clr|
+			unless(clr =~ regex)
+				clr =~ /\:\d/
+				declaringFile = $`;
+				break;
 			end
+		end
+
+		cd(File.dirname(declaringFile),:verbose=>false) do
+			enableNewFields() do |cfg|
+
+				enableNewFields(&b);
+
+				enableNewFields(&@initGlobalPaths) if @initGlobalPaths;
+
+				@buildDir ||= ENV['RakishBuildRoot']||"#{Rake.original_dir}/build";
+				@buildDir = File.expand_path(@buildDir);
+
+				config = nil;
+				if(HOSTTYPE =~ /Macosx/)
+					defaultConfig = "iOS-gcc-fat-Debug";
+				else
+					defaultConfig = "Win32-VC10-MD-Debug";
+				end
 
 
-			# set defaults if not set above
-			@nativeLibDir ||= "#{@buildDir}/lib"
+				# set defaults if not set above
+				@nativeLibDir ||= "#{@buildDir}/lib"
 
-			# get config from command line
-			cfg.nativeConfigName ||= ENV['nativeConfigName'];
-			cfg.nativeConfigName ||= defaultConfig
-			binDir();
+				# get config from command line
+				cfg.nativeConfigName ||= ENV['nativeConfigName'];
+				cfg.nativeConfigName ||= defaultConfig
+				binDir();
 
+			end
 		end
 
 		puts("host is #{HOSTTYPE()}") if self.verbose?
 
-        ensureDirectoryTask(@buildDir);
+		ensureDirectoryTask(@buildDir);
 
 		RakeFileUtils.verbose(@@gcfg.verbose?)
 		if(@@gcfg.verbose?)
