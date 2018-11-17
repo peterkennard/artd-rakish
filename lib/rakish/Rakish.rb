@@ -1191,7 +1191,7 @@ module Rakish
 				@@stderrToNUL = "2>NUL:"
 			end
 		else
-			@@stderrToNUL = "2>/dev/null"
+			@@stderrToNUL = "2>/dev/null >/dev/nul"
 		end
 		
 		def textFilesDiffer(a,b)
