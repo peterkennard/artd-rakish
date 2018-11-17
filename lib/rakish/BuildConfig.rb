@@ -172,7 +172,7 @@ class GlobalConfig < BuildConfig
 	def initialize(*args, &b)
 
 		if @@gcfg
-			raise("Exeption !! You can only initialize one GlobalConfig !!!")
+			raise("Exception !! You can only initialize one GlobalConfig !!!")
 		end
 
 		@@gcfg = self
@@ -188,7 +188,8 @@ class GlobalConfig < BuildConfig
 
 		super(nil,{}) {}
 
-		declaringFile = nil
+		# can this be factored out ??
+		declaringFile = './.';
 		regex = Regexp.new(Regexp.escape(File.dirname(__FILE__)));
 		caller.each do |clr|
 			unless(clr =~ regex)

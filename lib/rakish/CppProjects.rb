@@ -615,26 +615,27 @@ module CTools
       @targetName||="#{targetBaseName}";
     end
 
-    # get list of libraries built by and exported by dependency projects
-    # in dependency order from most dependent to least, and follow with
-    # libraries added in the current project
-    # TODO: dependency order not proper id it needs to sort them by "registration order"
-    def getOrderedLibs
+		# get list of libraries built by and exported by dependency projects
+		# as linkdefs ( hashes with fields )
+		# in dependency order from most dependent to least, and follow with
+		# libraries added in the current project
+		# TODO: dependency order not proper id it needs to sort them by "registration order"
+		def getOrderedLibs
 
       libs=[]
       libs << @libs;
 
-      project.dependencies.reverse_each do |dep|
-        if(defined? dep.outputsNativeLibrary)
-          if(dep.nativeLibDir)
-            ldef = ctools.loadLinkref(dep.nativeLibDir,self,configName,dep.projectName);
-            if(ldef != nil)
-              deflibs = ldef[:libs];
-              libs += deflibs if deflibs;
-            end
-          end
-        end
-      end
+			project.dependencies.reverse_each do |dep|
+				if(defined? dep.outputsNativeLibrary)
+					if(dep.nativeLibDir)
+						ldef = ctools.loadLinkref(dep.nativeLibDir,self,configName,dep.projectName);
+						if(ldef != nil)
+							deflibs = ldef[:libs];
+							libs += deflibs if deflibs;
+						end
+					end
+				end
+			end
 
       # add user specified lobraries after all dependency libraries.
 
