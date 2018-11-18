@@ -1735,13 +1735,25 @@ module Rakish
 		end
 	
 	public
-		# Add files contained in 'files' to this set.  It will acccept 'wildcard' 
+		# Add files contained in 'files' to this set.  It will acccept 'wildcard'
 		# entries which are expanded relative to the current directory.
 		# relative to the current directory at the time entries are added
 		def include(*files)
 			add_ary(files)
 		end
-		
+
+		# Add files contained in 'files' to this set.  It will acccept 'wildcard'
+		# entries which are expanded relative to the current directory.
+		# relative to the current directory at the time entries are added
+		# it also takes an :exclude option that rejects files.
+		def update(*files)
+			files.flatten!
+			opts = (Hash === files.last) ? files.pop : {}
+			fl = FileList.new(files);
+			fl.exclude([opts[:exclude]].flatten) if opts[:exclude];
+			add_ary(fl);
+		end
+
 		# Add a single file path to this set if it is not present.
 		#
 		# returns true if the path was not previously in the set, false otherwise
@@ -1810,7 +1822,8 @@ module Rakish
 		end
 	end
 
-    # A FileSet where the order entries are installed is preserved
+	# A FileSet where the order entries are installed is preserved
+	# todo handle deleting entries
 	class OrderedFileSet < FileSet
 		def initialize
 			super

@@ -1,8 +1,9 @@
 0.9.14.beta
 
 - Configuration initializer now called in directory of declaring file.
-
 - changed RakishProject#moduleName to projectName
+- direct stdout as well as stderr to /dev/null on silent unix commands
+- added FileSet#update with an optional :exclude option.
 
 0.9.13.beta
 

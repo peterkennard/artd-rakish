@@ -330,9 +330,8 @@ module CppProjectConfig
 	end
 
 	def addSourceFiles(*args)
-		opts = (Hash === args.last) ? args.pop : {}
 		@cppSourceFiles ||= FileSet.new;
-		@cppSourceFiles.include(args);
+		@cppSourceFiles.update(args);
 	end
 
 	#returns include path "set" with parent's entries after this ones entries
@@ -511,6 +510,7 @@ module CppProjectModule
 		opts = (Hash === args.last) ? args.pop : {}
 
 		files = FileSet.new(args);
+		files.exclude(opts[:exclude]) if opts[:exclude];
 
 		unless(destdir = opts[:destdir])
 			destdir = myPackage;
