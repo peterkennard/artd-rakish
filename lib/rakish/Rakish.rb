@@ -1435,8 +1435,8 @@ module Rakish
 		# This will take an array of parents scanned like a like a path, first hit wins.
 		# by default parents o level above are split into heritable and non-heritable parents
 		# the first parent i  the list is considered heritable subsequent parents are in the
-        # search path but are not considerd "heritable" so they will not be fround from 
-        # inhering childern.		
+		# search path but are not considerd "heritable" so they will not be fround from
+		# inhering childern.
 		def init_PropertyBag(*args)
 			@_h = (Hash === args.last) ? args.pop : {}
 		    allP = [];
