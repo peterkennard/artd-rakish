@@ -1090,12 +1090,19 @@ module Rakish
 		#   ffrom = input file path
 		#   fto   = output file path
 		#   bnd   = "binding" to context to evaluate substitutions in
-		def rubyPP(ffrom,fto,bnd)
+		def rubyPP(ffrom,fto,bnd,args={})
 
 			begin
-				File.open(fto,'w') do |file|
+				mode = args[:append] ? 'w+' : 'w';
+				if(fto.is_a? File)
 					File.open(ffrom,'r') do |fin|
-						rubyLinePP(fin,file,bnd)
+						rubyLinePP(fin,fto,bnd)
+					end
+				else
+					File.open(fto,mode) do |fileto|
+						File.open(ffrom,'r') do |fin|
+							rubyLinePP(fin,fileto,bnd)
+						end
 					end
 				end
 			rescue => e
@@ -1434,7 +1441,7 @@ module Rakish
 		# constructor for PropertyBagMod to be called by including classes
 		# This will take an array of parents scanned like a like a path, first hit wins.
 		# by default parents o level above are split into heritable and non-heritable parents
-		# the first parent i  the list is considered heritable subsequent parents are in the
+		# the first parent in the list is considered heritable subsequent parents are in the
 		# search path but are not considerd "heritable" so they will not be fround from
 		# inhering childern.
 		def init_PropertyBag(*args)
