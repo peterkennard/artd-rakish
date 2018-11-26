@@ -1194,17 +1194,19 @@ module Rakish
 		if( HostIsWindows_ )
 			if(HostIsCygwin_)
 				@@stderrToNUL = "2>/dev/null"
+				@@stdoutToNUL = ">/dev/null"
 			else
 				@@stderrToNUL = "2>NUL:"
+				@@stdoutToNUL = ">NUL:"
 			end
 		else
-			@@stderrToNUL = "2>/dev/null >/dev/nul"
+			@@stderrToNUL = "2>/dev/null"
+			@@stdoutToNUL = ">/dev/null"
 		end
 		
 		def textFilesDiffer(a,b)
 			differ = true;
-			
-			sh "diff #{@@stderrToNUL} --brief \"#{a}\" \"#{b}\"", :verbose=>false do |ok, res|
+			sh "diff #{@@stderrToNUL}  #{@@stdoutToNUL} --brief \"#{a}\" \"#{b}\"", :verbose=>false do |ok, res|
 				differ = false if ok
 			end
 			differ
