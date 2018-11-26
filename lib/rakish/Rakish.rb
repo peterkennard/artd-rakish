@@ -1267,15 +1267,15 @@ module Rakish
             @@binPathOpts_ = {};
         end
 
-        # Find executable in the "bin" search path
-        # return nil if not found.
-        #
-        #   currently the search path is set to the value of ENV['PATH']
-        #
-        def self.findInBinPath(name)
-            @@binpath||=SearchPath.new(ENV['PATH']);
-            ret = @@binpath.findFile(name,@@binPathOpts_);
-			log.debug("searh for \"#{name}\" found \"#{ret}\"");
+			# Find executable in the "bin" search path
+			# return nil if not found.
+			#
+			#   currently the search path is set to the value of ENV['PATH']
+			#
+			def self.findInBinPath(name)
+				@@binpath||=SearchPath.new(ENV['PATH']);
+				ret = @@binpath.findFile(name,@@binPathOpts_);
+				# log.debug("searh for \"#{name}\" found \"#{ret}\"");
 			unless ret 
 			   log.debug("Path is #{ENV['PATH']}");
 			end
