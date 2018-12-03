@@ -209,7 +209,7 @@ EOTEXT
 		projectUuid = proj.projectId;
 		projectName = proj.projectName;
 		
-		rakeCommand = vcprojRelative(File.join(proj.thirdPartyPath,'tools/exec-rake.bat'));
+		rakeCommand = vcprojRelative(File.join(ENV['ARTD_TOOLS'].pathmap('%d'),'tools/exec-rake.bat'));
 		rakeFile = vcprojRelative(proj.projectFile);
 
 		@rakeCommandLine = "#{rakeCommand} -f #{rakeFile} \"RakishBuildRoot=$(SolutionDir)build\"";

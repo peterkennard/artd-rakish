@@ -640,7 +640,7 @@ module CTools
 				end
 			end
 
-      # add user specified lobraries after all dependency libraries.
+      # add user specified libraries after all dependency libraries.
 
       if(thirdPartyLibs)
         thirdPartyLibs.flatten.each do |tpl|
@@ -650,7 +650,7 @@ module CTools
             tpl = tpl.pathmap('%f');
           else
             puts("adding lib #{tpl}");
-            libpath = "#{thirdPartyPath}/lib";
+            libpath = "#{ENV['ARTD_TOOLS'].pathmap('%d')}/lib";
             unless(File.directory?(libpath))
               libs << tpl;
               next;
