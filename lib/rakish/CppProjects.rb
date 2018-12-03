@@ -26,7 +26,11 @@ module CTools
             require projectName;
             projectName = projectName.pathmap('%n');
             mod = Rakish.const_get(projectName.to_s);
-            mod.getConfiguredTools(configName,args);
+            begin
+               mod.getConfiguredTools(configName,args);
+            rescue
+               log.debug("can't initialize toolchain \"#{projectName}\""); # \n#{Thread.current.backtrace.join("\n")}");
+            end
         rescue
             log.debug("unrecognized toolchain module \"#{projectName}\"");
         end
@@ -569,7 +573,6 @@ module CppProjectModule
     end
     tools = ctools;
     ret = @resolvedConfigs[config] = tools.createLinkConfig(self,config);
-
     if(defined? @cppConfigurator_)
       @cppConfigurator_.call(ret);
     end

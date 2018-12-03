@@ -80,9 +80,9 @@ module Rakish
 			linkOpts = '';
 			sdkLibs = [];
 			ipaths=[];
-			
-			tpp = GlobalConfig.instance.thirdPartyPath;
-					
+
+            tpp = ENV['ARTD_TOOLS'].pathmap('%d');
+
 			case(@platformBits)
 				when '32'
 					machineSpec = '-machine:x86';
