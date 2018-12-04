@@ -145,9 +145,12 @@ EOTEXT
 			end
 			out << '</ItemGroup>';
 		end
+
+
+		# TODO: rather than suffix search look for file NOT in the source or include lists.
 		files = FileList.new();
 		files.include("#{cppProject.projectDir}/*.*");
-	    files.exclude('**/*.cpp', '**/*.c' '**/*.asm','**/*.h', '**.inl', '**/inc', '**/xsd', '**/*.hpp', '**/*.rc' );
+	    files.exclude('**/*.cpp', '**/*.c','**/*.asm','**/*.h', '**/*.inl', '**/*.inc', '**/*.xsd', '**/*.hpp', '**/*.rc' );
 
 
 		out << '<ItemGroup>';
