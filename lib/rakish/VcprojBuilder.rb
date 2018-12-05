@@ -129,23 +129,35 @@ EOTEXT
 		indent = "%#{indent}s" % "";
 		out = []
 		files = cppProject.getSourceFiles();
+
+		dirs = FileSet.new();
+
 		unless(files.empty?)
 			out << '<ItemGroup>';
 			files.each do |f|
+			    dirs.add(f.pathmap('%d'));
 				out << "  <ClCompile Include=\"#{vcprojRelative(f)}\" />";
 			end
 			out << '</ItemGroup>';
 		end
 
+		includeFiles = FileSet.new;
+		dirs.each do |dir|
+	        includeFiles.include("#{dir}/**/*.h", "#{dir}/**/*.inl", "#{dir}/**/*.inc", "#{dir}/**/*.xsd", "#{dir}/**/*.hpp", "#{dir}/**/*.rc" );
+		end
+
 		files = cppProject.getIncludeFiles();
-		unless(files.empty?)
+		files.each do |f|
+		    includeFiles.add(f);
+		end
+
+		unless(includeFiles.empty?)
 			out << '<ItemGroup>';
-			files.each do |f|
+			includeFiles.each do |f|
 				out << "  <ClInclude Include=\"#{vcprojRelative(f)}\" />";
 			end
 			out << '</ItemGroup>';
 		end
-
 
 		# TODO: rather than suffix search look for file NOT in the source or include lists.
 		files = FileList.new();
