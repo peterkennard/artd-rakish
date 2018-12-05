@@ -175,12 +175,13 @@ end
 		files.include("#{cppProject.projectDir}/*.*");
 	    files.exclude('**/*.cpp', '**/*.c','**/*.asm','**/*.h', '**/*.inl', '**/*.inc', '**/*.xsd', '**/*.hpp', '**/*.rc' );
 
-
-		out << '<ItemGroup>';
-		    files.each do |f|
-		        out << "  <None Include=\"#{vcprojRelative(f)}\" />";
-		    end
-		out << '</ItemGroup>';
+		unless(files.empty?)
+            out << '<ItemGroup>';
+                files.each do |f|
+                    out << "  <None Include=\"#{vcprojRelative(f)}\" />";
+                end
+            out << '</ItemGroup>';
+		end
 		out.join("\n#{indent}");
 	end
 
