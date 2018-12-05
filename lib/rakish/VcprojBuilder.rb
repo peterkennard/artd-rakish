@@ -8,7 +8,7 @@ class VcprojBuilder
 
 	@@rakefileConfigTxt_=<<EOTEXT
 <?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     \#{getVCX10RakefileConfigList(indent)}
   </ItemGroup>
@@ -158,6 +158,17 @@ EOTEXT
 			end
 			out << '</ItemGroup>';
 		end
+
+if(nil)
+		files = cppProject.getIncludeFiles();
+		unless(files.empty?)
+			out << '<ItemGroup>';
+			files.each do |f|
+				out << "  <ClInclude Include=\"#{vcprojRelative(f)}\" />";
+			end
+			out << '</ItemGroup>';
+		end
+end
 
 		# TODO: rather than suffix search look for file NOT in the source or include lists.
 		files = FileList.new();
