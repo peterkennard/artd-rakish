@@ -16,6 +16,8 @@ module CTools
 	include Rakish::Logger
 	include Rakish::Util
 
+    attr_reader :ctools
+
 	# parses and validates an unknown string configuration name 
 	# of the format [TargetPlatform]-[Compiler]-(items specific to compiler type)
 	# and loads if possible an instance of a set of configured "CTools" 
@@ -66,8 +68,10 @@ module CTools
 				end
 				return({libpaths: libpaths, libs: libs});
 			rescue => e
-				log.debug("#{config.projectFile},failed to load #{libdef} #{e}");
-			end
+				unless(libExt() === baseName.pathmap('%x'))
+				    log.debug("#{config.projectFile},failed to load #{libdef} #{e}");
+				end
+		    end
 			{}
 		end
 	end
@@ -224,7 +228,7 @@ module CTools
 		false
 	end
 
-end
+end # CToolx module
 
 module CppProjectConfig
 
@@ -414,9 +418,9 @@ module CppProjectModule
 	end
 
 	def outputsNativeLibrary
-		true
+        currentBuildConfig.outputsNativeLibrary
 	end
-	
+
 	# called after initializers on all projects and before rake
 	# starts executing tasks
 
@@ -434,6 +438,11 @@ module CppProjectModule
 			export(:vcprojclean);
 		end
 	end
+
+    # get currenr build config after the pr-build phase has set it.
+    def currentBuildConfig
+      @cppBuildConfig;
+    end
 
 	def self.doUpdateDepends(t)
 		cfg = t.config;
@@ -586,11 +595,11 @@ module CTools
     include CppProjectConfig
 
     attr_reader		:configName
-    attr_accessor :targetName
+    attr_accessor   :targetName
     attr_accessor	:targetBaseName
     attr_reader 	:libpaths
     attr_reader 	:libs
-    attr_accessor :dependencyFilesUpdated
+    attr_accessor   :dependencyFilesUpdated
 
     def initialize(pnt, cfgName, tools)
       super(pnt);
@@ -630,6 +639,7 @@ module CTools
 
         project.dependencies.reverse_each do |dep|
             if(defined? dep.outputsNativeLibrary)
+              if(dep.outputsNativeLibrary)
                 if(dep.nativeLibDir)
                     ldef = ctools.loadLinkref(dep.nativeLibDir,self,configName,dep.projectName);
                     if(ldef != nil)
@@ -637,6 +647,7 @@ module CTools
                         libs += deflibs if deflibs;
                     end
                 end
+              end
             end
         end
 
@@ -679,7 +690,17 @@ module CTools
       @manifestFile
     end
 
-  end
+    def outputsNativeLibrary
+      ret = false;
+      case targetType
+      when 'LIB','DLL' # other types of targets DO NOT export anything
+        ret = true;
+      end
+      ret
+    end
+
+  end # end TargetConfig
+
 end # end module CTools
 
 
