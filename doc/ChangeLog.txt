@@ -2,8 +2,9 @@
 
 - Configuration initializer now called in directory of declaring file.
 - changed RakishProject#moduleName to projectName
-- direct stdout as well as stderr to /dev/null on silent unix commands
 - added FileSet#update with an optional :exclude option.
+- added accessor for currentBuildConfig into CppProject
+- thirdPartyPath now burried in hacky WindowsCpp module and retrieved from environment variable.
 
 0.9.13.beta
 
