@@ -47,4 +47,5 @@ module Rakish
 		    Rakish::GitModule::Git
 		end
 	end
+	Git = Rakish::GitModule::Git;
 end
