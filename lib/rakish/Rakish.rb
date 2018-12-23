@@ -866,7 +866,18 @@ module Rakish
 					cd dir do
 						system("git remote add \"#{name}\" \"#{uri}\"");
 					end
-				end
+                end
+
+				def checkout(branch, opts={})
+                    cmd = "git checkout \"#{branch}\"";
+					if(opts[:dir])
+					    cd opts[:dir] do
+                            system(cmd);
+                        end
+                     else
+                        system(cmd);
+                     end
+                end
 			end
 		end
 
