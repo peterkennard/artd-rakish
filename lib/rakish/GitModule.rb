@@ -44,7 +44,7 @@ module Rakish
 		end
 
 		def git
-		    Rakish::GitModule::Git
+		    Rakish::Git
 		end
 	end
 	Git = Rakish::GitModule::Git;

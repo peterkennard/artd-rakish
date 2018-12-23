@@ -1,5 +1,6 @@
 0.9.14.beta
 
+- added GitModule for inclusion in projects.
 - Configuration initializer now called in directory of declaring file.
 - changed RakishProject#moduleName to projectName
 - added FileSet#update with an optional :exclude option.
