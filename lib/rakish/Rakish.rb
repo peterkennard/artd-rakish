@@ -1155,7 +1155,7 @@ module Rakish
 		end
 
 		# open and read an entire file into a string
-		# throws excpetion if the file is not present.
+		# throws exception if the file is not present.
 		def readFileToString(path)
 			str = nil
 			File::open(path,'r') do |f|
