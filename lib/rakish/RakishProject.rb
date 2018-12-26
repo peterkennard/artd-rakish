@@ -267,7 +267,7 @@ public
 
 	# Get configuration directory for specific (current) platform configuration
 	def projectConfigurationDir
-		@moduleConfiguredObjDir||="#{moduleObjDir()}/#{nativeConfigName()}.config";
+		@projectConfigurationDir||="#{moduleObjDir()}/#{nativeConfigName()}.config";
 	end
 
 	# return self for inheriting PropertyBag configurations
