@@ -1,5 +1,6 @@
 0.9.14.beta
 
+- standard :preBuild task is now :configure
 - added RakishProject#moduleConfigurationDir for the location of platform specific configuration cache.
 - added GitModule for inclusion in projects for convenient git operations
 - Configuration initializer now called in directory of declaring file.

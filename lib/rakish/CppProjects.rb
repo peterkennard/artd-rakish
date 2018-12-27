@@ -377,7 +377,7 @@ module CppProjectModule
   include CppProjectConfig
 
   addInitBlock do
-    t = task :preBuild do
+    t = task :configure do
       doCppPreBuild
     end
     @cppCompileTaskInitialized = false;
@@ -422,7 +422,7 @@ module CppProjectModule
 	end
 
 	# called after initializers on all projects and before rake
-	# starts executing tasks
+	# starts executing any other tasks
 
 	def doCppPreBuild()
 		addIncludePaths( [ moduleConfiguredObjDir(),buildIncludeDir() ] );

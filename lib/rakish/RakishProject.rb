@@ -450,12 +450,12 @@ public
 	# starts executing tasks
 	def preBuild # :nodoc:
     cd @projectDir, :verbose=>verbose? do
-      tname = "#{@myNamespace}:preBuild"
+      tname = "#{@myNamespace}:configure"
       ns = Rake.application.in_namespace(@myNamespace) do
         log.info("pre building #{@myNamespace}");
         # optional project pre build task
-        doPreBuild = Rake.application.lookup(tname);
-        doPreBuild.invoke if doPreBuild;
+        doConfigure = Rake.application.lookup(tname);
+        doConfigure.invoke if doConfigure;
       end
     end
 	end
