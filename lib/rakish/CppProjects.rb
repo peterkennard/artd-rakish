@@ -42,7 +42,9 @@ module CTools
 		defpath = "#{cfg.nativeLibDir}/#{baseName}-#{cfg.nativeConfigName}.linkref"
         reltarget = getRelativePath(targetName,cfg.nativeLibDir);
 		File.open(defpath,'w') do |f|
-			f.puts("libs = [\'#{reltarget}\']")
+            f.puts('{');
+			f.puts(":libs => [ \'#{reltarget}\'],")
+			f.puts('}');
 		end
 	end
 
@@ -53,20 +55,18 @@ module CTools
         cd libdir, :verbose=>false do
 			libdef = File.expand_path("#{baseName}-#{cfgName}.linkref");
 			begin
-				libpaths=nil
-				libs=nil
-				eval(File.new(libdef).read)
-				if(libpaths)
-					libpaths.collect! do |lp|
+				ref = eval(File.new(libdef).read)
+				if(ref[:libpaths])
+					ref[:libpaths].collect! do |lp|
 						File.expand_path(lp)
 					end
 				end
-				if(libs)
-					libs.collect! do |lp|
+				if(ref[:libs])
+					ref[:libs].collect! do |lp|
 						File.expand_path(lp)
 					end
 				end
-				return({libpaths: libpaths, libs: libs});
+				return(ref);
 			rescue => e
 				unless(libExt() === baseName.pathmap('%x'))
 				    log.debug("#{config.projectFile},failed to load #{libdef} #{e}");
