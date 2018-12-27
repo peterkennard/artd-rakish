@@ -452,10 +452,10 @@ public
     cd @projectDir, :verbose=>verbose? do
       tname = "#{@myNamespace}:configure"
       ns = Rake.application.in_namespace(@myNamespace) do
-        log.info("pre building #{@myNamespace}");
-        # optional project pre build task
+        # log.info("configuring #{@myNamespace}");
+        # optional project configuration task
         doConfigure = Rake.application.lookup(tname);
-        doConfigure.invoke if doConfigure;
+        doConfigure.invoke if(doConfigure)
       end
     end
 	end
