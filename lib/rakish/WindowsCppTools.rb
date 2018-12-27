@@ -840,6 +840,8 @@ module Rakish
 
 		def createLinkTask(objs,cfg)
 		
+            libdir = "#{cfg.nativeLibDir()}/#{cfg.configName}";
+
 			case(cfg.targetType)
 				
 				when 'APP'
@@ -862,7 +864,7 @@ module Rakish
 
 				when 'LIB'
 					
-					targetName = "#{cfg.nativeLibDir()}/#{cfg.targetName}.lib";
+					targetName = "#{libdir}/#{cfg.targetName}.lib";
 					doLink = Rake::FileTask.define_task targetName, 
 							&@@buildLibAction;
 				
@@ -873,7 +875,6 @@ module Rakish
 					resobjs = getAutoResourcesObjs(cfg);
 					mapfile = targetName.pathmap("%X.map");
 					pdbfile = targetName.pathmap("%X.pdb");
-					libdir = "#{cfg.nativeLibDir()}/#{cfg.configName}";
 					implib = "#{libdir}/#{cfg.targetName}.lib";
 					ensureDirectoryTask(libdir);
 
