@@ -16,7 +16,7 @@ class Build
 		@projectsByModule={}
 		@projectsByFile={}  # each entry is an array of one or more projects
 		@configurationsByName={}
-    @registrationIndex_ = 0;
+        @registrationIndex_ = 0;
 
 		task :resolve do |t|
 		  if(defined? Rakish::GlobalConfig.instance.nativeConfigName)

@@ -263,21 +263,14 @@ module CppProjectConfig
    #
     def setToolchain(ctools,*args)
         if(ctools.is_a?(CTools)) 
-		@ctools = ctools;
-	else	
-		configName = args[0];
-		hash = args.last;		
-		hash = {} unless hash.is_a?(Hash)
-		@ctools = CTools.loadToolchain(ctools,configName,hash);
-	end
+            @ctools = ctools;
+        else
+            configName = args[0];
+            hash = args.last;
+            hash = {} unless hash.is_a?(Hash)
+            @ctools = CTools.loadToolchain(ctools,configName,hash);
+        end
     end
-
-    # temporary include directory built for compiling
-    # where generated include files or links to the project sources
-    # are created
-	def INCDIR
-		@INCDIR||=getAnyAbove(:INCDIR)||"#{buildDir()}/include";
-	end
 
 	def binDir
 		@binDir||=(getAnyAbove(:binDir)||"#{buildDir()}/bin/#{nativeConfigName}");

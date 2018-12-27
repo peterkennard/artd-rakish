@@ -1,7 +1,10 @@
 0.9.14.beta
 
 - standard :preBuild task is now :configure
-- added RakishProject#configurationDir for the location of project's configuration specific cache.
+
+- added buildBinDir to retrieve build global Bin directory
+- removed old INCDIR and replaced references with buildIncludeDir
+- added configurationDir to retrieve the location of project's configuration specific cache.
 - added GitModule for inclusion in projects for convenient git operations
 - Configuration initializer now called in directory of declaring file.
 - changed RakishProject#moduleName to projectName
@@ -9,7 +12,7 @@
 - moduleConfiguredObjDir is now configuredObjDir
 - added FileSet#update with an optional :exclude option.
 - added accessor for currentBuildConfig into CppProject
-- thirdPartyPath now burried in hacky WindowsCpp module, on the way out
+- thirdPartyPath now burried in hacky WindowsCppTools module, on the way out
      now retrieved from environment variable.
 
 0.9.13.beta

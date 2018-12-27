@@ -82,14 +82,15 @@ module BuildConfigModule
  	# compiler and processor configuration
 	attr_property   :nativeConfigName
 
-    # suffix to append to native output binary and library files
-    # defaults to the nativeConfigName
-	attr_property   :nativeOutputSuffix
-
     # root folder for build output files
 	def buildDir
 		@buildDir||=getAnyAbove(:buildDir);
 	end
+
+    # Get output binDir for all configurations in this build area
+    def buildBinDir
+		@buildBinDir||=getAnyAbove(:buildBinDir)||"#{buildDir}/bin";
+    end
 
     # folder to output native executable and dll files to.
     # defaults to (buildDir)/bin/(nativeConfigName)
@@ -108,12 +109,6 @@ module BuildConfigModule
     # in a project module defaults to the value set in th (configValue)/(projectName)
 	def projectObjDir
 		@projectObjDir||=getAnyAbove(:projectObjDir)||"#{buildDir()}/obj";
-	end
-
-    # suffix to add to native output files
-    # defaults to nativeConfigName
-	def nativeOutputSuffix
-		@nativeOutputSuffix||=nativeConfigName();
 	end
 
     # temporary include directory built for compiling

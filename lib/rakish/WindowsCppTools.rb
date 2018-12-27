@@ -563,20 +563,11 @@ module Rakish
 
 			cfg = t.config;
 
-					
-			#STATIC_LIB_FILES += $(addsuffix .lib,$(call GET_REFERENCES,$(STATIC_LIBS),$(OUTPUT_PATH)))
-			#SHARED_LIBS_FILES := $(addsuffix .lib,$(call GET_REFERENCES,$(SHARED_LIBS),$(OUTPUT_PATH)))
-			#
-			#$(TARGET_FILE): $(OBJS) $(STATIC_LIB_FILES)
-				
-			# assemble a static library 
+			# assemble a static library
 			log.info("asembling #{File.basename(t.name)}")
 			deleteFile(t.name)
 			writeLinkref(cfg,cfg.targetBaseName,t.name);
 			lnkfile = t.name.pathmap("#{cfg.configuredObjDir}/%f.response");
-
-			#	echo -n $(PROJECT_TARGET_NAME)-$(nativeOutputSuffix) > $(TARGET_REF)
-			#	@echo -n "$(CPP_OBJS_BASE) $(C_OBJS_BASE)" > $(TARGET_LOBJ)
 
 			File.open(lnkfile,'w') do |f|
 				f.puts("#{@LIB_OPTIONS} -nodefaultlib -out:\"#{t.name}\"" );
@@ -587,8 +578,6 @@ module Rakish
 					next unless obj.pathmap('%x') == '.obj' 
 					f.puts("\"#{obj}\"");
 				end		
-				# library files
-			#	@echo -n " $(STATIC_LIB_FILES) $(SHARED_LIBS_FILES)" >> $(TARGET_LNK)
 			end
 
 			cmdline = "\"#{@LINK_EXE}\" -lib -nologo @#{lnkfile}\""
