@@ -72,7 +72,7 @@ module BuildConfigModule
 	attr_property 	:nativeLibDir
 
     # folder to output native object and intermediate files to for this module
-	attr_property 	:moduleObjDir
+	attr_property 	:projectObjDir
 
     # folder to output native binary dll and so files to
 	attr_property 	:binDir
@@ -106,8 +106,8 @@ module BuildConfigModule
     # folder to output native intermedite and object files to.
     # config defaults to (buildDir)/obj
     # in a project module defaults to the value set in th (configValue)/(projectName)
-	def moduleObjDir
-		@moduleObjDir||=getAnyAbove(:moduleObjDir)||"#{buildDir()}/obj";
+	def projectObjDir
+		@projectObjDir||=getAnyAbove(:projectObjDir)||"#{buildDir()}/obj";
 	end
 
     # suffix to add to native output files

@@ -520,7 +520,7 @@ module Rakish
 			objfile = t.name;
 			cfig = t.config;
 
-			cmdline = "\"#{@MSVC_EXE}\" \"#{cppfile}\" -Fd\"#{cfig.moduleObjDir}/vc80.pdb\" -c -Fo\"#{objfile}\" ";
+			cmdline = "\"#{@MSVC_EXE}\" \"#{cppfile}\" -Fd\"#{cfig.projectObjDir}/vc80.pdb\" -c -Fo\"#{objfile}\" ";
 			cmdline += getFormattedMSCFlags(cfig)
 			cmdline += ' /showIncludes'
 
@@ -548,10 +548,10 @@ module Rakish
 
 		# Override for CTools
 		def initCompileTask(cfg)
-			cfg.project.addCleanFiles("#{cfg.moduleConfiguredObjDir()}/*#{objExt()}",
-							"#{cfg.moduleConfiguredObjDir()}/*.sbr");
+			cfg.project.addCleanFiles("#{cfg.configuredObjDir()}/*#{objExt()}",
+							"#{cfg.configuredObjDir()}/*.sbr");
 			Rake::Task.define_task :compile => [:includes,
-												cfg.moduleConfiguredObjDir(),
+												cfg.configuredObjDir(),
 												:depends]
 		end	
 
@@ -573,7 +573,7 @@ module Rakish
 			log.info("asembling #{File.basename(t.name)}")
 			deleteFile(t.name)
 			writeLinkref(cfg,cfg.targetBaseName,t.name);
-			lnkfile = t.name.pathmap("#{cfg.moduleConfiguredObjDir}/%f.response");
+			lnkfile = t.name.pathmap("#{cfg.configuredObjDir}/%f.response");
 
 			#	echo -n $(PROJECT_TARGET_NAME)-$(nativeOutputSuffix) > $(TARGET_REF)
 			#	@echo -n "$(CPP_OBJS_BASE) $(C_OBJS_BASE)" > $(TARGET_LOBJ)
@@ -607,7 +607,7 @@ module Rakish
 			deleteFile(t.name);
 			writeLinkref(cfg,cfg.targetBaseName,t.createArgs[:implib]);
 
-			lnkfile = t.name.pathmap("#{cfg.moduleConfiguredObjDir()}/%f.response");
+			lnkfile = t.name.pathmap("#{cfg.configuredObjDir()}/%f.response");
 
 			# build linker source file
 			begin
@@ -692,7 +692,7 @@ module Rakish
 			log.info("linking #{File.basename(t.name)}")
 					
 			deleteFile(t.name);
-			lnkfile = t.name.pathmap("#{cfg.moduleConfiguredObjDir}/%f.response");
+			lnkfile = t.name.pathmap("#{cfg.configuredObjDir}/%f.response");
 					
 			# build linker source file
 			begin
@@ -794,7 +794,7 @@ module Rakish
 			
 			resobjs=[]
 			rcobjs=[]
-			basePath = File.join(cfg.moduleConfiguredObjDir,cfg.targetBaseName);
+			basePath = File.join(cfg.configuredObjDir,cfg.targetBaseName);
 					
 			if(@defaultManifest) # not present if not needed
 				manifest_rc = "#{basePath}.manifest.rc"
@@ -804,7 +804,7 @@ module Rakish
 					# manifest resource
 					cfg.project.addCleanFiles(manifest_rc,manifest_txt);
 												
-					tsk = Rake::FileTask.define_task manifest_rc => [ cfg.moduleConfiguredObjDir, cfg.projectFile, @defaultManifest ], :manifestTxt=>manifest_txt
+					tsk = Rake::FileTask.define_task manifest_rc => [ cfg.configuredObjDir, cfg.projectFile, @defaultManifest ], :manifestTxt=>manifest_txt
 					tsk.enhance &@@makeManifestAction;
 					tsk.config = cfg
 				end
@@ -819,7 +819,7 @@ module Rakish
 
 				cfg.project.addCleanFiles(autores_rc,autores_res,autores_obj);
 						
-				restask = Rake::FileTask.define_task autores_obj => [ cfg.moduleConfiguredObjDir, cfg.projectFile, rcobjs].flatten do |t|
+				restask = Rake::FileTask.define_task autores_obj => [ cfg.configuredObjDir, cfg.projectFile, rcobjs].flatten do |t|
 					log.info("Generating #{t.name}")
 					File.open(autores_rc,'w') do |f|
 						t.sources.each do |src|

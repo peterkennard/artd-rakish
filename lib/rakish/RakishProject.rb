@@ -87,7 +87,7 @@ class Build
 	# selects namespace appropriately
 	# returns array of all projects referenced directly by this load
 
-	def loadProjects(*args) # :nodoc: knternal called by RakishProject to load dependencies.
+  def loadProjects(*args) # :nodoc: knternal called by RakishProject to load dependencies.
 
     opts = (Hash === args.last) ? args.pop : {}
     rakefiles = FileSet.new(args);
@@ -123,7 +123,7 @@ class Build
     end # namespace
     end # cd
     projs
-	end
+  end
 end
 
 # --------------------------------------------------------------------------
@@ -255,19 +255,19 @@ public
 	# list of projects specified that this is dependent on ( not recursive - only direct dependencies )
 	attr_reader :dependencies
 
-    # folder to output native object and intermediate files to for this module
-	def moduleObjDir
-		@moduleObjDir||="#{getAnyAbove(:moduleObjDir)}/#{projectName()}";
+    # Get project's object and intermediate directory
+	def projectObjDir
+		@projectObjDir||="#{getAnyAbove(:projectObjDir)}/#{projectName()}";
 	end
 
-	# Get configuration specific native intermediate object directory
-	def moduleConfiguredObjDir
-		@moduleConfiguredObjDir||="#{moduleObjDir()}/#{nativeConfigName()}";
+	# Get project's configuration specific intermetdiate object directory
+	def configuredObjDir
+		@configuredObjDir||="#{projectObjDir()}/#{nativeConfigName()}";
 	end
 
-	# Get configuration directory for specific (current) platform configuration
-	def projectConfigurationDir
-		@projectConfigurationDir||="#{moduleObjDir()}/#{nativeConfigName()}.config";
+	# Get project's configuration specific directory for (current) output configuration
+	def configurationDir
+		@configurationDir||="#{projectObjDir()}/#{nativeConfigName()}.config";
 	end
 
 	# return self for inheriting PropertyBag configurations
