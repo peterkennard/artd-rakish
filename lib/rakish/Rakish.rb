@@ -865,11 +865,10 @@ module Rakish
 
 	protected
 		# Task action to simply copy source to destination
-		SimpleCopyAction_ = ->(t) { FileUtils.cp(t.source, t.name) }
+		SimpleCopyAction_ = ->(t,args) { FileUtils.cp(t.source, t.name) }
 
 		# Task action to do nothing.
-		DoNothingAction_ = ->(t) {}
-
+		DoNothingAction_ = ->(t,args) {}
 
 	public
 

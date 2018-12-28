@@ -169,7 +169,7 @@ module JarBuilderModule
             end
         end
 
-        @@buildJarAction_ = ->(t) do
+        @@buildJarAction_ = ->(t,args) do
             t.config.doBuildJarAction(t);
         end
 
@@ -458,7 +458,7 @@ protected
 
         end
 
-        @@CompileJavaAction_ = ->(t) do
+        @@CompileJavaAction_ = ->(t,args) do
             t.config.doCompileJava(t);
         end
 
@@ -523,7 +523,7 @@ protected
             end
         end
 
-        @@BuildJavadocAction = ->(t) do
+        @@BuildJavadocAction = ->(t,args) do
             t.config.doBuildJavadoc(t);
         end
 

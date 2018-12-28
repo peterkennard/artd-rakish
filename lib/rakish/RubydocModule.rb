@@ -40,7 +40,7 @@ protected
 
         # action for rdoc task.
         # :nodoc:
-        CreateRubydocAction = ->(t) do
+        CreateRubydocAction = ->(t,args) do
             t.config.doBuildRubydocs(t);
         end
 
