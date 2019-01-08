@@ -61,7 +61,7 @@ module ZipBuilderModule
         end
 
         @@buildZipAction_ = ->(t,args) do
-            t.config.doBuildZipAction(t);
+            t.config.doBuildZipAction(t,args);
         end
 
         # create task for building a zip file to specifications stored in this builder.
