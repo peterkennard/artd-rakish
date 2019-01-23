@@ -1,5 +1,7 @@
 0.9.14.beta
 
+- added allDependencies() method to Project to retrieve a list of all dependencies
+  sorted from the one with the least pre-requisites to the most.
 - standard :preBuild task is now :configure
 - changed remaing unfixed task lambdas for two arguments for later rake verisons
 - added buildBinDir to retrieve build global Bin directory

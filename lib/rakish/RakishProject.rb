@@ -252,8 +252,6 @@ public
 	attr_reader :myPackage
 	# UUID of this project
 	attr_reader :projectId
-	# list of projects specified that this is dependent on ( not recursive - only direct dependencies )
-	attr_reader :dependencies
 
     # Get project's object and intermediate directory
 	def projectObjDir
@@ -274,6 +272,34 @@ public
 	def project
 		self
 	end
+
+	# list of projects specified that this is dependent on ( not recursive - only direct dependencies )
+	attr_reader :dependencies
+
+protected
+    def _depsRecursive(level, depset)
+      unless(depset[projectName]) # just in case recursion protection
+        depset[projectName] = self if(level > 0)
+        if(@dependencies)
+          level=level+1;
+          @dependencies.each do |dep|
+            dep._depsRecursive(level,depset);
+          end
+        end
+      end
+      depset
+    end
+
+public
+
+	# Get a list of all projects that this project is dependent on.
+	# sorted bfrom least dependent (with fewest prerequisites) to most.
+    def allDependencies
+      vals = _depsRecursive(0,{}).values;
+      vals.sort_by! { |dep| dep.registrationIndex }
+      vals
+    end
+  end
 
 #    def addProjectDependencies(*args) # :nodoc:  not used anywhere at present
 #    	# NOTE: for some unknown reason when this is called from initialize exception handling is
