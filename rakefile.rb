@@ -94,7 +94,7 @@ file :binFindUtil => "#{myDir}/src/artd-rakish-find" do |t|
     puts("git hash is #{gitDeployHash}" );
     rubyPP("#{myDir}/src/artd-rakish-find", "#{myDir}/bin/artd-rakish-find", binding);
     if(OS.linux?)
-        system("chmod +x \""#{myDir}/bin/artd-rakish-find"\"");
+        system("chmod +x \"#{myDir}/bin/artd-rakish-find\"");
     end
 end
 
