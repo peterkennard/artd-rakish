@@ -1,5 +1,6 @@
 0.9.14.beta
 
+- set up artd-rakish-find to return the git hash of the installed version when given no arguments.
 - added allDependencies() method to Project to retrieve a list of all dependencies
   sorted from the one with the least pre-requisites to the most.
 - standard :preBuild task is now :configure
