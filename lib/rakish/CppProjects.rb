@@ -620,11 +620,40 @@ module CTools
       @targetName||="#{targetBaseName}";
     end
 
-		# get list of libraries built by and exported by dependency projects
-		# as linkdefs ( hashes with fields )
-		# in dependency order from most dependent to least, and follow with
-		# libraries added in the current project
-		# TODO: dependency order not proper id it needs to sort them by "registration order"
+    # get list of libraries built by and exported by dependency projects
+    # loaded into "linkdefs" ( hashes with fields )
+    # this is because at least with some systems libraries have associated
+    # files like exported symbols, dlls, inteface definitions etc.
+    # in dependency order from most dependent to least, and follow with
+    # libraries added in the current project
+    # This caches it's result, so don't call until compile and autogen are complete.
+
+    def getOrderedLinkrefs
+      unless(@orderedRefs_)
+        refs=[];
+        # dependencies provided in order from least dependent to most
+        project.dependencies.reverse_each do |dep|
+          if(defined? dep.outputsNativeLibrary)
+            if(dep.outputsNativeLibrary)
+              if(dep.nativeLibDir)
+                ldef = dep.ctools.loadLinkref(dep.nativeLibDir,dep,configName);
+                if(ldef != nil)
+                  refs << ldef;
+                end
+              end
+            end
+          end
+        end
+        @orderedRefs_ = refs.flatten;
+      end
+      @orderedRefs_
+    end
+
+    # get list of libraries built by and exported by dependency projects
+    # as linkdefs ( hashes with fields )
+    # in dependency order from most dependent to least, and follow with
+    # libraries added in the current project
+    # TODO: dependency order not proper id it needs to sort them by "registration order"
 	def getOrderedLibs
 
       libs=[]
