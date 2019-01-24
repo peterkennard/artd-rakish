@@ -22,16 +22,56 @@ module OS
   end
 end
 
+
+# This will "pre-process" input lines using the ruby escape sequence
+# '#{}' for substitutions
+#
+#  in the binding
+#     linePrefix is an optional prefix to prepend to each line.
+#
+#     setIndent means set a variable "indent" in the environment
+#     to be the indent level of the current raw line
+#
+#   lines = input lines (has to implement each_line)
+#   fout  = output file (has to implement puts, print)
+#   bnd   = "binding" to context to evaluate substitutions in
+def rubyLinePP(lines,fout,bnd,opts={})
+
+    setIndent = eval('defined? indent',bnd)
+    linePrefix = opts[:linePrefix];
+
+    rawLine = nil;
+    lineNum = 0;
+    begin
+        lines.each_line do |line|
+            ++lineNum;
+            rawLine = line;
+            fout.print(linePrefix) if linePrefix;
+            if(line =~ /\#\{gitDeployHash\}/)  # bit of hack here for this rakefile might have this get a string list !!!
+                fout.puts line.gsub(/\#\{[^\#]+\}/) { |m|
+                    eval("indent=#{$`.length}",bnd) if setIndent;
+                    eval('"'+m+'"',bnd)
+                }
+            else
+                fout.print(line);
+            end
+        end
+    rescue => e
+        puts "error processing line #{lineNum}: #{e}\n\"#{rawLine.chomp}\"";
+    end
+end
+
+
 # This will "preprocess" an entire file using the ruby escape sequence
 # '#{}' for substitutions
 #
 #   ffrom = input file path
 #   fto   = output file path
 #   bnd   = "binding" to context to evaluate substitutions in
-def rubyPP(ffrom,fto,bnd,args={})
+def rubyPP(ffrom,fto,bnd,opts={})
 
     begin
-        mode = args[:append] ? 'w+' : 'w';
+        mode = opts[:append] ? 'w+' : 'w';
         if(fto.is_a? File)
             File.open(ffrom,'r') do |fin|
                 rubyLinePP(fin,fto,bnd)
@@ -44,31 +84,32 @@ def rubyPP(ffrom,fto,bnd,args={})
             end
         end
     rescue => e
-        log.error("error precessing: #{ffrom} #{e}")
+        puts("error precessing: #{ffrom} #{e}")
         raise e
     end
 end
 
-file "#{myDir}/bin/artd-rakish-find" => "#{myDir}/src/artd-rakish-find" do |t|
-    gitHash = `git rev-parse`
-
+file :binFindUtil => "#{myDir}/src/artd-rakish-find" do |t|
+    gitDeployHash = `git rev-parse HEAD`.chomp
+    puts("git hash is #{gitDeployHash}" );
+    rubyPP("#{myDir}/src/artd-rakish-find", "#{myDir}/bin/artd-rakish-find", binding);
 end
 
 task :default do
 end
 
-task :buildGem do |t|
+task :buildGem => :binFindUtil do |t|
 	cd myDir do
 	    ENV['RAKISH_UNSIGNED']='0';
 		system("gem build rakish.gemspec");
 	end
 end
 
-task :buildUnsignedGem do |t|
+task :buildUnsignedGem => :binFindUtil do |t|
 	cd myDir do
 	    ENV['RAKISH_UNSIGNED']='1';
 		system("gem build rakish.gemspec");
-	end
+end
 end
 
 task :pushGem => [:buildGem] do |t|
@@ -90,6 +131,7 @@ task :installGem => [:buildUnsignedGem] do |t|
 end
 
 task :cleanAll do |t|
+    FileUtils.rm(binFindUtil);
 end
 
 # just here to handle being called from exec-rake.bat dealing with quoted empty arguments

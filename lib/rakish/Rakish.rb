@@ -1016,7 +1016,9 @@ module Rakish
 		end
 		
 		# This will "pre-process" input lines using the ruby escape sequence
-		# '#{}' for substitutions
+		# '#{}' for substitutions so NOT good for processing ruby files
+		# TODO: a variants using other "unique" excape sequence for other
+		# TODO: languanges
 		#
 		#  in the binding
 		#     linePrefix is an optional prefix to prepend to each line.
@@ -1045,7 +1047,7 @@ module Rakish
 					}
 				end
 			rescue => e
-				log.error do 
+				log.error do
 					bt=[]
 					e.backtrace.each do |bline|
 						bt << Logger.formatBacktraceLine(bline);
