@@ -22,7 +22,7 @@ module OS
   end
 end
 
-
+# clipped out of rakish
 # This will "pre-process" input lines using the ruby escape sequence
 # '#{}' for substitutions
 #
@@ -61,7 +61,7 @@ def rubyLinePP(lines,fout,bnd,opts={})
     end
 end
 
-
+# clipped out of Rakish
 # This will "preprocess" an entire file using the ruby escape sequence
 # '#{}' for substitutions
 #
