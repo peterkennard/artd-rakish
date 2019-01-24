@@ -47,7 +47,7 @@ def rubyLinePP(lines,fout,bnd,opts={})
             ++lineNum;
             rawLine = line;
             fout.print(linePrefix) if linePrefix;
-            if(line =~ /\#\{gitDeployHash\}/)  # bit of hack here for this rakefile might have this get a string list !!!
+            if(line =~ /\#\{gitDeployHash\}/)  # bit of hack here for processing ruby file might have this get a string list !!!
                 fout.puts line.gsub(/\#\{[^\#]+\}/) { |m|
                     eval("indent=#{$`.length}",bnd) if setIndent;
                     eval('"'+m+'"',bnd)
