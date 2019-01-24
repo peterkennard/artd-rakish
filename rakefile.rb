@@ -22,6 +22,38 @@ module OS
   end
 end
 
+# This will "preprocess" an entire file using the ruby escape sequence
+# '#{}' for substitutions
+#
+#   ffrom = input file path
+#   fto   = output file path
+#   bnd   = "binding" to context to evaluate substitutions in
+def rubyPP(ffrom,fto,bnd,args={})
+
+    begin
+        mode = args[:append] ? 'w+' : 'w';
+        if(fto.is_a? File)
+            File.open(ffrom,'r') do |fin|
+                rubyLinePP(fin,fto,bnd)
+            end
+        else
+            File.open(fto,mode) do |fileto|
+                File.open(ffrom,'r') do |fin|
+                    rubyLinePP(fin,fileto,bnd)
+                end
+            end
+        end
+    rescue => e
+        log.error("error precessing: #{ffrom} #{e}")
+        raise e
+    end
+end
+
+file "#{myDir}/bin/artd-rakish-find" => "#{myDir}/src/artd-rakish-find" do |t|
+    gitHash = `git rev-parse`
+
+end
+
 task :default do
 end
 
