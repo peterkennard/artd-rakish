@@ -299,7 +299,6 @@ public
       vals.sort_by! { |dep| dep.registrationIndex }
       vals
     end
-  end
 
 #    def addProjectDependencies(*args) # :nodoc:  not used anywhere at present
 #    	# NOTE: for some unknown reason when this is called from initialize exception handling is
