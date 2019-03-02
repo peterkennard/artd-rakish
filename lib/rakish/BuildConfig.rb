@@ -95,6 +95,7 @@ module BuildConfigModule
     # folder to output native executable and dll files to.
     # defaults to (buildDir)/bin/(nativeConfigName)
 	def binDir
+	    log.debug("getting binDir #{@binDir}");
         @binDir||=getAnyAbove(:binDir)||"#{buildDir()}/bin/#{nativeConfigName}";
     end
 
@@ -211,15 +212,14 @@ class GlobalConfig < BuildConfig
 					defaultConfig = "Win32-VC10-MD-Debug";
 				end
 
-
 				# set defaults if not set above
 				@nativeLibDir ||= "#{@buildDir}/lib"
 
 				# get config from command line
 				cfg.nativeConfigName ||= ENV['nativeConfigName'];
 				cfg.nativeConfigName ||= defaultConfig
-				binDir();
 
+				binDir();
 			end
 		end
 

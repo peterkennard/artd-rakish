@@ -107,7 +107,8 @@ module Rakish
 					linkOpts += ' -debug' # -nodefaultlib'
 				when 'Release'
 					linkOpts += ' ' # -nodefaultlib'
-					cppOpts += ' -O3 -Qprec-div-'
+					cppOpts += ' -Ox'
+					# cppOpts += ' -O3 -Qprec-div-'
 				when 'ICL'
 					cppOpts += ' -O3 -Qprec-div-'
 				else
