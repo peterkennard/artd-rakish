@@ -100,7 +100,7 @@ module Rakish
 
 			case(@debugType)
 				when 'Debug'
-					cppOpts += ' -Zi -Od'
+					cppOpts += ' -Zi -Od -Ob2'
 					linkOpts += ' -debug' # -nodefaultlib'
 				when 'Checked'
 					cppOpts += ' -Zi -Ox'

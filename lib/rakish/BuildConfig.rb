@@ -95,7 +95,7 @@ module BuildConfigModule
     # folder to output native executable and dll files to.
     # defaults to (buildDir)/bin/(nativeConfigName)
 	def binDir
-	    log.debug("getting binDir #{@binDir}");
+	    # log.debug("getting binDir #{@binDir}");
         @binDir||=getAnyAbove(:binDir)||"#{buildDir()}/bin/#{nativeConfigName}";
     end
 
