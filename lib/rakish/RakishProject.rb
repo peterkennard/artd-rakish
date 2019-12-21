@@ -379,8 +379,8 @@ public
     #		break
     # end
 
-    fileDependencies = args[:dependsUpon] || Array.new;
-    optionalFileDependencies = args[:dependsOptionallyUpon];
+    projectDependencies = args[:dependsUpon] || Array.new;
+    optionalProjectDependencies = args[:dependsOptionallyUpon];
 
     parent = @build.configurationByName(args[:config]);
 
@@ -403,14 +403,14 @@ public
 
       # load all project files this is dependent on relative to this project's directory
       begin
-        @dependencies = @build.loadProjects(*fileDependencies);
+        @dependencies = @build.loadProjects(*projectDependencies);
       rescue LoadError => e
         log.error("requred dependency not found in #{myFile}: #{e}");
         raise e
       end
 
-      if(optionalFileDependencies)
-        projs = @build.loadProjects(*optionalFileDependencies, :optional=>TRUE);
+      if(optionalProjectDependencies)
+        projs = @build.loadProjects(*optionalProjectDependencies, :optional=>TRUE);
         @dependencies = @dependencies + (projs - @dependencies);
       end
 
