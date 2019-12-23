@@ -263,7 +263,7 @@ def self.Configuration(opts={},&block)
     found = build.configurationByName(name);
     if(name == 'root')
         if(found)
-            log.debug("found registered config \"" + found.registeredName() + "\""):
+            log.debug("found registered config \"" + found.registeredName() + "\"");
             return(found);
         end
         me = GlobalConfig.new(opts,&block);
