@@ -140,7 +140,10 @@ class BuildConfig
         self.class.initializeIncluded(self,pnt,opts);
 		yield self if block_given?
     end
+
     include BuildConfigModule
+
+	attr_accessor 	:registeredName
 
 end
 
@@ -241,6 +244,10 @@ end
 
 public
 
+def self.ConfigurationLoaded(name)
+    found = build.configurationByName(name);
+end
+
 # Declare (create) a new named configuration
 #
 #  named arguments:
@@ -253,8 +260,14 @@ public
 def self.Configuration(opts={},&block)
     name = opts[:name]||='root'
     me = nil;
+    found = build.configurationByName(name);
     if(name == 'root')
+        if(found)
+            log.debug("found registered config \"" + found.registeredName() + "\""):
+            return(found);
+        end
         me = GlobalConfig.new(opts,&block);
+        me.registeredName = name;
     else
         return(nil); # for now.
     end
