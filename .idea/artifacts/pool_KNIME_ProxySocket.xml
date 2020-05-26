@@ -1,0 +1,11 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="pool-KNIME-ProxySocket">
+    <output-path>$PROJECT_DIR$/../build/didi-KNIME/bin/Win64-VC14-MD-Debug</output-path>
+    <root id="archive" name="pool-KNIME-ProxySocket.jar">
+      <element id="module-output" name="pool-KNIME-ProxySocket" />
+      <element id="directory" name="META-INF">
+        <element id="file-copy" path="$PROJECT_DIR$/didi-KNIME-plugins/pool-KNIME-ProxySocket/plugin/src/META-INF/MANIFEST.MF" />
+      </element>
+    </root>
+  </artifact>
+</component>

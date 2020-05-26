@@ -1,0 +1,11 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="knime-NumberFormatter">
+    <output-path>$PROJECT_DIR$/../build/didi-KNIME/bin/Win64-VC14-MD-Debug</output-path>
+    <root id="archive" name="knime-NumberFormatter.jar">
+      <element id="module-output" name="knime-NumberFormatter" />
+      <element id="directory" name="META-INF">
+        <element id="file-copy" path="$PROJECT_DIR$/didi-KNIME-plugins/knime-NumberFormatter/plugin/src/META-INF/MANIFEST.MF" />
+      </element>
+    </root>
+  </artifact>
+</component>
