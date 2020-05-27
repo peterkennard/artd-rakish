@@ -134,9 +134,8 @@ task :installGem => [:buildUnsignedGem] do |t|
 end
 
 task :cleanAll do |t|
-    FileUtils.rm(binFindUtil);
+    FileUtils.rm_f("#{myDir}/bin/artd-rakish-find");
 end
-
 # just here to handle being called from exec-rake.bat dealing with quoted empty arguments
 task '' do
 end
