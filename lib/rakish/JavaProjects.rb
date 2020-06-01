@@ -30,6 +30,25 @@ module JavaProjectConfig
             @classPaths_||=(getInherited(:classPaths)||FileSet.new);
         end
 
+        # add contents of a jar directory to the classpath
+        # if the directory is absolute it is taken as is.
+        # if not it is looked up in the current jar search path.
+        # the files item is a wildcard for the files in the directory to include
+        def addJarDirectoryClassPaths(directory, *files)
+            opts = (files.last.is_a?(Hash) ? files.pop : {})
+            files.flatten!
+            dir = java.jarSearchPath.findFile(directory);
+            return if(dir == nil);
+            unless(File.directory?(dir))
+                log.debug("\"#{directory}\" is not a directory!")
+                return;
+            end
+            FileUtils.cd dir do
+                files = FileSet.new(files);
+            end
+            addClassPaths(files);
+        end
+
         # Add a path or paths to the compile time class path.
         # jar files added are not resolved until compile time against the
         # jarSearchPath
