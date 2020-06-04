@@ -1,11 +1,7 @@
 
 module Rakish
-puts "######################### "
     class << self
         def ensureVersion(lastHash)
-            puts "######################### 222"
-        end
-        def xxsensureVersion(lastHash)
             home = ENV["HOME"];
             currentHash = `artd-rakish-find`;
             currentHash.strip!;
@@ -23,4 +19,3 @@ puts "######################### "
         end
     end
 end
-

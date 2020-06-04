@@ -98,31 +98,40 @@ file :binFindUtil => "#{myDir}/src/artd-rakish-find" do |t|
     end
 end
 
+# file :versionUtil => "#{myDir}/src/ensure-version" do |t|
+#    gitDeployHash ||= `git rev-parse HEAD`.chomp
+#    puts("git hash is #{gitDeployHash}" );
+#    rubyPP("#{myDir}/src/ensure-version.rb", "#{myDir}/lib/rakish/ensure-version.rb", binding);
+#    if(OS.linux?)
+#        system("chmod +x \"#{myDir}/lib/rakish/ensure-version.rb\"");
+#    end
+# end
+
 task :default do
 end
 
-task :buildGem => :binFindUtil do |t|
+task :buildGem => [ :binFindUtil ] do |t|
 	cd myDir do
 	    ENV['RAKISH_UNSIGNED']='0';
 		system("gem build rakish.gemspec");
 	end
 end
 
-task :buildUnsignedGem => :binFindUtil do |t|
+task :buildUnsignedGem => [ :binFindUtil ] do |t|
 	cd myDir do
 	    ENV['RAKISH_UNSIGNED']='1';
 		system("gem build rakish.gemspec");
 end
 end
 
-task :pushGem => [:buildGem] do |t|
+task :pushGem => [:buildGem ] do |t|
 	cd myDir do
 	    ENV['RAKISH_UNSIGNED']='0';
 		system("gem push rakish-#{gemspec.version}.gem");
 	end
 end
 
-task :installGem => [:buildUnsignedGem] do |t|
+task :installGem => [:buildUnsignedGem ] do |t|
 	cd myDir do
 
 	    ENV['RAKISH_UNSIGNED']='1';
