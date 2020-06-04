@@ -1,0 +1,21 @@
+#!/usr/bin/env ruby
+
+args = ARGV;
+
+if(args[0])
+    path = "#{File.expand_path(File.dirname(__FILE__))}/artd-rakish-bin/#{args[0]}";
+    if(File.exists?(path))
+        puts path;
+        exit 0
+    end
+    if(ENV['ARTD_TOOLS'])  # only will be found on windows when executed with artd-shell
+        path = File.expand_path("#{ENV['ARTD_TOOLS']}#{args[0]}");
+        if(File.exists?(path))
+            puts path;
+            exit 0
+        end
+    end
+else
+    puts "da215b65a88f6031f58bd21037962391a899d0c7"
+end
+
