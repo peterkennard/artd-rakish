@@ -8,7 +8,7 @@ module Rakish
 
             if(currentHash != lastHash)
                 puts("currently on rakish #{currentHash}");
-                puts("checking out rakish #{lastHash}");s
+                puts("checking out rakish #{lastHash}");
                 cd "#{home}/artd-rakish" do
                     system("git checkout master");
                     system("git pull");
