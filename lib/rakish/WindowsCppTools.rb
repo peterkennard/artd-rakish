@@ -317,7 +317,7 @@ module Rakish
 
                         @sdkBinDir = sdkBin;
 
-                        msvcBinDir = NIL;
+                        msvcBinDir = nil;
                         if(File.directory?(msvcDir))
                             if(@platform === "Win32")
                                 msvcBinDir = "#{msvcDir}/bin/Hostx64/x86";
@@ -414,7 +414,7 @@ module Rakish
 					@defaultManifest ||= "#{tpp}/tools/msvc10/manifest/#{@platform}-#{@linkType}.manifest"
 				when 'VC14'
 				when 'ICL'
-					@defaultManifest = NIL;
+					@defaultManifest = nil;
 			end
 
 			# assign results to instance variables			
