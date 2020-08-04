@@ -80,7 +80,7 @@ module Rakish
                 @compileForSuffix[suff] = action;
             end
 
-            @@compileCPPAction = lambda do |t|
+            @@compileCPPAction = lambda do |t,args|
                 t.config.ctools.doCompileCpp(t)
             end
             @@compileCAction = @@compileCPPAction;
@@ -123,7 +123,7 @@ module Rakish
 
             end
 
-            @@buildLibAction = lambda do |t|
+            @@buildLibAction = lambda do |t,args|
                 t.config.ctools.doBuildLib(t)
             end
             def doBuildLib(t)
@@ -164,7 +164,7 @@ module Rakish
                 cmdline
             end
 
-            @@linkDllAction = lambda do |t|
+            @@linkDllAction = lambda do |t,args|
                 t.config.ctools.doLinkDll(t)
             end
             def doLinkDll(t)
@@ -199,7 +199,7 @@ module Rakish
 
             end
 
-            @@linkAppAction = lambda do |t|
+            @@linkAppAction = lambda do |t,args|
                 t.config.ctools.doLinkApp(t)
             end
             def doLinkApp(t)
