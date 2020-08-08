@@ -677,7 +677,7 @@ module CTools
 
       if(thirdPartyLibs)
         thirdPartyLibs.flatten.each do |tpl|
-          libpath = NIL;
+          libpath = nil;
           if(File.path_is_absolute?(tpl))
             libpath = tpl.pathmap('%d');
             tpl = tpl.pathmap('%f');
