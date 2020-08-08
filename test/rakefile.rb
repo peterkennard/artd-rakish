@@ -1,51 +1,29 @@
 myDir = File.dirname(__FILE__);
-require "#{myDir}/../bin/rakish/CppProjects.rb";
-require "rakish/JavaProjects.rb";
-require "rakish/IntellijConfig.rb";
-require "rakish/RubydocModule.rb";
-
-InitBuildConfig :include=>[ Rakish::IntellijConfig, Rakish::CppProjectConfig] do |cfg|
-
-	cfg.thirdPartyPath = File.expand_path("#{myDir}/../../third-party");
-	cfg.verbose = false;
-	cfg.didiRoot = File.expand_path("#{myDir}/..");
-	cfg.buildDir = "#{cfg.didiRoot}/build";
-	cfg.resourceDir = "#{cfg.buildDir}/Didi/production/.didi";
-	cfg.demoRoot = "#{cfg.buildDir}/Didi/DidiDemos";
-	cfg.java_home = ENV['JAVA_HOME'];
-
-	if(cfg.java_home =~ /Program Files \(x86\)/)
-		cfg.nativeConfigName = 'Win32-VC10-MD-Debug';
-	else
-		cfg.nativeConfigName = 'Win64-VC10-MD-Debug'
-	end
-
-    cfg.cppDefine('WINVER=0x0700');
-
-end
-
+require "#{myDir}/build-options.rb"
 
 include Rakish::Util
 
+log.debug("logging with util included");
+
 module Rakish
 
-    puts "JAVA_HOME is #{ENV['JAVA_HOME']}"
+    log.debug "JAVA_HOME is #{ENV['JAVA_HOME']}"
 
     module Mod1
         addInitBlock do
-            puts("initializing Mod1");
+            log.debug("initializing Mod1 - no includes");
         end
     end
 
     module Mod2
         addInitBlock do
-            puts("initializing Mod2");
+            log.debug("initializing Mod2 - no inlcudes");
         end
     end
 
     module Mod1
         addInitBlock do |arg|
-            puts("initializing Mod1-extension");
+            log.debug("initializing Mod1 - extension");
         end
     end
 
@@ -54,26 +32,33 @@ module Rakish
         include Mod2
 
         addInitBlock do |arg|
-            puts("initializing Mod3 on #{self} XX #{arg[0]}");
+            log.debug("initializing Mod3 - includes Mod1, Mod2 on #{self} XX #{arg[0]}");
             @foo = "string set by Mod3";
         end
     end
 
+	module Mod4
+	    include Mod3
+ 
+		addInitBlock do |arg|
+            log.debug("initializing Mod4 - includes Mod3");
+            log.debug "Mod4 initialized #{@foo}";
+        end
+ 	end
+		
     class InitClass
         include Mod2
         include Mod1
+		include Mod4
         include Mod3
 
         def initialize(*args)
             self.class.initializeIncluded(self,args[0]);
-            puts "initialized #{@foo}";
+            log.debug "InitClass initialized #{@foo}";
         end
     end
 
     InitClass.new("arg1","arg2");
-
-
-
 
 	module Util
 		def testMethod()
@@ -121,6 +106,53 @@ end
 	end
 end
 
+
+class MyClass < Rakish::PropertyBag
+
+    def initialize(*args)
+        super(*args);
+        if(args.length < 1)
+            # self.testField = "test class string"
+        end
+    end
+
+    attr_property :testField
+
+end
+
+class UncleClass < Rakish::PropertyBag
+
+    def initialize(*args)
+        super();
+        if(args.length < 1)
+            self.uncleField = "uncle string"
+        end
+    end
+
+    attr_property :uncleField
+
+end
+
+
+testClass = MyClass.new();
+uncleClass = UncleClass.new();
+
+log.debug("######### field is \"#{testClass.testField}\"")
+
+class MyClass2 < MyClass
+
+    def initialize(*args)
+        super(*args);
+    end
+end
+
+testClass2 = MyClass2.new(testClass,uncleClass);
+
+log.debug("parents \"#{testClass2.parents.length}\"")
+log.debug("field is \"#{testClass2.testField}\"")
+log.debug("uncle field is \"#{testClass2.uncleField}\"")
+
+
 def FooObj(&block)
 	MyObj.new(&block).putit()
 end 
@@ -148,9 +180,6 @@ end
 #end
 
 module Rakish
-
-
-
 
 
 #module BooBoo
@@ -188,7 +217,7 @@ module Rakish
 #	log.debug("test const is #{c.TEST_CONST}");
 #end
 #
-#config = RakishProject(:name=>'project1', :extends=>TestProject, :includes=>[BaDaBing,BaDaBoom,BaDaBing,BooBoo]) do |c|
+#config = Rakish.Project(:name=>'project1', :extends=>TestProject, :includes=>[BaDaBing,BaDaBoom,BaDaBing,BooBoo]) do |c|
 #
 #
 #
@@ -198,7 +227,7 @@ module Rakish
 #	c.set(:mysym, 121)
 #end
 #
-#config2 = RakishProject(:name=>'project2', :config=>config, :includes=>[BaDaBoom,BaDaBing,BaDaBing]) do |c|
+#config2 = Rakish.Project(:name=>'project2', :config=>config, :includes=>[BaDaBoom,BaDaBing,BaDaBing]) do |c|
 #	c.printStuff();
 #	c.printStuff2();
 #	log.debug "### new symbol is #{c.get(:mysym)}"
@@ -209,7 +238,8 @@ module Rakish
 #
 #log.debug("new name is #{NewClass.new().class.name()}");
 
-task :artdRakishTest => [] do |t|
+task :propertyBagTest => [] do |t|
+
 
     cf1 = BuildConfig.new do |cfg|
         cfg.enableNewFields do
@@ -217,9 +247,29 @@ task :artdRakishTest => [] do |t|
         end
     end
     cf2 = BuildConfig.new(cf1) do |cfg|
-        cfg.enableNewFields do
+        log.debug("#### fields enabled #{cfg.newFieldsEnabled?}")
+		
+		begin
+		   cfg.unknown;
+		rescue  Exception => ex
+		   log.debug("#### unknown field fail #{ex}");
+		end
+		
+		cfg.enableNewFields do
+			cfg.unknown="value set into unknown";
+			begin
+			   log.debug(cfg.unknown);
+			rescue  Exception => ex
+			   log.debug("#### unknown field fail #{ex}");
+			end
+			if(cfg.newFieldsEnabled?)
+			   log.debug("true fields enabled #{cfg.newFieldsEnabled?}")
+			else 
+			   log.debug("false fields enabled #{cfg.newFieldsEnabled?}")
+			end
             cfg.field2 = "field2"
         end
+        log.debug("fields enabled #{cfg.newFieldsEnabled?}")
     end
 
     f1 = cf2.get(:field1);
@@ -236,11 +286,14 @@ task :artdRakishTest => [] do |t|
 
 end
 
-RakishProject(
+Rakish.Project(
  	:name=>'test-project1',
  	:dependsUpon=> [
  	]
 ) do
+
+    log.debug("####### services config is #{servicesConfig}");
+
 
     task :test do |t|
         log.debug("doing #{t.name}");
@@ -248,17 +301,28 @@ RakishProject(
 
 end
 
-
-RakishProject(
+Rakish.Project(
     :includes=> [ Rakish::RubydocModule ],
  	:name=>'test-project2',
  	:dependsUpon=> [
  	]
-) do
+) do |s|
 
-    docs = createRubydocBuilder();
+	log.debug(" here acccessing s");
+	
+    docs = s.createRubydocBuilder();
 
-    export (task :rubydocs => [ docs.rubydocTask() ]);
+		begin
+		   self.unknown;
+		rescue  Exception => ex
+		   log.debug("#### unknown field fail #{ex}");
+		end
+
+    export task :rubydocs => [ docs.rubydocTask() ];
+
+    export task :exportTest => [] do |t|
+		log.debug("executing block for #{t.name}")
+	end;
 
     task :test => [ :rubydocs, ':test-project1:test' ] do |t|
         log.debug("doing #{t.name}");
@@ -266,10 +330,7 @@ RakishProject(
         log.debug("found #{tsk}");
     end
 
-
-
 end
-
 
 
 

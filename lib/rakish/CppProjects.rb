@@ -1,79 +1,77 @@
 myPath = File.dirname(File.expand_path(__FILE__));
 require "#{myPath}/RakishProject.rb"
 
+include Rake::DSL
+
 module Rakish
 
+    # :nodoc: legacy only looked at in the
+	MAKEDIR = File.dirname(File.expand_path(__FILE__)); # :nodoc:
 
+	# C++ build module
+    # Not really part of public distributioin - too littered with local stuff
+    # specific to my main builds  This needs to be converted to work in a more configurable way
+    # for multiple platforms
 module CTools
 	include Rakish::Logger
 	include Rakish::Util
 
-	VALID_PLATFORMS = { 
-		:Win32 => {
-			:module => "#{Rakish::MAKEDIR}/WindowsCppTools.rb",
-		},
-		:Win64 => {
-			:module => "#{Rakish::MAKEDIR}/WindowsCppTools.rb",
-		},
-		:iOS => {
-			:module => "#{Rakish::MAKEDIR}/IOSCTools.rb",
-		},
-		:Linux32 => {
-			:module => "#{Rakish::MAKEDIR}/GCCCTools.rb",
-		},
-		:Linux64 => {
-			:module => "#{Rakish::MAKEDIR}/GCCCTools.rb",
-		},
-	};
+    attr_reader :ctools
 
 	# parses and validates an unknown string configuration name 
 	# of the format [TargetPlatform]-[Compiler]-(items specific to compiler type)
 	# and loads if possible an instance of a set of configured "CTools" 
 	# for the specified "nativeConfigName" configuration.
-	def self.loadConfiguredTools(strCfg)
-		
-		splitcfgs = strCfg.split('-');
-		platform  = VALID_PLATFORMS[splitcfgs[0].to_sym];
-			
-		unless platform
-			raise InvalidConfigError.new(strCfg, "unrecognized platform \"#{splitcfgs[0]}\"");
-		end
-		factory = LoadableModule.load(platform[:module]);
-		factory.getConfiguredTools(splitcfgs,strCfg);
 
+	def self.loadToolchain(projectName,configName,args={})
+        begin
+            require projectName;
+            projectName = projectName.pathmap('%n');
+            mod = Rakish.const_get(projectName.to_s);
+            begin
+               mod.getConfiguredTools(configName,args);
+            rescue
+               log.debug("can't initialize toolchain \"#{projectName}\""); # \n#{Thread.current.backtrace.join("\n")}");
+            end
+        rescue
+            log.debug("unrecognized toolchain module \"#{projectName}\"");
+        end
 	end
 
-	def writeLinkref(cfg,baseName,targetName)
-					
+	def writeLinkref(cfg,baseName,targetName)					
 		defpath = "#{cfg.nativeLibDir}/#{baseName}-#{cfg.nativeConfigName}.linkref"
-		reltarget = getRelativePath(targetName,cfg.nativeLibDir);
+        reltarget = getRelativePath(targetName,cfg.nativeLibDir);
 		File.open(defpath,'w') do |f|
-			f.puts("libs = [\'#{reltarget}\']")
+            f.puts('{');
+			f.puts(":libs => [ \'#{reltarget}\'],")
+			f.puts('}');
 		end
 	end
 
 	# real bodge for now need to clean this up somehow.
-	def loadLinkref(libdir,cfg,baseName)
-		cd libdir, :verbose=>false do
-			libdef = File.expand_path("#{baseName}-#{cfg}.linkref");
+	def loadLinkref(libdir,config,cfgName,baseName)
+        # log.debug("load linkref for #{baseName} from #{libdir} there ? #{File.directory?(libdir)}");
+
+        cd libdir, :verbose=>false do
+			libdef = File.expand_path("#{baseName}-#{cfgName}.linkref");
 			begin
-				libpaths=nil
-				libs=nil
-				eval(File.new(libdef).read)
-				if(libpaths)
-					libpaths.collect! do |lp|
+				ref = eval(File.new(libdef).read)
+				if(ref[:libpaths])
+					ref[:libpaths].collect! do |lp|
 						File.expand_path(lp)
 					end
 				end
-				if(libs)
-					libs.collect! do |lp|
+				if(ref[:libs])
+					ref[:libs].collect! do |lp|
 						File.expand_path(lp)
 					end
 				end
-				return({libpaths: libpaths, libs: libs});
+				return(ref);
 			rescue => e
-				log.debug("failed to load #{libdef} #{e}");
-			end
+				unless(libExt() === baseName.pathmap('%x'))
+				    log.debug("#{config.projectFile},failed to load #{libdef} #{e}");
+				end
+		    end
 			{}
 		end
 	end
@@ -100,17 +98,24 @@ module CTools
 		end
 				
         # only touch file if new file differs from old one
-		if(textFilesDiffer(outName,tempfile)) 
+
+		if(!File.exists?(outName) || textFilesDiffer(outName,tempfile))
             # @#$#@$#@ messed up. set time of new file ahead by one second.
             # seems rake time resolution is low enough that the comparison often says 
             # times are equal between depends files and depends.rb.
-            mv(tempfile, outName, :force=>true);
+            FileUtils.mv(tempfile, outName, :force=>true);
             time = Time.at(Time.new.to_f + 1.0);
             File.utime(time,time,outName);
+            task.config.dependencyFilesUpdated = true;
 		else
-			rm(tempfile, :force=>true);
-		end	
+			FileUtils.rm(tempfile, :force=>true);
+		end
 	end
+
+    # to be overridden by specific toolchains for link target configurations
+    def createLinkConfig(parent,configName)
+        TargetConfig.new(parent,configName,self);
+    end
 
 
 	## Overidables for specific toolsets to use or supply
@@ -124,11 +129,11 @@ module CTools
 		[]
 	end
 
-	@@doNothingAction_ = lambda do |t|
+	@@doNothingAction_ = lambda do |t,args|
 		log.debug("attempting to compile #{t.source} into\n    #{t}\n    in #{File.expand_path('.')}");
 	end
 
-	# return the approriate compile action to creat an object files from
+	# return the approriate compile action to creat an object file from
 	# a source file with the specified suffix.
 	# nil if not action is available in this toolset. 
 	def getCompileActionForSuffix(suff)
@@ -157,7 +162,7 @@ module CTools
     def createCompileTasks(files,cfg)                
         # format object files name
 	                                 
-        mapstr = "#{cfg.nativeObjectPath()}/%n#{OBJEXT()}";
+        mapstr = "#{cfg.configuredObjDir()}/%n#{objExt()}";
 
         objs=FileList[];
         files.each do |source|
@@ -169,33 +174,34 @@ module CTools
     end
 	
 	def initCompileTask(cfg)
-		cfg.project.addCleanFiles("#{cfg.nativeObjectPath()}/*#{OBJEXT()}");
+		cfg.project.addCleanFiles("#{cfg.configuredObjDir()}/*#{objExt()}");
 		Rake::Task.define_task :compile => [:includes,
-											cfg.nativeObjectPath(),
+											cfg.configuredObjDir(),
 											:depends]
 	end	
 
-	def initDependsTask(cfg) # :nodoc:		
+ 	def initDependsTask(cfg) # :nodoc:
                
 		# create dependencies file by concatenating all .raked files				
-		tsk = file "#{cfg.nativeObjectPath()}/depends.rb" => [ :includes, cfg.nativeObjectPath() ] do |t|
-			cd(cfg.nativeObjectPath(),:verbose=>false) do
+		tsk = file "#{cfg.configuredObjDir()}/depends.rb" => [ :includes, cfg.configuredObjDir() ] do |t|
+			cd(cfg.configuredObjDir(),:verbose=>false) do
 				File.open('depends.rb','w') do |out|
 					out.puts("# puts \"loading #{t.name}\"");
 				end
 				t.prerequisites.each do |dep|
 					next unless (dep.pathmap('%x') == '.raked')
-					system "cat \'#{dep}\' >> depends.rb"
+					next unless (File.exists?(dep))
+ 					system "cat \'#{dep}\' >> depends.rb"
 				end
 			end
 		end
 		# build and import the consolidated dependencies file
-		task :depends => [ "#{cfg.nativeObjectPath()}/depends.rb" ] do |t|
-			load("#{cfg.nativeObjectPath()}/depends.rb")
+		task :depends => [ "#{cfg.configuredObjDir()}/depends.rb" ] do |t|
+			load("#{cfg.configuredObjDir()}/depends.rb")
 		end		
 		task :cleandepends do
-			depname = "#{cfg.nativeObjectPath()}/depends.rb";
-			deleteFiles("#{cfg.nativeObjectPath()}/*.raked");
+			depname = "#{cfg.configuredObjDir()}/depends.rb";
+			deleteFiles("#{cfg.configuredObjDir()}/*.raked");
 
 			# if there is no task defined for the 'raked' file then create a dummy
 			# that dos nothing so the prerequisites resolve - this is the case where the
@@ -222,7 +228,7 @@ module CTools
 		false
 	end
 
-end
+end # CToolx module
 
 module CppProjectConfig
 
@@ -230,6 +236,10 @@ module CppProjectConfig
 	attr_reader :cppDefines
 	attr_reader :targetType
 	attr_reader :thirdPartyLibs
+
+	def cpp
+	    self
+	end
 
 #	attr_reader	:cflags  had this in old one for added VC flags.
 
@@ -245,16 +255,33 @@ module CppProjectConfig
 		end
  	end
 
+   # set toolchain for a cpp configuration
+   # if ther is only one non hash argument and it is a module the module is used as a pre-loaded toolchain
+   # otherwise the first argument is considered a module name of the tools module to load
+   # the second argument is the configuration name assigned to it, and subsequent hash argument are the 
+   # initialization arguments for creating the toolchain instance.
+   #
+    def setToolchain(ctools,*args)
+        if(ctools.is_a?(CTools)) 
+            @ctools = ctools;
+        else
+            configName = args[0];
+            hash = args.last;
+            hash = {} unless hash.is_a?(Hash)
+            @ctools = CTools.loadToolchain(ctools,configName,hash);
+        end
+    end
+
 	def binDir
-		@binDir||=getInherited(:binDir)||"#{buildDir()}/bin";
+		@binDir||=(getAnyAbove(:binDir)||"#{buildDir()}/bin/#{nativeConfigName}");
 	end
 
 	def nativeLibDir
-		@nativeLibDir||=getInherited(:nativeLibDir)||"#{buildDir()}/lib";
+		@nativeLibDir||=getAnyAbove(:nativeLibDir)||"#{buildDir()}/lib";
 	end
 
 	def vcprojDir
-		@vcprojDir||=getInherited(:vcprojDir)||"#{buildDir()}/vcproj";
+		@vcprojDir||=getAnyAbove(:vcprojDir)||"#{buildDir()}/vcproj";
 	end
 
     # add include paths in order to the current list of include paths.
@@ -304,9 +331,8 @@ module CppProjectConfig
 	end
 
 	def addSourceFiles(*args)
-		opts = (Hash === args.last) ? args.pop : {}
 		@cppSourceFiles ||= FileSet.new;
-		@cppSourceFiles.include(args);
+		@cppSourceFiles.update(args);
 	end
 
 	#returns include path "set" with parent's entries after this ones entries
@@ -341,30 +367,39 @@ module CppProjectConfig
 end
 
 module CppProjectModule
-    include CppProjectConfig
+  include CppProjectConfig
 
-    addInitBlock do
-        t = task :preBuild do
-            doCppPreBuild
-        end
-        @cppCompileTaskInitialized = false;
+  addInitBlock do
+    t = task :configure do
+      doCppPreBuild
     end
+    @cppCompileTaskInitialized = false;
+  end
 
-	VCProjBuildAction_ = lambda do |t|
+  def addCFlags(flags)
+    @cflags||=[];
+    @cflags << flags;
+  end
+
+  def cflags
+    @cflags||[];
+  end
+
+	VCProjBuildAction_ = lambda do |t,args|
         require "#{Rakish::MAKEDIR}/VcprojBuilder.rb"
         VcprojBuilder.onVcprojTask(t.config);
 	end
 
-	VCProjCleanAction_ = lambda do |t|
+	VCProjCleanAction_ = lambda do |t,args|
         require "#{Rakish::MAKEDIR}/VcprojBuilder.rb"
         VcprojBuilder.onVcprojCleanTask(t.config);
 	end
 
-	LinkIncludeAction_ = lambda do |t|
+	LinkIncludeAction_ = lambda do |t,args|
 		config = t.config;
-		# if(config.verbose?)
+		if(config.verbose?)
 			puts "generating #{t.name} from #{t.source}"
-		# end
+		end
 
 		destfile = t.name;
 		srcpath = config.getRelativePath(t.source,File.dirname(t.name));
@@ -375,23 +410,52 @@ module CppProjectModule
 		end
 	end
 
+	def outputsNativeLibrary
+        currentBuildConfig.outputsNativeLibrary
+	end
+
 	# called after initializers on all projects and before rake
-	# starts executing tasks
+	# starts executing any other tasks
 
 	def doCppPreBuild()
-        addIncludePaths( [ nativeObjectPath(),buildIncludeDir() ] );
-        @cppBuildConfig = resolveConfiguration(nativeConfigName());
-        resolveConfiguredTasks();
-        if(@projectId)
-            ensureDirectoryTask(vcprojDir);
-            tsk = task :vcproj=>[vcprojDir], &VCProjBuildAction_;
-            tsk.config = self;
-            export(:vcproj);
+		addIncludePaths( [ configuredObjDir(),buildIncludeDir() ] );
+		@cppBuildConfig = resolveConfiguration(nativeConfigName());
+		resolveConfiguredTasks();
+		if(@projectId)
+			ensureDirectoryTask(vcprojDir);
+			tsk = task :vcproj=>[vcprojDir], &VCProjBuildAction_;
+			tsk.config = self;
+			export(:vcproj);
+			tsk = task :vcprojclean, &VCProjCleanAction_;
+			tsk.config = self;
+			export(:vcprojclean);
+		end
+	end
 
-            tsk = task :vcprojclean, &VCProjCleanAction_;
-            tsk.config = self;
-            export(:vcprojclean);
-        end
+    # get currenr build config after the pr-build phase has set it.
+    def currentBuildConfig
+      @cppBuildConfig;
+    end
+
+	def self.doUpdateDepends(t)
+		cfg = t.config;
+		tools = cfg.ctools
+		objs = t.sources;
+		cd(cfg.configuredObjDir(),:verbose=>false) do
+			File.open('depends.rb','w') do |out|
+				out.puts("# puts \"loading #{t.name}\"");
+			end
+			objs.each do |obj|
+			 	raked = obj.pathmap('%n.raked');
+				if(File.exists?(raked))
+					system "cat \'#{raked}\' >> depends.rb"
+			    	end
+			end
+		end
+	end
+
+	UpdateDependsAction_ = lambda do |t,args|
+		doUpdateDepends(t) if(t.config.dependencyFilesUpdated)
 	end
 
 	def resolveConfiguredTasks()
@@ -401,13 +465,19 @@ module CppProjectModule
 
         objs = tools.createCompileTasks(getSourceFiles(),cfg);
 
-		unless tsk = Rake.application.lookup("#{@myNamespace}:compile") && @cppCompileTaskInitialized
+		unless compileTsk = Rake.application.lookup("#{@myNamespace}:compile") && @cppCompileTaskInitialized
 			cppCompileTaskInitialized = true;
-			tsk = tools.initCompileTask(self);
+			compileTsk = tools.initCompileTask(self);
 		end
-		tsk.enhance(objs)
+		compileTsk.enhance(objs)
 
- 		unless tsk = Rake.application.lookup("#{@nativeObjDir}/depends.rb")
+
+		updateDepTsk = Rake::Task.define_unique_task &UpdateDependsAction_;
+		updateDepTsk.config = cfg;
+		updateDepTsk.sources = objs;
+		compileTsk.enhance(updateDepTsk);
+
+		unless tsk = Rake.application.lookup("#{@projectObjDir}/depends.rb")
             tsk = tools.initDependsTask(self)
  		end
 
@@ -419,15 +489,15 @@ module CppProjectModule
 		tsk.enhance(raked);
 
 		@objs = objs;
-		ensureDirectoryTask(nativeObjectPath());
+		ensureDirectoryTask(configuredObjDir());
 
 		## link tasks
-		tsk = tools.createLinkTask(objs,cfg);
+		tsk = tools.createLinkTask(objs,@cppBuildConfig);
 		if(tsk)
-			ensureDirectoryTask(cfg.nativeLibDir);
+			outdir = tsk[:linkTask].name.pathmap('%d');
+			ensureDirectoryTask(outdir);
 			ensureDirectoryTask(cfg.binDir);
-
-			task :build => [ :compile, cfg.nativeLibDir, cfg.binDir, tsk ].flatten
+			task :build => [ :compile, outdir, cfg.binDir, tsk[:setupTasks], tsk[:linkTask] ]
 
 		end
 
@@ -446,6 +516,7 @@ module CppProjectModule
 		opts = (Hash === args.last) ? args.pop : {}
 
 		files = FileSet.new(args);
+		files.exclude(opts[:exclude]) if opts[:exclude];
 
 		unless(destdir = opts[:destdir])
 			destdir = myPackage;
@@ -459,12 +530,11 @@ module CppProjectModule
 		end
 	end
 
-
-    # asd a project local include directory so files will be listed
-    def addLocalIncludeDir(idir)
-        @cppLocalIncludeDirs_ ||= [];
-        @cppLocalIncludeDirs_ << idir;
-    end
+  # add a project local include directory so files will be listed
+  def addLocalIncludeDir(idir)
+    @cppLocalIncludeDirs_ ||= [];
+    @cppLocalIncludeDirs_ << idir;
+  end
 
 	# get all include files for generated projects
 	def getIncludeFiles()
@@ -487,105 +557,185 @@ module CppProjectModule
 	end
 
 
-	# define a configurator to load a configuration for a specific ( string )
-	# configruation
-
-	def setupCppConfig(args={}, &b)
+	# define a configurator for the linker configuration
+	def setupLinkConfig(args={}, &b)
 		@targetType = args[:targetType];
 		@cppConfigurator_ = b;
 	end
+  alias :setupCppConfig :setupLinkConfig
 
-	class TargetConfig < BuildConfig
-		include CppProjectConfig
-
-		attr_reader		:configName
-		attr_accessor	:targetBaseName
-		attr_reader 	:libpaths
-		attr_reader 	:libs
-		attr_accessor   :targetName
-
-		def initialize(pnt, cfgName, tools)
-			super(pnt);
-			@libpaths=[]; # ???
-			@libs=[];
-			@configName = cfgName;
-			@ctools = tools;
-			@targetBaseName = pnt.moduleName;
-			tools.ensureConfigOptions(self);
-		end
-
-		def addLibPaths(*lpaths)
-			@libpaths << lpaths
-		end
-
-		def addLibs(*l)
-			l.flatten.each do |lib|
-				lib = File.expand_path(lib) if(lib =~ /\.\//);
-				@libs << lib
-			end
-		end
-
-		def targetName
-			@targetName||="#{targetBaseName}-#{configName}";
-		end
-
-		def dependencyLibs
-			libs=[]
-			project.dependencies.each do |dep|
-                # TODO: should this check for the type of project?
-                if(dep.nativeLibDir != nil)
-                    ldef = ctools.loadLinkref(dep.nativeLibDir,configName,dep.moduleName);
-                    if(ldef != nil)
-                        deflibs = ldef[:libs];
-                        libs += deflibs if deflibs;
-                    end
-				end
-			end
-			if(thirdPartyLibs)
-				thirdPartyLibs.flatten.each do |tpl|
-					ldef = ctools.loadLinkref("#{thirdPartyPath}/lib",configName,tpl);
-                    if(ldef != nil)
-                        deflibs = ldef[:libs];
-                        libs += deflibs if deflibs;
-					end
-				end
-			end
-			libs
-		end
-
-		def objectFiles
-			[]
-		end
-	end
 
 	# for a specifc named configuraton, resolves the configration and loads it with the
 	# the project's specified values.
 
-	def resolveConfiguration(config)
+  def resolveConfiguration(config)
 
-		if(ret = (@resolvedConfigs||={})[config])
-			return ret;
-		end
-
-		tools = CTools.loadConfiguredTools(config);
-		ret = @resolvedConfigs[config] = TargetConfig.new(self,config,tools);
-
-		if(defined? @cppConfigurator_)
-			@cppConfigurator_.call(ret);
-		end
-		ret
-	end
+    if(ret = (@resolvedConfigs||={})[config])
+      return ret;
+    end
+    tools = ctools;
+    ret = @resolvedConfigs[config] = tools.createLinkConfig(self,config);
+    if(defined? @cppConfigurator_)
+      @cppConfigurator_.call(ret);
+    end
+    ret
+  end
 
 end
 
+module CTools
+  class TargetConfig < BuildConfig
+    include CppProjectConfig
+
+    attr_reader		:configName
+    attr_accessor   :targetName
+    attr_accessor	:targetBaseName
+    attr_reader 	:libpaths
+    attr_reader 	:libs
+    attr_accessor   :dependencyFilesUpdated
+
+    def initialize(pnt, cfgName, tools)
+      super(pnt);
+      @libpaths=[]; # ???
+      @libs=[];
+      @configName = cfgName;
+      @ctools = tools;
+      @targetBaseName = pnt.projectName;
+      # @manifestFile = pnt.manifestFile;
+      tools.ensureConfigOptions(self);
+    end
+
+    def addLibPaths(*lpaths)
+      @libpaths << lpaths
+    end
+
+    def addLibs(*l)
+      l.flatten.each do |lib|
+        lib = File.expand_path(lib) if(lib =~ /\.\//);
+        @libs << lib
+      end
+    end
+
+    def targetName
+      @targetName||="#{targetBaseName}";
+    end
+
+    # get list of libraries built by and exported by dependency projects
+    # loaded into "linkdefs" ( hashes with fields )
+    # this is because at least with some systems libraries have associated
+    # files like exported symbols, dlls, inteface definitions etc.
+    # in dependency order from most dependent to least, and follow with
+    # libraries added in the current project
+    # This caches it's result, so don't call until compile and autogen are complete.
+
+    def getOrderedLinkrefs
+      unless(@orderedRefs_)
+        refs=[];
+        # dependencies provided in order from least dependent to most
+        project.dependencies.reverse_each do |dep|
+          if(defined? dep.outputsNativeLibrary)
+            if(dep.outputsNativeLibrary)
+              if(dep.nativeLibDir)
+                ldef = dep.ctools.loadLinkref(dep.nativeLibDir,dep,configName);
+                if(ldef != nil)
+                  refs << ldef;
+                end
+              end
+            end
+          end
+        end
+        @orderedRefs_ = refs.flatten;
+      end
+      @orderedRefs_
+    end
+
+    # get list of libraries built by and exported by dependency projects
+    # as linkdefs ( hashes with fields )
+    # in dependency order from most dependent to least, and follow with
+    # libraries added in the current project
+    # TODO: dependency order not proper id it needs to sort them by "registration order"
+	def getOrderedLibs
+
+      libs=[]
+      libs << @libs;
+
+        project.dependencies.reverse_each do |dep|
+            if(defined? dep.outputsNativeLibrary)
+              if(dep.outputsNativeLibrary)
+                if(dep.nativeLibDir)
+                    ldef = ctools.loadLinkref(dep.nativeLibDir,self,configName,dep.projectName);
+                    if(ldef != nil)
+                        deflibs = ldef[:libs];
+                        libs += deflibs if deflibs;
+                    end
+                end
+              end
+            end
+        end
+
+      # add user specified libraries after all dependency libraries.
+
+      if(thirdPartyLibs)
+        thirdPartyLibs.flatten.each do |tpl|
+          libpath = NIL;
+          if(File.path_is_absolute?(tpl))
+            libpath = tpl.pathmap('%d');
+            tpl = tpl.pathmap('%f');
+          else
+            puts("adding lib #{tpl}");
+            libpath = "#{ENV['ARTD_TOOLS'].pathmap('%d')}/lib";
+            unless(File.directory?(libpath))
+              libs << tpl;
+              next;
+            end
+          end
+          ldef = ctools.loadLinkref(libpath,self,configName,tpl);
+          if(ldef != nil)
+            deflibs = ldef[:libs];
+            libs += deflibs if deflibs;
+          else
+            libs << "#{libpath}/#{tpl}";
+          end
+        end
+      end
+      libs
+    end
+
+    def objectFiles
+      []
+    end
+
+    def setManifest(file)
+      @manifestFile = File.expand_path(file);
+    end
+    def manifestFile
+      @manifestFile
+    end
+
+    def outputsNativeLibrary
+      ret = false;
+      case targetType
+      when 'LIB','DLL' # other types of targets DO NOT export anything
+        ret = true;
+      end
+      ret
+    end
+
+  end # end TargetConfig
+
+end # end module CTools
+
+
 class BuildConfig
-   # ensure added global project task dependencies
-    task :autogen 		=> [ :cleandepends, :includes, :vcproj ];
-    task :cleanautogen 	=> [ :cleanincludes, :cleandepends, :vcprojclean ];
-    task :compile 		=> [ :includes ];
-    task :depends		=> [ :includes ];
-    task :build 		=> [ :compile ];
-    task :rebuild 		=> [ :build, :autogen, :compile ];
+  # ensure added global project task dependencies
+  task :clean
+  task :autogen 		=> [ :cleandepends, :includes, :vcproj ];
+  task :cleanautogen 	=> [ :cleanincludes, :cleandepends, :vcprojclean ];
+  task :cleanAll      => [ :clean, :cleanautogen ];
+  task :compile 		=> [ :includes ];
+  task :depends		=> [ :includes ];
+  task :build 		=> [ :compile ];
+  task :rebuild 		=> [ :build, :autogen, :compile ];
 end
 
 # Create a new project
@@ -594,7 +744,7 @@ end
 #
 #   :name        => name of this project, defaults to parent directory name
 #   :package     => package name for this project defaults to nothing
-#   :config      => explicit parent configuration, defaults to the GlobalConfig
+#   :config      => explicit parent configuration, defaults to 'root'
 #   :dependsUpon => array of project directories or specific rakefile paths this project
 #                   depends upon
 #   :id          => uuid to assign to project in "uuid string format"
@@ -603,7 +753,7 @@ end
 # &block is always yielded to in the directory of the projects file, and the
 # Rake namespace of the new project, and called in this instance's context
 
-CppProject = GetProjectClass( :includes=>[CppProjectModule] )
+CppProject = getProjectClass( :includes=>[CppProjectModule] )
 
 end # Rakish
 
@@ -612,7 +762,7 @@ end # Rakish
 
 if false
 
-	def acquireBuildId(dir, map=nil)
+	def acquireBuildId(dir, map=nil) # :nodoc:
 		outOfSync = false;
 		rev = 'test'
 		count = 0
@@ -654,7 +804,7 @@ public
 	# have been made and the last ID is 'test' will not call svnversion
 	# again (which is very slow) but will return 'test'
 
-	def getBuildId
+	def getBuildId # :nodoc:
 		unless defined? @@buildId_
 			idfile = "#{@buildDir}/obj/.rakishBuildId.txt"
 
@@ -684,6 +834,5 @@ public
 		end
 		@@buildId_
 	end
-
 end # false
 

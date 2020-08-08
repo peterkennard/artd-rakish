@@ -1,6 +1,9 @@
 
 module Rakish
 
+	# C++ build tools
+    # Not really part of public distributioin - too littered with local stuff
+    # specific to my main builds  This needs to be converted to work in a more configurable way
 	module PlatformTools
 	
 		VALID_PLATFORMS = { 
@@ -104,8 +107,8 @@ module Rakish
 			def initDependsTask(cfg) # :nodoc:		
                
 				# create dependencies file by concatenating all .raked files				
-				tsk = file "#{cfg.nativeObjectPath()}/depends.rb" => [ :includes, cfg.nativeObjectPath() ] do |t|
-					cd(cfg.nativeObjectPath(),:verbose=>false) do
+				tsk = file "#{cfg.configuredObjDir()}/depends.rb" => [ :includes, cfg.configuredObjDir() ] do |t|
+					cd(cfg.configuredObjDir(),:verbose=>false) do
                         File.open('depends.rb','w') do |out|
 							out.puts("# puts \"loading #{t.name}\"");
 						end
@@ -116,21 +119,21 @@ module Rakish
 					end
 				end
 				# build and import the consolidated dependencies file
-				task :depends => [ "#{cfg.nativeObjectPath()}/depends.rb" ] do |t|
-					load("#{cfg.nativeObjectPath()}/depends.rb")
+				task :depends => [ "#{cfg.configuredObjDir()}/depends.rb" ] do |t|
+					load("#{cfg.configuredObjDir()}/depends.rb")
 				end		
 				task :cleandepends do
-					deleteFiles("#{cfg.nativeObjectPath()}/*.raked",
-								"#{cfg.nativeObjectPath()}/depends.rb");
+					deleteFiles("#{cfg.configuredObjDir()}/*.raked",
+								"#{cfg.configuredObjDir()}/depends.rb");
 				end
 				tsk
 			end
 
 			def initCompileTask(cfg)
-				cfg.project.addCleanFiles("#{cfg.nativeObjectPath()}/*#{OBJEXT()}",
-							  "#{cfg.nativeObjectPath()}/*.sbr");
+				cfg.project.addCleanFiles("#{cfg.configuredObjDir()}/*#{objExt()}",
+							  "#{cfg.configuredObjDir()}/*.sbr");
 				Rake::Task.define_task :compile => [:includes,
-													 cfg.nativeObjectPath(),
+													 cfg.configuredObjDir(),
 													 :depends]
 			end	
 		
@@ -164,7 +167,7 @@ module Rakish
                 
                 # format object files name
 	                                 
-                mapstr = "#{cfg.nativeObjectPath()}/%n#{OBJEXT()}";
+                mapstr = "#{cfg.configuredObjDir()}/%n#{objExt()}";
 
                 objs=FileList[];
                 files.each do |source|
@@ -195,7 +198,7 @@ module Rakish
 #			srcdir ||= @projectDir;
 #
 #		#	if(verbose?) 
-#		#		puts("creating rule for #{srcdir} -> #{@nativeObjectPath}");
+#		#		puts("creating rule for #{srcdir} -> #{@configuredObjDir}");
 #		#	end
 #		
 #			pmapcpp = srcdir + '/%n.cpp';
@@ -203,7 +206,7 @@ module Rakish
 #					
 #			# rule for object file generation
 #			regex = 
-#				Regexp.new('^' + Regexp.escape(@nativeObjectPath) + '\/[^\/]+' + OBJEXT() + '\z');
+#				Regexp.new('^' + Regexp.escape(@configuredObjDir) + '\/[^\/]+' + objExt() + '\z');
 #
 #			Rake::Task::create_rule( regex => [
 #				proc { |task_name| 
@@ -220,7 +223,7 @@ module Rakish
 #			if(nil)
 #				# rule for dependency generation 
 #				regexd = 
-#					Regexp.new('^' + Regexp.escape(@nativeObjectPath) + '\/[^\/]+.raked\z');
+#					Regexp.new('^' + Regexp.escape(@configuredObjDir) + '\/[^\/]+.raked\z');
 #				
 #				Rake::Task::create_rule( regexd => [
 #					proc { |task_name| 

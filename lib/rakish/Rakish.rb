@@ -9,17 +9,16 @@ $LOAD_PATH.unshift(gemPath) unless $LOAD_PATH.include?(gemPath)
 
 require 'open3.rb'
 
-module Kernel
+module Kernel # :nodoc:
 
-
+#--
 if false
+
   if defined?(rakish_original_require) then
-	# Ru    by ships with a custom_require, override its require
+	# Ruby ships with a custom_require, override its require
 	remove_method :require
   else
-	##
 	# The Kernel#require from before RubyGems was loaded.
-
 	alias rakish_original_require require
 	private :rakish_original_require
   end
@@ -39,30 +38,58 @@ if false
 	  end
   end
   private :require
+end # end false
 
-end
-
-end # false
+end # Kernel
+#++
 
 require 'set'
 require 'logger'
 
 
-# stupid thing needed because rake doesn't check for "" arguments so we make an explicit task
+#-- stupid thing needed because rake doesn't check for "" arguments so we make an explicit task
+#++
 task "" do
 end
 
-# define the Logger first so we can use it to abort
+# Module containg the package Rakish
+# includes the module ::Rakish::Logger
+#
+# :include:doc/RakishOverview.html
+#
+# For more information see UserGuide[link:./doc/UserGuide.html]
+#
 module Rakish
 
+    # set to true if called from windows - cygwin
+    HostIsCygwin_ = (RUBY_PLATFORM =~ /(cygwin)/i) != nil;
+    # set to true if called on a windows host
+    HostIsWindows_ = (/cygwin|mswin|mingw|bccwin|wince|emx/ =~ RUBY_PLATFORM) != nil;
+    # set to true if called on a unix host
+    HostIsUnix_ = (!HostIsWindows_);
+    # set to true on a MacOS or iOS host
+    HostIsMac_ = (/darwin/ =~ RUBY_PLATFORM) != nil;
+
+
+	# Logger module
 	# To use this Logger initialization include it in a class or module
-	# then you can do log.debug { "message" } etc 
-	# from methods or initializations in that class
+	# enables log.debug { "message" } etc 
+	# from methods or initializations in that class 
+	# Other than for INFO level output
+	# output messages are formatted to include the file and line number where 
+	# log.[level] was invoked.
+
+    # add a search path to the ruby search path for this process unless it is already there
+    def self.addToRubySearchPath(dir)
+        toAdd =  File.expand_path(dir);
+        $LOAD_PATH.unshift(toAdd) unless $LOAD_PATH.include?(toAdd);
+    end
 
 	module Logger
 
 		@@_logger_ = ::Logger.new(STDOUT);
 
+		# Returns the singleton instance of ::Logger managed by the Rakish::Logger
 		def self.log
 			@@_logger_
 		end
@@ -88,7 +115,7 @@ module Rakish
 			end
 		end
 		
-		# format a backtrace line appropriately for the IDE we are using.
+		# Format a single backtrace line as defined for the IDE we are using.
 		def self.formatBacktraceLine(line)
 			sp = line.split(':in `',2);
 			sp0 = sp[0].sub(/:(\d)/, '(\1');
@@ -96,6 +123,8 @@ module Rakish
 			"#{sp0}) : #{sp1}";
 		end
 
+		# Format all lines in a backtrace using formatBacktraceLine() into a 
+        # single printable string with entries separated by "\\n"
 		def self.formatBacktrace(backtrace)
 			out=[];
 			backtrace.each do |line|
@@ -104,28 +133,33 @@ module Rakish
 			out.join("\n");
 		end
 		
-		def self.included(by)
+		# Defines the method "log" in any including 
+		# module or class at the class "static" level
+		def self.included(by)  # :nodoc: 
 			by.class.send(:define_method, :log) do
-				Rakish.log
+				::Rakish.log
 			end
 		end
+		
+		# Returns the singleton instance of ::Logger managed by the Rakish::Logger
 		def log
 			STDOUT.flush;
-			Rakish.log
+			::Rakish.log
 		end
 	end
 
-	def self.log
+	def self.log # :nodoc:
 		Rakish::Logger.log
 	end
 
-	# Execute shell command in sub process and pipe output to Logger
+	# Execute shell command in sub process and pipe output to Logger at info level
 	# cmdline - single string command line, or array of command and arguments
-	# opts:
+	#  opts:
 	#     :verbose - if set to true (testable value is true) will print command when executing
-	#     :env - environment hash for spawned process
+	#     :env - optional environment hash for spawned process
 	#
 	#  returns status return from spawned process.
+	#  uses Open3:popen2()
 
 	def self.execLogged(cmdline, opts={})
 		begin
@@ -154,7 +188,7 @@ module Rakish
 #				while line = output.gets do
 #					log.info line.strip!
 #				end
-  #			end
+#			end
 #			return $?
 		rescue => e
 			if(opts[:verbose])
@@ -171,20 +205,21 @@ module Rakish
 
     # convenience method like Rake::task
     def self.task(*args,&block)
-        Rake::Task.define_task(*args, &block)
+        ::Rake::Task.define_task(*args, &block)
     end
 
 end
 
-# rake extensions
 
-
+# Rake extensions
 module Rake
 
-	module DSL  # so if a version doesn't have it it works
+	module DSL  # :nodoc: so if a version doesn't have it it works
 	end
 
 	class << self
+	    # get a new generated unique name for "anonymous" classes
+	    # and tasks and other uses
 		def get_unique_name
 			@_s_||=0
 			@_s_ += 1
@@ -192,40 +227,45 @@ module Rake
 		end
 	end
 
-	module TaskManager
-	   # the only difference here is flattening the dependencies
-	   # and it will recognize a leading ':' as an indicator of global root scope
-	   def resolve_args(args)
-		 if args.last.is_a?(Hash)
-		   deps = args.pop
-		   ret = resolve_args_with_dependencies(args, deps)
-		   ret[2].flatten!
-		   ret[2].map! do |e|
-		     (e=~/^:/)?"rake#{e}":e
-		   end
-		   ret
-		 else
-		   resolve_args_without_dependencies(args)
-		 end
-	   end
-	end
-
+    # Rake::Application extensions
 	class Application
 
 		# Display the error message that caused the exception.
 		# formatted the way we like it for a particualar IDE
 
 		def display_error_message(ex)
-		  
+
+		  $stdout.flush;
+		  $stderr.flush;
+
 		  $stderr.puts "#{name} aborted!: #{ex.message}"
 		  backtrace = ex.backtrace;
 
 		  if options.trace
 			$stderr.puts Rakish::Logger.formatBacktrace(backtrace)
-		  else
-			$stderr.puts(Rakish::Logger.formatBacktraceLine(backtrace[0]));
-			$stderr.puts rakefile_location(backtrace);
-		  end
+    		  else
+
+    		lineNum = 0;
+    		useLine = 0;
+
+            if(ex.message =~ /wrong number of arguments/)
+                useLine = 1;
+            end
+
+    		backtrace.each do |line|
+                lineNum = lineNum + 1;
+			    sp = line.split(':in `',2);
+                if(sp.length > 1)
+    		        if(sp[1] =~ /const_missing'$/)
+    		            useLine = lineNum;
+                        break;
+    		        end
+    		    end
+    		end
+
+			$stderr.puts(Rakish::Logger.formatBacktraceLine(backtrace[useLine]));
+			$stderr.puts(rakefile_location(backtrace)); # this seems to be broken !!
+          end
 
 		  $stderr.puts "Tasks: #{ex.chain}" if has_chain?(ex)
 		  $stderr.puts "(See full trace by running task with --trace)" unless options.trace
@@ -236,34 +276,50 @@ module Rake
 	  include Rakish::Logger
 	  
 	  rake_extension('config') do
-		# optional "config" field on Rake Task objects
-		attr_accessor :config
+		# note commented because Rdoc does not parse this 
+		# attr_accessor :config
+	  end
+	  # optional "config" field on Rake Task objects
+	  attr_accessor :config
+	  
+	  rake_extension('createArgs') do
 	  end
 
-	  rake_extension('data') do
-		# optional "per instance" field on Rake Task objects
-		attr_accessor :data
-	  end
+      def createArgs
+        @createArgs||={};
+      end
+      def createArgs=(aHash)
+        @createArgs||=aHash # can only assign once !!!
+      end
+
 
 	  # see Rake.Task as this overrides it's method
-	  def enhance(args,&b)
+	  # to flatten dependencies so they can be provided as
+	  # nested arrays or arguments
+	  def enhance(*args,&b)
 		# instead of |=
-		@prerequisites = [@prerequisites,args].flatten if args
+		if(args)
+		    args.flatten!
+            args.map! do |e|
+                (e=~/^:/)?"rake#{e}":e
+            end
+		    @prerequisites = @prerequisites.concat(args);
+		end
 		@actions << b if block_given?
 		self
 	  end
-
-	  def scopeExec(args=nil)
-		  @application.in_namespace_scope(@scope) do
-			  FileUtils.cd @_p_.projectDir do
-				  _baseExec_(args);
-			  end
-		  end
+	  
+	  def scopeExec(args=nil) # :nodoc:
+		@application.in_namespace_scope(@scope) do
+			FileUtils.cd @_p_.projectDir do
+				_baseExec_(args);
+			end
+		end
 	  end
 	  private :scopeExec
 
 	  rake_extension('setProjectScope') do
-		def setProjectScope(d)
+		def setProjectScope(d) # :nodoc:
 			return self if(@_p_)
 			instance_eval do
 				alias :_baseExec_ :execute
@@ -275,8 +331,14 @@ module Rake
 	  end
 
 	  class << self
+
+        def usesCreatArgs
+            false
+        end
+
 		# define a task with a unique anonymous name
-		# TODO: doesn't handle :name=>[] hash dependencies
+		# does not handle :name=>[] dependencies because the generated name is
+		# not known at the time of this declaratation
 		def define_unique_task(*args,&b)
 			args.unshift(Rake.get_unique_name)
 			Rake.application.define_task(self,*args,&b);
@@ -284,7 +346,9 @@ module Rake
 	  end
 	end
 	
-	# force all file tasks to reference full path for file name
+	# Extension to force all file tasks to reference the full path for the file name.
+	# We want to make sure all File tasks are named after the full path
+	# so there is only one present for any given file.
 	class FileTask
 		class << self
 		    # Apply the scope to the task name according to the rules for this kind
@@ -295,28 +359,74 @@ module Rake
 		end
 	end
 
+    # Rake::TaskManager extensions
 	module TaskManager
 
+        # Two difference here:
+        # flattening of dependency lists
+        # so arguments can be arrays of arrays
+        # and it will recognize a leading ':' as an indicator of global root namespace scope
+        # in additon to "rake:"
+        def resolve_args(args)
+            if args.last.is_a?(Hash)
+                deps = args.pop
+                ret = resolve_args_with_dependencies(args, deps)
+                ret[2].flatten!
+                ret[2].map! do |e|
+                    (e=~/^:/)?"rake#{e}":e
+                end
+                ret
+            else
+                resolve_args_without_dependencies(args)
+            end
+        end
+
+        alias_method :rake_define_task, :define_task
+
+        # Thie will add additional "task creat time" arguments passed into a task when defined in the form
+        # :$@=>{ :createArg1=>'1', :createArg2=>'2' ... }
+        # They are retrieved from the task as taskInstance.createArgs[:createArg1] etc, at any
+        # time after the task is defined.
+
+        def define_task(task_class, *args, &block)
+            last = args.last;
+            if(last.is_a?(Hash))
+                extOpts=last[:$@]
+                if extOpts
+                    createArgs=extOpts;
+                    last.delete(:$@)
+                    args.pop if last.empty?;
+                    tsk = rake_define_task(task_class, *args, &block);
+                    tsk.createArgs=extOpts;
+                    return tsk
+                end
+            end
+            rake_define_task(task_class, *args, &block);
+        end
+
 		if(RUBY_VERSION =~ /^2./)
-			def _trc
+			def _trc  # :nodoc:
 				puts("** namespace \":#{@scope.path}\"");
 			end
 		else # ruby 1.9.X
-			def _trc
+			def _trc # :nodoc:
 				puts("** namespace \":#{@scope.join(':')}\"");
 			end
 		end
 		private :_trc
 
-		# directory tasks are always in root list so this should be a bit faster
+
+		# Directory tasks are always in root list so this should be a bit faster
 		rake_extension('directory_task_defined?') do
+			# Return true if a directory creation task for the diven path is defined.
 			def directory_task_defined?(path)
 				@tasks.has_key?(path)
 			end
 		end
 
-		# this allows for explicitly setting an "absolute" namespace
 		rake_extension('in_namespace_scope') do
+		    # Allows for explicitly setting an "absolute" namespace
+			# Executes the block in the provided scope.
 			def in_namespace_scope(scope)
 				prior = @scope;
 				@scope = scope;
@@ -416,33 +526,77 @@ end
 
 module Rakish
 
-	MAKEDIR = File.dirname(File.expand_path(__FILE__));
+    # extension to Ruby ::File class
+    class ::File
 
+        unless defined? ::File.path_is_absolute?
+
+            if(HostIsWindows_)
+                # Return true if path is an absolute path
+                def self.path_is_absolute?(path)
+                    f0 = path[0]
+                    f0 == '/' or f0 == '\\' or path[1] == ':'
+                end
+            else
+                # Return true if file is an absolute path
+                def self.path_is_absolute?(path)
+                    path[0] == '/'
+                end
+            end
+        end
+    end
+
+	# Extensons to root level Module
+	
 	class ::Module
 		
-		# static method used like ruby's attr_accessor declaration
+		# Static method used like ruby's attr_accessor declaration
 		# for use in declaring added properties on a class
-		# inheriting from a PropertyBag
+		# inheriting from a Rakish::PropertyBag or including a Rakish::PropertyBagMod
 
 		def attr_property(*args)
 			if(self.include? ::Rakish::PropertyBagMod)
 				args.each do |s|
 					# add "property" assignment operator method s= to this class
-					# equivalent of: def s=(v) { @h_[s]=v }
+					# equivalent of: def s=(v) { @_h[s]=v }
 					# where s is the input symbol, it is formatted as a string and passed
 					# to eval
-					eval("self.send(:define_method,:#{s}=){|v|@h_[:#{s}]=v}")
+					eval("self.send(:define_method,:#{s}=){|v|@_h[:#{s}]=v}")
 				end
 			else
 				raise("can only add properties to PropertyBag object")
 			end
 		end
 
+		# Allows for the declaration and initialization of 
+		# "Constructor" chains in the way C++ or Java operates where base classes (here mixin modules)
+		# can be optionally "automagically" invoked in inclusion order on class instance initialization.
+		# Any Class and Module may now take advantage of this. see ::Class.initializeIncluded
+		#   
+		#    Module HasConstructor
+		#       addInitBlock do |args|
+		#           @myVariable_ = "initialized in constructor of HasContructor"
+        #           log.debug("initializing HasConstructor - on #{self} XX #{arg[0]}");
+		#       end
+		#    end
+		#
+		#    class MyObject
+		#        include HasConstructor
+		#
+		#        initialize(*args)
+		#           # Of course all modules included on this object and by their recursively
+		#           # included modules must respond properly to args so likely best to use
+		#           # named hash args and a naming convention for what included modules
+		#           # use as opposed to an array of positional arguments
+		#           self.class.initializeIncluded(self,args);
+		#        end
+		#    end
+		
 		def addInitBlock(&b)
 			(@_init_||=[])<<b if block_given?
 		end
 
-		def _initBlocks_
+		def _initBlocks_ # :nodoc:
 			@_init_;
 		end
 
@@ -450,11 +604,14 @@ module Rakish
 
 	class ::Class
 
-		# monkey hack to call the initBlocks of all modules included in this class in the included order
-		# nicely provided by the ancestors list
-		# use this in an instance initializer:
+		# Monkey Hack to enable constructor inheritance like C++ on mixin modules
+		# and call the "initBlocks" of all modules included in this class in the included order
+		# installed by included modules which are nicely provided by the ruby ancestors list
+		# To do this use this in a Class instance initializer, the arguments will be passed to all superclass mixin init blocks:
 		#
 		#    obj.class.initializeIncluded(obj,*args);
+		#
+		# see ::Module and ::Module.addInitBlock() for example.
 
 		def initializeIncluded(obj,*args)
 			# call the included modules init blocks with arguments
@@ -469,7 +626,138 @@ module Rakish
 		end
 	end
 
-	class MultiProcessTask < Rake::Task
+    # Container for searchable path set for finding files in
+    class SearchPath
+
+        # Initialize a new SearchPath calls setPath(*paths)
+        def initialize(*paths)
+            setPath(*paths);
+        end
+
+		if( HostIsWindows_ )
+            @@osDelimiter_=';';
+        else
+            @@osDelimiter_=':';
+        end
+
+        # Clear and set path set and call adPath(*paths)
+        #
+        # If no paths are provided then this path set is left empty.
+        def setPath(*paths)
+            @path_=[];
+            addPath(*paths);
+        end
+
+		# So we can pass this into SearchPath.new or SearchPath.addPath
+		def to_ary # :nodoc:
+		   	@path_
+		end
+
+		# Iterate over all paths in this SearchPath
+        def each(&b)
+            @path_.each(&b)
+        end
+
+        # Add a path or path list to this search path
+        # If a path entry begins with a '.' is will be left in the search path
+        # as a relative path, otherwise it will be expanded to an absolute path when added.
+        #
+        #  Named opts:
+        #    :delimiter => path entry delimiter
+        #
+        def addPath(*paths)
+			opts = (Hash === paths.last) ? paths.pop : {}
+            delimiter = opts[:delimiter] ||@@osDelimiter_;
+            paths.flatten!
+            paths.each do |path|
+                pa = path.split(delimiter);
+                pa.each do |p|
+                    p=File.absolute_path(p) unless p[0]=='.'
+                    @path_ << p;
+                end
+            end
+            @path_.uniq!
+        end
+
+        # like array.join() to build path strings
+        def join(s)
+            @path_.join(s);
+        end
+
+    private
+        def onNotFound(name,opts) # :nodoc:
+            msg = "could not find file #{name}\n     from: #{File.expand_path('.')}\n     in:\n       #{join("\n      ")}"
+            case opts[:onMissing]
+            when 'log.error'
+                ::Rakish.log.error msg;
+            when 'log.warn'
+                ::Rakish.log.warn msg;
+            when 'log.debug'
+                ::Rakish.log.debug msg;
+            when 'log.info'
+                ::Rakish.log.debug msg;
+            else
+                raise Exception.new(msg);
+            end
+        end
+    public
+
+        # Find a file with the given name (or relative subpath) in this search set
+        # If the input name is an absolute path it is simply returned.
+        #  named ops:
+        #    :suffi => If set search for file with suffix in order of suffi list
+        #              '' is a valid suffix in this case. suffi must have leading dot
+        #              as in '.exe'
+        #    :onMissing => reporting action to perform when file is not found
+        #              'log.error','log.warn',log.debug','log.info',
+        #              any other true (or non false/nil) value raises an exception
+        #              I prefer 'raise'
+        #
+
+        def findFile(name,opts={})
+            if(File.path_is_absolute?(name))
+                onNotFound(name,opts) if(opts[:onMissing] && (!File.exists?(name)))
+                return(name);
+            end
+            found = nil;
+            suffi = opts[:suffi];
+            @path_.each do |path|
+                path = "#{path}/#{name}";
+                unless suffi
+                    if(File.exists?(path))
+                        found=File.absolute_path(path);
+                        break;
+                    end
+                else
+                    suffi.each do |suff|
+                        fpath="#{path}.exe";
+                        if(File.exists?(fpath))
+                            found=File.absolute_path(fpath);
+                            break;
+                        end
+                    end
+                    break if(found)
+                end
+            end
+            onNotFound(name,opts) if(!found && opts[:onMissing]);
+            found;
+        end
+        
+        def findFiles(*files) 
+            opts = (Hash === files.last) ? files.pop : {}
+            files.flatten!
+            ret=[];
+            files.each do |file|
+                ret << findFile(file,opts);
+            end
+            ret;
+        end
+    end
+
+    # Intended to clean up things to minimize thread usage and queue up these so as to
+    # keep avaiable processor cores saturated but without thread thrashing. Spawning lots of threads
+    # does not help in the process spawning case and actually slows things down.
+    class MultiProcessTask < Rake::Task
 	private
 		def invoke_prerequisites(args, invocation_chain)
 			threads = @prerequisites.collect { |p|
@@ -479,75 +767,97 @@ module Rakish
 		end
 	end
 
-	module LoadableModule
-		include Rakish::Logger
+    public
 
-		@@loadedByFile_ = {};
+    # Create task that finds an existing set of files with wildcards and
+    # checks timestamps on the files.
+    # currently it is never "out of date" as it doesn't have a target
+    # the file set is evaluated and resolved when the timestamp is checked.
+    # so if the directory or files are created or updated by a prior prerequisite
+    # this will supply the up to date timestamp.
+    #
+    # it uses additional hash arguments beyond the rake dependencies assigned to the name
+    # so you can't use these symbols for the name itself.
+    #
+    # :basedir => string, the directory to search for the
+    #    the default is '.'
+    # :files => a single string or an array of the files to find relative to the :basedir
+    #    the default is '*'
+    # example:
+    #
+    # fileset_task :nameOfTask => [prerequisites], :files=>['*.sh','*.py'], :basedir=>'scripts';
+    #
+    class FileSetTask < Rake::Task
 
-		def self.load(fileName)
-			fileName = File.expand_path(fileName);
-			mod = @@loadedByFile_[fileName];
-			return mod if mod;
-			begin			
-				Thread.current[:loadReturn] = nil;
-				Kernel.load(fileName);
-				mod = Thread.current[:loadReturn];
-				@@loadedByFile_[fileName] = mod if(mod);
-			rescue => e
-				log.error { e };
-				mod = nil;
-			end
-			Thread.current[:loadReturn] = nil;
-			mod
-		end
-		def self.onLoaded(retVal)
-			Thread.current[:loadReturn] = retVal;
-		end
-	end
+        # Is this image build needed?  Yes if it doesn't exist, or if its time stamp
+        # is out of date.
+        def needed?
+            ret = out_of_date? Time.now
+            # log.debug("#{name} needed #{ret}");
+            ret
+        end
 
-	public
+        # Time stamp for task.
+        def timestamp
+            resolveFiles
+            unless @timestamp
+                ts = Rake::EARLY;
+                @fileset.each do |f|
+                    ft = File.mtime(f);
+                    ts = ft if(ft > ts)
+                end
+                @timestamp = ts;
+            end
+            # log.debug("#{name} @timestamp #{@timestamp}");
+            @timestamp
+        end
 
+        private
 
+        def resolveFiles
+            unless @fileset
+                basedir = createArgs[:baseDir]||'.';
+                files = createArgs[:files]||'*';
+                FileUtils.cd basedir do
+                    @fileset = FileSet.new(files);
+                end
+            end
+        end
+
+        # Are there any prerequisites with a later time than the given time stamp?
+        def out_of_date?(stamp)
+            @prerequisites.any? do |n|
+                application[n, @scope].timestamp >stamp;
+            end
+        end
+    end
+
+    class << self
+        # convenience method like Rake::task for fileset_task
+        def fileset_task(*args,&block)
+            tsk = FileSetTask.define_task(*args, &block);
+        end
+    end
 	# a bunch of utility functions used by Projects and configurations
 	module Util
 		include ::Rake::DSL
 		include Rakish::Logger
-				
-		module Git
-
-			class << self
-				def clone(src,dest,opts={})
-					if(!File.directory?(dest))
-
-						origin = opts[:remote] || "origin";
-
-						puts("Git.clone -o \"#{origin}\" -n \"#{src}\" \"#{dest}\"");
-
-						system("git clone -o \"#{origin}\" -n \"#{src}\" \"#{dest}\"");
-						cd dest do
-							system("git config -f ./.git/config --replace-all core.autocrlf true");
-							system("git reset -q --hard");
-						end
-					end
-				end
-
-				def addRemote(dir, name, uri)
-					cd dir do
-						system("git remote add \"#{name}\" \"#{uri}\"");
-					end
-				end
-			end
-		end
 
         # convenience method like Rake::task
         def task(*args,&block)
             Rake::Task.define_task(*args, &block)
         end
 
-		# like each but checks for null and if object doesn't respond to each
-		# use like 
-		# eachof [1,2,3] do |v|
-		# end
+        # convenience method like Rake::task
+        def fileset_task(*args,&block)
+            Rakish::FileSetTask.define_task(*args, &block)
+        end
+
+		# Like each but checks for null and if object doesn't respond to each
+		#
+		#  use like
+		#    eachof [1,2,3] do |v|
+		#    end
 		#  
 		def eachof(v,&b)
 			v.each &b rescue yield v if v # TODO: should use a narrower exception type ?
@@ -555,20 +865,19 @@ module Rakish
 
 	protected
 		# Task action to simply copy source to destination
-		SimpleCopyAction_ = ->(t) { FileUtils.cp(t.source, t.name) }
+		SimpleCopyAction_ = ->(t,args) { FileUtils.cp(t.source, t.name) }
 
 		# Task action to do nothing.
-		DoNothingAction_ = ->(t) {}
-
+		DoNothingAction_ = ->(t,args) {}
 
 	public
 
-		# execute shell command and pipe output to Logger
+		# Execute shell command and pipe output to Logger
 		def execLogged(cmd, opts={})
 			Rakish.execLogged(cmd,opts)
 		end
 
-		# Generate an anonymous name.
+		# Get current namespace as a string.
 		def currentNamespace
 			":#{Rake.application.current_scope.join(':')}";
 		end
@@ -584,12 +893,17 @@ module Rakish
 			Rake.application.in_namespace_path(name, &block)
 		end
 
-		# get time stamp of file or directory 
+		# Get time stamp of file or directory
 		def filetime(name)
 			File.exists?(name) ? File.mtime(name.to_s) : Rake::EARLY
 		end
 
-		# get simple task action block (lambda) to copy from t.source to t.name
+        # Are there any tasks in the iterable 'tasks' list with an earlier 'time' than the given time stamp?
+        def any_task_earlier?(tasks,time)
+            tasks.any? { |n| n.timestamp < time }
+        end
+
+		# Get simple task action block (lambda) to copy from t.source to t.name
 		#   do |t|
 		#      cp t.source, t.name 
 		#   end	
@@ -619,11 +933,13 @@ module Rakish
 		# delete list of files (a single file or no files) similar to system("rm [list of files]")
 		# accepts Strings, FileList(s) and FileSet(s) and arrays of them
 		#
-		# <b>named options:</b> all [true|false]: 
-		#	:force   => default true
-		#	:noop    => just print (if verbose) don't do anything
-		#	:verbose => print "rm ..." for each file
-		#   :noglob  => do not interpret '*' or '?' as wildcard chars
+		#  named options: all [true|false]:
+		#
+		#    :force   => default true
+		#    :noop    => just print (if verbose) don't do anything
+		#    :verbose => print "rm ..." for each file
+		#    :noglob  => do not interpret '*' or '?' as wildcard chars
+		#
 		#
 		def deleteFiles(*files)
 			opts = (Hash === files.last) ? files.pop : {}			
@@ -699,16 +1015,19 @@ module Rakish
 			end
 		end
 		
-		# "pre-process" input lines using the ruby escape sequence
-		# '#{}' for substitutions
+		# This will "pre-process" input lines using the ruby escape sequence
+		# '#{}' for substitutions so NOT good for processing ruby files
+		# TODO: a variants using other "unique" excape sequence for other
+		# TODO: languanges
+		#
 		#  in the binding
 		#     linePrefix is an optional prefix to prepend to each line.
 		#
 		#     setIndent means set a variable "indent" in the environment
 		#     to be the indent level of the current raw line
 		#
-		#   ffrom = input lines (has to implement each_line)
-		#   fout  = output file (has to implement puts)
+		#   lines = input lines (has to implement each_line)
+		#   fout  = output file (has to implement puts, print)
 		#   bnd   = "binding" to context to evaluate substitutions in
 		def rubyLinePP(lines,fout,bnd,opts={})
 
@@ -728,7 +1047,7 @@ module Rakish
 					}
 				end
 			rescue => e
-				log.error do 
+				log.error do
 					bt=[]
 					e.backtrace.each do |bline|
 						bt << Logger.formatBacktraceLine(bline);
@@ -739,18 +1058,25 @@ module Rakish
 			end
 		end
 
-		# "preprocess" a file using the ruby escape sequence 
+		# This will "preprocess" an entire file using the ruby escape sequence 
 		# '#{}' for substitutions 
 		#
 		#   ffrom = input file path
 		#   fto   = output file path
 		#   bnd   = "binding" to context to evaluate substitutions in
-		def rubyPP(ffrom,fto,bnd)
+		def rubyPP(ffrom,fto,bnd,args={})
 
 			begin
-				File.open(fto,'w') do |file|
+				mode = args[:append] ? 'w+' : 'w';
+				if(fto.is_a? File)
 					File.open(ffrom,'r') do |fin|
-						rubyLinePP(fin,file,bnd)
+						rubyLinePP(fin,fto,bnd)
+					end
+				else
+					File.open(fto,mode) do |fileto|
+						File.open(ffrom,'r') do |fin|
+							rubyLinePP(fin,fileto,bnd)
+						end
 					end
 				end
 			rescue => e
@@ -759,7 +1085,7 @@ module Rakish
 			end
 		end
 
-		# create relative path between path and relto
+		# Get relative path between path and relto
 		# returns absolute path of path if the roots 
 		# are different.
 		def getRelativePath(path,relto=nil)
@@ -767,9 +1093,11 @@ module Rakish
 			relto ||= pwd
 			relto = File.expand_path(relto)
 			path = File.expand_path(path.to_s)
-			if( path =~ /^#{relto}\//)
-				return("./#{$'}")
-			end
+            if(path.start_with?("#{relto}/"))
+                reltolen = relto.length+1; 
+                path = path.slice(reltolen, path.length - reltolen);
+		        return("./#{path}")
+			end 
 
 			# puts("###  #{path} relto #{relto}") 
 
@@ -802,13 +1130,12 @@ module Rakish
 			op.join('/')
 		end
 
+		# Same as getRelativePath except the returned path uses '\\' instead of '/'
+		# as a path separator
 		def getWindowsRelativePath(path,relto=nil)
 			getRelativePath(path,relto).gsub('/','\\');
 		end
 
-		HostIsCygwin_ = RUBY_PLATFORM =~ /(cygwin)/i
-		HostIsWindows_ = (Rake::application.windows? || HostIsCygwin_ )
-		
 		# return true if host environment is windows or cygwin
 		def hostIsWindows?
 			HostIsWindows_
@@ -829,7 +1156,7 @@ module Rakish
 		end
 
 		# open and read an entire file into a string
-		# throws excpetion if the file is not present.
+		# throws exception if the file is not present.
 		def readFileToString(path)
 			str = nil
 			File::open(path,'r') do |f|
@@ -841,17 +1168,19 @@ module Rakish
 		if( HostIsWindows_ )
 			if(HostIsCygwin_)
 				@@stderrToNUL = "2>/dev/null"
+				@@stdoutToNUL = ">/dev/null"
 			else
 				@@stderrToNUL = "2>NUL:"
+				@@stdoutToNUL = ">NUL:"
 			end
 		else
 			@@stderrToNUL = "2>/dev/null"
+			@@stdoutToNUL = ">/dev/null"
 		end
 		
 		def textFilesDiffer(a,b)
 			differ = true;
-			
-			sh "diff #{@@stderrToNUL} --brief \"#{a}\" \"#{b}\"", :verbose=>false do |ok, res|
+			sh "diff #{@@stderrToNUL}  #{@@stdoutToNUL} --brief \"#{a}\" \"#{b}\"", :verbose=>false do |ok, res|
 				differ = false if ok
 			end
 			differ
@@ -878,6 +1207,8 @@ module Rakish
 			end
 		end
 			
+		# Returns hash containing the difference between a "parent" hash
+        # and an overriding "child" hash		
 		def hashDiff(parent,child)
 			dif={}
 			child.defines.each do |k,v|
@@ -887,7 +1218,7 @@ module Rakish
 			dif
 		end
 
-		# prepends a parent path to an array of file names
+		# Prepends a parent path to an array of file names
 		# 
 		# returns a FileList containing the joined paths
 		def addPathParent(prefix,files)
@@ -905,11 +1236,32 @@ module Rakish
 			end
 			return(a)
 		end
-		
-		# create a single simple file task to process source to dest
+
+		if( HostIsWindows_ )
+            @@binPathOpts_ = { :suffi => [ '.exe', '.bat' ] };
+        else
+            @@binPathOpts_ = {};
+        end
+
+			# Find executable in the "bin" search path
+			# return nil if not found.
+			#
+			#   currently the search path is set to the value of ENV['PATH']
+			#
+			def self.findInBinPath(name)
+				@@binpath||=SearchPath.new(ENV['PATH']);
+				ret = @@binpath.findFile(name,@@binPathOpts_);
+				# log.debug("searh for \"#{name}\" found \"#{ret}\"");
+			unless ret 
+			   log.debug("Path is #{ENV['PATH']}");
+			end
+			ret
+		end
+
+		# Create a single simple file task to process source to dest
 		#
 		# if &block is not given, then a simple copy action
-		#    do |t| { cp(t.source, t.name) } 
+		#    do |t| { FileUtils::cp(t.source, t.name) } 
 		# is used
 		#
 		# <b>named arguments:</b>
@@ -930,13 +1282,13 @@ module Rakish
 			task
 		end
 
-		# look up a task in the task table using a leading ':' as
+		# Look up a task in the task table using a leading ':' as
 		# the indicator of an absolute 'path' like 'rake:'
 		def lookupTask(tname)
 			Rake.application.lookup((tname=~/^:/)?"rake#{tname}":tname);
 		end
 		
-		# create a single simple "copy" task to process source file 
+		# Create a single simple "copy" task to process source file 
 		# file of same name in destination directory
 		#
 		# if &block is not given, then a simple copy action
@@ -953,7 +1305,7 @@ module Rakish
 		end
 		
 		
-		# for all files in files create a file task to process the file from the
+		# For all files in files create a file task to process the file from the
 		# source file files[n] to destdir/basename(files[n])
 		# 
 		# if &block is not given, then a simple copy task
@@ -1028,21 +1380,22 @@ module Rakish
 		end				
 	end
 
-	# yes including your own internal module
-	include Rakish::Util
-	
-private
-	class Utils < Module
-		include Util
-	end
-	@@utils = Utils.new
+# nothing uses this now - bad idea probably
+#	# include in our own module ( not needed )
+#	# include Rakish::Util
+#
+# private
+#	class Utils < Module
+#		include Util
+#	end
+#	@@utils = Utils.new
+#
+# public
+#	def self.utils
+#		@@utils
+#	end
 
-public	
-	def self.utils
-		@@utils
-	end
-
-	# generic dynamic propety bag functionality
+	# Generic dynamic propety bag functionality module1
 	# allows 'dot' access to dynamicly set properties.
 	#   ie:  value = bag.nameOfProperty
 	#        bag.nameOfProperty = newValue
@@ -1053,40 +1406,65 @@ public
 	# Assignment to a property that does not exist will add a new field *only* if
 	# done so within an enableNewFields block
 	#
+	#   bag.newProperty = "new value" # throws missing method exception
+	#   bag.enableNewFields do |s|
+	#       s.newProperty = "new value" # OK
+	#   end 
+	#
 	
 	module PropertyBagMod
 
 		# constructor for PropertyBagMod to be called by including classes
-		# TODO: have this take an array of parents like a path first hit wins.
+		# This will take an array of parents scanned like a like a path, first hit wins.
+		# by default parents o level above are split into heritable and non-heritable parents
+		# the first parent in the list is considered heritable subsequent parents are in the
+		# search path but are not considerd "heritable" so they will not be fround from
+		# inhering childern.
 		def init_PropertyBag(*args)
-			@h_ = (Hash === args.last) ? args.pop : {}
-			if(args.length > 0)
-				@parent_=args[0];
-		    end
-		    # make parents array the array in the of order of encounter all all unique parents.
+			@_h = (Hash === args.last) ? args.pop : {}
 		    allP = [];
-			args.each do |p|
-            	if(p)
-					allP << p;
-					allP << p.parents;
-            	end
+			@parents_ = allP;
+			
+			if(args.length > 0)
+				hp = nil;
+				# make parents array the array in the of order of encounter of all unique parents.
+				args.each do |p|
+					if(p)
+						allP << p;
+						php = p.heritableParents
+						hp||=[p,php].flatten;
+						allP << php;
+					else
+						hp||=[]
+					end
+				end
+				@parents_ = allP.flatten.uniq;
+				if( hp.length != @parents_.length) 
+					@_hpc_ = hp.length;
+				end
 			end
-			@parents_ = allP.flatten.uniq;
-
 			# log.debug("****** parents #{@parents_} allP #{allP}")
   		end
 
 		# get the first parent of this property bag if any
 		def parent
-			@parent_
+			(parents.length > 0 ? @parents_[0] : nil);
 		end
 
 		# get the list of ancestors (flattened) in search order.
 		def parents
-			@parents_
+			@parents_||=[]
+		end
+		# This will supply inheritable parents to children. 
+		# 
+		# By default only parents[0] and it's hetitableParents are inheritable by children
+		# added parents resolve in the search only.
+		def heritableParents
+			return parents unless @_hpc_;
+			@parents_.take(@_hpc_)
 		end
 
-		# enable creation of new fields in a property bag within the supplied block.
+		# Enable creation of new fields in a property bag within the supplied block.
 		# may be called recursively
 		
 		def enableNewFields(&b)
@@ -1098,54 +1476,76 @@ public
 			self # return self for convenience
 		end
 		
-		# item from "Module" we want overidable
-		def name
-			@h_[:name]
+		# Returns false if outside an enableNewFields block the nesting count if
+		# inside a enebleNewFields block if(newFieldsEnabled?)  will test true in this case.
+		def newFieldsEnabled?() 
+			@ul_ ? @ul_:false			
 		end
 		
 		# item from "Module" we want overidable
-		def name=(v)
-			@h_[:name]=v		
+		# note name does NOT inherit from parents
+		def name # :nodoc:
+			@_h[:name]
 		end
 		
-		def self.included(by)
+		# item from "Module" we want overidable
+		# note name does NOT inherit from parents
+		def name=(v) # :nodoc:
+			@_h[:name]=v
+		end
+		
+		def self.included(by) # :nodoc:
 		end
 		
 		# set or create property irrespective of property (field) creation lock on this object
 		def set(k,v)
 			if self.class.method_defined? k
-				raise PropertyBagMod::cantOverideX_(k)
+				raise PropertyBagMod::cantOverrideX_(k)
 			end
-			@h_[k]=v
+			@_h[k]=v
 		end
 
-		# get inherited value value for property, traverse up parent tree via flattened
-		# ancestor list to get first inherited value or nil if not found
-		def getInherited(sym, opts={})
-			if(@parents_)
-				@parents_.each do |p|
-					val = p.getMy(sym);
-					return(val) if val;
-				end
-			end
+		# Get non-nil value for property 0n any level above, traverse up parent tree via flattened
+		# ancestor list to get first inherited value or nil if not found.
+		# opts - none define at present
+		def getAnyAbove(sym)
+            parents.each do |p|
+                val = p.getMy(sym);
+                return(val) if val;
+            end
 			nil
 		end
 
-		# get value for property, traverse up parent tree to get first inherited
+		# Get non-nil value for property from heritable parents on any level above,
+		# traverse up parent tree via
+		# ancestor list to get first inherited value or nil if not found.
+		# opts - none defined at present
+		def getInherited(sym)
+			return(getAnyAbove(sym)) unless @_hpc_;
+			pc = @_hpc_;
+			@parents_.each do |p|
+				break if(pc < 1)
+				val = p.getMy(sym);
+				return(val) if val;
+				pc=pc-1;
+			end
+			nil
+		end
+		
+		
+		# Get value for property, traverse up parent tree to get first inherited
 		# value if not present on this node, returns nil if property not found or
-		# it's value is nil
+		# it's value is explicitly set to nil
 		def get(sym)
-			if((v=@h_[sym]).nil?)
-				unless @h_.has_key?(sym)
+			if((v=@_h[sym]).nil?)
+				unless @_h.has_key?(sym)
 					if(self.class.method_defined? sym)
 						v=__send__(sym)
-					else
-						if(@parent_)
-							@parents_.each do |p|
-								val = p.getMy(sym);
-								return(val) if val;
-							end
-						end
+					elsif(@parents_.length > 0)
+                        @parents_.each do |p|
+                            val = p.getMy(sym);
+                            return(val) if val;
+                        end
 					end
 				end
 			end
@@ -1153,41 +1553,53 @@ public
 		end
 	
 	protected
-		def self.cantOverideX_(k)
+		def self.cantOverrideX_(k) # :nodoc:
 			"can't overide method \"#{k}\" with a property"
 		end
 	
-	public
-		# get value for property. 
-		# does *not* traverse up tree, gets local value only.
-		# returns nil if value is either nil or not present
-		def getMy(s)
-			(self.class.method_defined? s) ? self.send(s) : @h_[s]
-		end
-
-		# class Eqnil
-		#	def self.nil?
-		#		true
-		#	end
-		# end
-		
-		# preperty is set on this node
-		def has_key?(k)
-			@h_.has_key?(k)
-		end
-
-		def hasAncestorKey(sym)
+		# returns true if any ancestor has a key defined in the hashtable
+		def hasAncestorKey(sym) # :nodoc:
 			@parents_.each do |p|
 				return(true) if p.has_key?(sym);
 			end
 			false
 		end
 
-		# needed so we can flatten the parents array.
-		def to_ary
-		   	nil
+		def _h # :nodoc: _h accessor
+		   @_h
 		end
 
+		def raiseUndef_(sym) # :nodoc:
+			c = caller;
+			caller.each do |clr|
+				c.shift
+				unless(clr =~ /\/Rakish.rb:\d+:in `(method_missing|__send__)'/)
+					# log.debug("\n#{Logger.formatBacktraceLine(clr)} - ##### undefined property or method \"#{sym}\"");
+					raise RuntimeError, "\n#{Logger.formatBacktraceLine(clr)} - undefined property or method \"#{sym}\"", c
+				end
+			end
+		end
+				
+	public
+		# Get value for property.
+		# Does *not* traverse up tree, gets local value only.
+		# returns nil if value is either nil or not present
+		def getMy(s)
+			(self.class.method_defined? s) ? self.send(s) : @_h[s]
+		end
+
+		# true if a property is set in hash on this object
+		# does not detect methods
+		def has_key?(k) # :nodoc: 
+			@_h.has_key?(k)
+		end
+
+
+		# needed so we can flatten the parents array.
+		def to_ary # :nodoc:
+		   	nil
+		end
+		
 		# allows 'dot' access to properties.
 		#   ie:  value = bag.nameOfProperty
 		#        bag.nameOfProperty = newValue
@@ -1198,11 +1610,10 @@ public
 		# Assignment to a property that does not exist will add a new field *only* if
 		# done so within an enableNewFields block
 		#
-		def method_missing(sym, *args, &block)
+		def method_missing(sym, *args, &block) # :nodoc:
 
-
-			if((v=@h_[sym]).nil?)
-				unless @h_.has_key?(sym) # if property exists nil is a valid value
+			if((v=@_h[sym]).nil?)
+				unless @_h.has_key?(sym) # if property exists nil is a valid value
 					if sym.to_s =~ /=$/ # it's an attempted asignment ie: ':sym='
 						sym = $`.to_sym  # $` has symbol with '=' chopped off
 						unless @ul_ # if not locked check if there is an inherited
@@ -1210,50 +1621,34 @@ public
 							unless(has_key?(sym))
 								super unless hasAncestorKey(sym); # raise no method exception if no key!
 							end
-#							p = self
-#							until()
-#								super unless(p=p.parent)
-#							end
 						end
 						if(self.class.method_defined? sym)
-							raise PropertyBagMod::cantOverideX_(sym)
+							raise PropertyBagMod::cantOverrideX_(sym)
 						end
-						return(@h_[sym]=args[0]) # assign value to property
-					elsif @parent_ # recurse to parents
-					# we don't recurse here but check the flattened parent list in order
-				    #	if(self.class.method_defined?("#{sym}="))
-				    		@parents_.each do |p|
-				    		    v = p.getMy(sym);
-				    		    return v if(v);
-				    #		end
+						return(@_h[sym]=args[0]) # assign value to property
+					elsif(@parents_.length > 0) # "recurse" to parents
+					    # we don't actually recurse here but check the flattened parent list in order
+					    eqSym = "#{sym}=".to_sym;
+					    anyDefined = self.class.method_defined?(eqSym);
+						@parents_.each do |p|
+			               return(p.send(sym)) if(p.class.method_defined? sym);
+						   v = p._h[sym];
+						   return(v) if (v || p._h.has_key?(sym));
+						   anyDefined||=p.class.method_defined?(eqSym);
 						end
+						return v if(anyDefined);
+						raiseUndef_(sym)
 					else
-						return v if (self.class.method_defined?("#{sym}="))
-						c = caller
-						caller.each do |clr|
-							c.shift
-							unless(clr =~ /\/Rakish.rb:\d+:in `(method_missing|__send__)'/)
-								raise RuntimeError, "\n#{Logger.formatBacktraceLine(clr)} - undefined property or method \"#{sym}\"", c
-							end
-						end
-						super
+						return v if (self.class.method_defined?("#{sym}="));
+						raiseUndef_ sym;
 					end
 				end
 			end
 			v
 		end
-		# enhancement for 1.9.X allows use of upper case names 
-		# for property accessors.
-		#
-		# tries to access method if symbol for const is missing
-		# alias :const_missing :__send__
-		
-#		def const_missing(name)
-#			raise "property bag const missing: #{name}"
-#		end
 	end
 
-	# general purpose property bag :see: PropertyBagMod
+	# General purpose property bag class includes PropertyBagMod
 	class PropertyBag < Module
 		include PropertyBagMod
 		
@@ -1263,22 +1658,23 @@ public
 		end
 	end
 		
-	# case independent set for file paths
+	# A case independent set for file paths
 	# intended to act like a Ruby class Set for File path names
 	class FileSet < Module
 		
-		# create a FileSet containing an initial set of files
+		# Create a FileSet containing an initial set of files
 		# contained in 'files'.  It will acccept 'wildcard' 
-		# entries which are expanded relative to the current directory.
+		# entries as defined for a Rake::FileList which are expanded 
+		# relative to the current directory at the time entries are added
 
 		def initialize(*files)
 			@h={}
 			add_ary(files) unless(files.empty?)
 		end			
 		
-		# case independent string key. WARNING does not clone and intern keys
+		# Case independent string key. WARNING does not clone and intern keys
 		# so the source strings must not be changed after being set.
-		class Key
+		class Key  # :nodoc:
 			def initialize(str)
 				@s=str.to_s
 				@h=@s.downcase.hash
@@ -1313,7 +1709,7 @@ public
 				end
 			end
 		end
-		def delete_a(f) # ;nodoc: 
+		def delete_a(f) # :nodoc:
 			if(f.respond_to?(:to_ary))
 				f.each do |x| delete_a(x) end
 			else
@@ -1322,25 +1718,42 @@ public
 		end
 	
 	public
-		# Add files contained in 'files' to this set.  It will acccept 'wildcard' 
+		# Add files contained in 'files' to this set.  It will acccept 'wildcard'
 		# entries which are expanded relative to the current directory.
+		# relative to the current directory at the time entries are added
 		def include(*files)
 			add_ary(files)
 		end
-		
-		# add a single file path to this set if it is not present.
+
+		# Add files contained in 'files' to this set.  It will acccept 'wildcard'
+		# entries which are expanded relative to the current directory.
+		# relative to the current directory at the time entries are added
+		# it also takes an :exclude option that rejects files.
+		def update(*files)
+			files.flatten!
+			opts = (Hash === files.last) ? files.pop : {}
+			fl = FileList.new(files);
+			fl.exclude([opts[:exclude]].flatten) if opts[:exclude];
+			add_ary(fl);
+		end
+
+		# Add a single file path to this set if it is not present.
 		#
 		# returns true if the path was not previously in the set, false otherwise
+		# note does NOT expand the path when inserted
 		def add?(f)
 			f = Key.new(f)
 			return false if @h[f]
 			@ordered << f if @ordered
-			@h[f]=nil
+  			@h[f]=nil
 			true
 		end
-		# add a single file path to this set
+		# Add a single file path to this set
+		# note does NOT expand the path when inserted
+		# returns self for convenience
 		def add(f)
-			@h[Key.new(f)]=nil
+			add?(f);
+			self
 		end
 		alias :<< :add
 		
@@ -1350,24 +1763,25 @@ public
 			delete_a(args)
 		end
 
-		# returns true if the path is in this set
+		# Returns true if the path is in this set
 		# false otherwise.
 		def include?(f)
 			@h.has_key?(Key.new(f))
 		end
 		
-		# returns true if this set is empty
+		# Returns true if this set is empty
 		def empty?
 			@h.empty?
 		end
-		# iterates over each path (key) in the set
+
+		# Iterates over each path in the set
 		def each(&b) # :yields: path
 			@h.each do |k,v|
 				yield(k.to_s)
 			end
 		end
 
-		# like array.join
+		# Like array.join, joins all paths with separator
 		def join(separator)
 			out = nil;
 			each do |p|
@@ -1381,51 +1795,59 @@ public
 			out||'';
 		end
 
-		# returns then number of entries in this set
+		# Returns then number of entries in this set
 		def size
 			@h.size
 		end
-		# returns an array of all path entries in this set
+		# Returns an array of all path entries in this set
 		def to_ary
 			@h.keys
 		end
 	end
 
+	# A FileSet where the order entries are installed is preserved
+	# todo handle deleting entries
 	class OrderedFileSet < FileSet
-		def initaliaze
+		def initialize
 			super
 			@ordered=[]
 		end
 		alias :add :add?
 		alias :<< :add?
 
-		# iterates over each path (key) in the set
+		# Iterates over each path (key) in the set
+		# in the order added
 		def each(&b) # :yields: path
 			@ordered.each do |k|
 				yield(k.to_s) unless k.nil?
 			end
 		end
-		# returns then number of entries in this set
+		# Returns then number of entries in this set
 		def size
 			@h.size
 		end
-		# returns an array of all path entries in this set
+		# Returns an array of all path entries in this set
+		# in the order added
 		def to_ary
 			@ordered
 		end
 
-		def join
+		def join # :nodoc:
 			@ordered.join
 		end
 		
 	end
 	
 	
-	# case independent "path" hash
+	# Case independent "path" hash
+	# preserves order of addition
 	class FileHash < FileSet
 		def initialize()
 			super
 		end
+        def addAll
+
+        end
 		def [](k)
 			@h[Key.new(k)]
 		end
@@ -1438,7 +1860,7 @@ public
 				yield k,v
 			end
 		end
-		# returns array of all values in the hash
+		# Returns array of all values in the hash
 		def values
 			@h.values
 		end
@@ -1460,7 +1882,7 @@ public
 		end
 	public
 	
-		# create new FileCopySet with optional argument to initialize this set as a 
+		# Create new FileCopySet with optional argument to initialize this set as a 
 		# deep copy of another FileCopySet
 		def initialize(cloneFrom=nil)
 			@byDir_=FileHash.new
@@ -1492,6 +1914,27 @@ public
 		end
 	
 	protected
+
+        @@truncLen_ = File.expand_path("/./").length;
+
+        # Cleans up a relative path 'rp' without expanding against the current directory
+        #  ie:
+        #   ./a/b/c/../../ => ./a
+        #   ./ => .
+        #
+        #  NOTE: this will not work if the relative path evaluates to below itself
+        #  which is improper for a destination directory
+        #
+        def cleanupDestdir(dd) # :nodoc:
+            dd=dd.to_s;
+            unless(File.path_is_absolute?(dd))
+                dd = File.expand_path("/./#{dd}");
+                dd = "./#{dd[@@truncLen_,10000]}";
+                dd='.' if(dd=='./')
+            end
+            dd
+        end
+
 		def add_simple_a(list,files,data) # :nodoc:
 			files.each do |f|
 				list << Entry.new(File.expand_path(f.to_s),data)
@@ -1510,23 +1953,18 @@ public
 				list << Entry.new(File.expand_path(f.to_s),data)
 			end		
 		end
+
 	public
-		# add a directory with no source files to this set, if not already there.
+		# Add a directory (in destination) with no source files to this set, if not already there.
+        # dir = './set/dir' or '.' for the root of a relative destination
 		def addDir(dir)
-#			if(dir =~ /^\//)
-#				dir = $'           # truncate leading '/' ???
-#			end
-			@byDir_[dir]||=[]
+			@byDir_[cleanupDestdir(dir)]||=[]
 		end
 		
 		# add files all assigned to the destdir directory
-		def addFiles(destdir, *files)			
-			destdir = destdir.to_s
-#			if(destdir =~ /^\//)
-#				destdir = $'
-#			end
+		def addFiles(destdir, *files)
 			if(!files.empty?)
-				ilist = (@byDir_[destdir] ||= [])
+				ilist = (@byDir_[cleanupDestdir(destdir)] ||= [])
 				add_files_a(ilist,files,nil)
 			end
 		end
@@ -1562,29 +2000,28 @@ public
 	
 	public
 	
-		# add a tree of files all of which are to be assigned 
-		# to the supplied 'destdir' relative to 'destdir' as the source files are 
-		# relative to the supplied 'basedir'
-		#
-		#  ie: if destdir is 'outdir' basedir is '/base/dir'
-		#  the file '/base/dir/dir2/file.x' will be assigned to the 
-		#  directory outdir/dir2[/file.x]
-		#
+        # Adds all the files from a subtree into the destdir in the set
+        # the subtree will have it's leading "basedir" removed from the file path
+        # and replaced with the "basedir" before adding to the archive.
+        #  ie:
+        #     file = '/a/b/c/d/e/file.txt'
+        #     basedir = '/a/b/c'
+        #     destdir = './set/dir' or '.' for the root of a relative destination
+        #
+        #     added to set = 'set/dir/d/e/file.txt'
+        #
 		# <b>named options:</b>
 		#   :data => user value to assign to all entries added to this set
 		#
 		def addFileTree(destdir, basedir, *files)
 			opts = (Hash === files.last) ? files.pop : {}			
-			destdir = destdir.to_s
-#			if (destdir =~ /^\//)
-#				destdir = $'
-#			end
-			basedir = File.expand_path(basedir)	
+			destdir = cleanupDestdir(destdir);
+			basedir = File.expand_path(basedir)
 			regx = Regexp.new('^' + Regexp.escape(basedir+'/'),Regexp::IGNORECASE);
 			add_filet_a(destdir,regx,files,opts[:data])
 		end
 	
-		# retrieve all source files by assigned output directory
+		# Retrieve all source files by assigned output directory
 		# one source file may be assigned to more than one output directory
 		#
 		def filesByDir(&block) # :yields: directory, iterable of files
@@ -1593,10 +2030,11 @@ public
 			end
 		end
 		
-		# return array of all source files in this set
-		# TODO: make this a true set and remove redundancies
+		# Return array of all source files in this set
 		def sources
-			@byDir_.values.flatten
+			v = @byDir_.values.flatten;
+			v.uniq!
+			v
 		end
 		
 		def prettyPrint
@@ -1611,7 +2049,7 @@ public
 			end
 		end
 		
-		# generate processing tasks for all files in this copy set
+		# Generate processing tasks for all files in this copy set
 		# using the task action provided or a simple copy if not
 		# hash args
 		#     :suffixMap - map from source suffi to destination suffi
@@ -1655,7 +2093,7 @@ public
 		
 	end
 	
-	
+	# not used yet intending to use it for MultiTask queueing
 	class CountingSemaphore
 	  def initialize(initvalue = 0)
 		@counter = initvalue
@@ -1704,6 +2142,7 @@ public
 
 	end
 
-	Semaphore = CountingSemaphore
+    # :nodoc: not used curently
+	# Semaphore = CountingSemaphore
 
 end

@@ -1,11 +1,14 @@
 module Rakish
 
+# Module to generate VCProject files for ocmpile C++ specified in this build
+# Not really part of public distributioin - too littered with local stuff
+# specific to my main builds  This needs to be converted to work in a more configurable way
 class VcprojBuilder
 	include Rakish::Util
 
 	@@rakefileConfigTxt_=<<EOTEXT
 <?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     \#{getVCX10RakefileConfigList(indent)}
   </ItemGroup>
@@ -51,7 +54,7 @@ EOTEXT
 		out << "<PropertyGroup Condition=\"'$(Configuration)|$(Platform)'=='#{config}|Win32'\" Label=\"Configuration\">";
 		out << '  <ConfigurationType>Makefile</ConfigurationType>';
 		out << '  <UseDebugLibraries>false</UseDebugLibraries>';
-	    out << "  <IntDir>#{cppProject.nativeObjectPath()}</IntDir>";
+	    out << "  <IntDir>#{cppProject.configuredObjDir()}</IntDir>";
 		out << "  <OutDir>#{cppProject.binDir()}</OutDir>";
 		out << '</PropertyGroup>';
 	end
@@ -83,7 +86,7 @@ EOTEXT
 	def addVCX10RakefileUserMacroGroup(out, cfg)
 		
 		out << "<PropertyGroup Condition=\"'$(Configuration)|$(Platform)\'=='#{cfg.configName}|Win32'\">";
-		out << "  <NMakeOutput>#{cppProject.moduleName}.exe</NMakeOutput>";
+		out << "  <NMakeOutput>#{cppProject.binDir()}/#{cfg.targetName}.exe</NMakeOutput>";
 		
 		begin
 			cppdefs = '';
@@ -126,14 +129,37 @@ EOTEXT
 		indent = "%#{indent}s" % "";
 		out = []
 		files = cppProject.getSourceFiles();
+
+		dirs = FileSet.new();
+
 		unless(files.empty?)
 			out << '<ItemGroup>';
 			files.each do |f|
+			    dirs.add(f.pathmap('%d'));
 				out << "  <ClCompile Include=\"#{vcprojRelative(f)}\" />";
 			end
 			out << '</ItemGroup>';
 		end
 
+		includeFiles = FileSet.new;
+		dirs.each do |dir|
+	        includeFiles.include("#{dir}/**/*.h", "#{dir}/**/*.inl", "#{dir}/**/*.inc", "#{dir}/**/*.xsd", "#{dir}/**/*.hpp", "#{dir}/**/*.rc" );
+		end
+
+		files = cppProject.getIncludeFiles();
+		files.each do |f|
+		    includeFiles.add(f);
+		end
+
+		unless(includeFiles.empty?)
+			out << '<ItemGroup>';
+			includeFiles.each do |f|
+				out << "  <ClInclude Include=\"#{vcprojRelative(f)}\" />";
+			end
+			out << '</ItemGroup>';
+		end
+
+if(nil)
 		files = cppProject.getIncludeFiles();
 		unless(files.empty?)
 			out << '<ItemGroup>';
@@ -142,21 +168,35 @@ EOTEXT
 			end
 			out << '</ItemGroup>';
 		end
-		out << '<ItemGroup>';
-		out << "  <None Include=\"#{vcprojRelative(cppProject.projectFile)}\" />";
-		out << '</ItemGroup>';
+end
+
+		# TODO: rather than suffix search look for file NOT in the source or include lists.
+		files = FileList.new();
+		files.include("#{cppProject.projectDir}/*.*");
+	    files.exclude('**/*.cpp', '**/*.c','**/*.asm','**/*.h', '**/*.inl', '**/*.inc', '**/*.xsd', '**/*.hpp', '**/*.rc' );
+
+		unless(files.empty?)
+            out << '<ItemGroup>';
+                files.each do |f|
+                    out << "  <None Include=\"#{vcprojRelative(f)}\" />";
+                end
+            out << '</ItemGroup>';
+		end
 		out.join("\n#{indent}");
 	end
 
 
 	def eachConfig(&b) 
-		[	
-			"Win32-VC10-MD-Debug",
-			"Win32-VC10-MDd-Debug",
-			"Win32-VC10-MT-Debug",
-			"Win32-VC10-MTd-Debug",
-			"Win32-VC10-MD-Release",
-			"Win32-VC10-MT-Release" 
+
+	    spl = cppProject.nativeConfigName.split('-', 3);
+
+		[
+			"#{spl[0]}-#{spl[1]}-MD-Debug",
+			"#{spl[0]}-#{spl[1]}-MDd-Debug",
+			"#{spl[0]}-#{spl[1]}-MT-Debug",
+			"#{spl[0]}-#{spl[1]}-MTd-Debug",
+			"#{spl[0]}-#{spl[1]}-MD-Release",
+			"#{spl[0]}-#{spl[1]}-MT-Release"
 		].each do |cfg|
 			cfg = cppProject.resolveConfiguration(cfg);
 			next unless cfg
@@ -194,9 +234,9 @@ EOTEXT
 		indent = "";
 		proj = cppProject;
 		projectUuid = proj.projectId;
-		projectName = proj.moduleName;
+		projectName = proj.projectName;
 		
-		rakeCommand = vcprojRelative(File.join(proj.thirdPartyPath,'tools/exec-rake.bat'));
+		rakeCommand = vcprojRelative(File.join(ENV['ARTD_TOOLS'].pathmap('%d'),'tools/exec-rake.bat'));
 		rakeFile = vcprojRelative(proj.projectFile);
 
 		@rakeCommandLine = "#{rakeCommand} -f #{rakeFile} \"RakishBuildRoot=$(SolutionDir)build\"";
@@ -211,9 +251,9 @@ EOTEXT
 	def writeVCProjFiles(proj)
 		@cppProject = proj;
 
-		defpath = File.join(proj.vcprojDir, proj.moduleName + '-rake.vcxproj'); 
+		defpath = File.join(proj.vcprojDir, proj.projectName + '-rake.vcxproj');
 		filpath = "#{defpath}.filters"
-		tempPath = File.join(proj.vcprojDir, proj.moduleName + '.temp');
+		tempPath = File.join(proj.vcprojDir, proj.projectName + '.temp');
 		
 		puts(" creating vcproj in #{defpath}")
 		begin
@@ -243,7 +283,7 @@ EOTEXT
 	end
 	
 	def VcprojBuilder.onVcprojCleanTask(proj)
-		defpath = File.join(proj.vcprojDir, proj.moduleName + '-rake.vcxproj'); 
+		defpath = File.join(proj.vcprojDir, proj.projectName + '-rake.vcxproj');
 		filpath = "#{defpath}.filters";
 		proj.addCleanFiles(defpath,filpath);		
 	end 

@@ -1,0 +1,455 @@
+
+==Java Project file Samples
+
+As I haven't written the real "manual" other than the rdocs on the ruby files so I figure this will help
+This is actual production code for me.
+
+Hopefully easy enough to sus out - I am too close to it now to judge :)
+And yes ruby people will hate me 'cause I am am a CamelCasingPerson and not an underbar_word_separartor_person
+and I tend to use it for all "dot delimited" languanges
+
+The JavaProjectModule does export some standard targets :compile, :javadoc, :dist, :libs with
+
+   java.addLibraryTargets(...)
+
+===Global Configuration file used by below samples basically from my current project
+
+    myDir = File.dirname(__FILE__);
+    require "rakish"
+    require "rakish/CppProjects.rb";
+    require "rakish/JavaProjects.rb";
+    require "rakish/IntellijConfig.rb";
+    require "#{myDir}/OMS/build-scripts/rakish/ServeletProject.rb"; # a custom module for this project
+
+    module Rakish  # not needed just to avoid having to use full paths for module names etc.
+
+
+        Rakish.Configuration :include=>[ IntellijConfig, JavaProjectConfig] do |cfg|
+
+            # set up global target dependencies.
+
+            task :autogen
+            task :compile =>[:autogen]
+            task :libs =>[:compile]
+            task :dist =>[:libs]
+            task :deploy=>[:dist] # for tomcat servlets and generating docs etc.
+            task :undeploy=>[:libs] # tomcat
+            task :cleanRebuild =>[:reallyClean, :dist]
+
+            myDir = File.dirname(File.expand_path(__FILE__));
+
+            isWindows = Rakish.HostIsWindows_;
+
+            log = Rakish.log;
+
+            # cfg.verbose = true; # default is false
+
+            cfg.orlandoRoot = File.expand_path("#{myDir}");
+
+            if(cfg.intellij) # we are running this from an intellij UI
+                cfg.buildDir = cfg.intellij.outputPath;
+            else
+                cfg.buildDir = "#{cfg.orlandoRoot}/build";
+            end
+
+            cfg.resourceDir = "#{cfg.buildDir}/production/.orlando";
+
+            # Java configuration items.
+            java = cfg.java;
+
+            cfg.java_home = ENV['JAVA_HOME'];
+            cfg.ant_home = ENV['ANT_HOME'] || '/usr/share/ant';
+
+            # cfg.catalina_home = ENV['CATALINA_HOME'] || '/usr/share/tomcat7';
+            java.addJarSearchPath("#{myDir}/third-party-jars");
+            java.addClassPaths( 'log4j-1.2.17.jar' ); # everything will inherit this
+
+            if(cfg.intellij) # we are running this from an intellij UI
+                java.addJavacFlags(cfg.intellij.javacFlags);
+            else
+                java.addJavacFlags("-Xlint:unchecked -encoding ISO-8859-1");
+            end
+
+            # tomcat deployment options
+
+            tomcatConfig = BuildConfig.new
+            tomcatConfig.enableNewFields do |cfg|
+                cfg.managerURL = "http://localhost:8080/manager/text";
+                cfg.managerUsername = "for me only";
+                cfg.managerPassword = "for me only";
+            end
+
+            # deployment configurations for the three categories of apps
+            cfg.omsConfig = BuildConfig.new(tomcatConfig) do |cfg|
+                cfg.managerURL = "http://localhost:8080/manager/text"
+            end
+
+            cfg.routerConfig = BuildConfig.new(tomcatConfig) do |cfg|
+                cfg.managerURL = "http://localhost:8081/manager/text"
+            end
+
+            (cfg.servicesConfig = BuildConfig.new(tomcatConfig)).enableNewFields do |cfg|;
+                cfg.managerURL = "http://localhost:8082/manager/text";
+            end
+        end
+    end
+
+===Root project file that has all the libraries in it
+
+All this is is the dependencies and the reallyClean target
+
+    myDir = File.dirname(__FILE__);
+    require "#{myDir}/build-options.rb";
+    require "rakish/RakishProject.rb";
+
+    Rakish.Project(
+        :name=>'libs',
+        :dependsUpon=> [
+            'artd-util',
+            'artd-vecmath',
+            'artd-net',
+            'artd-bml-generator',
+            'artd-bml-generator/artd-bmlgen-test',
+            'artd-bml-base',
+            'artd-bml-interpreter',
+            'artd-bml-net',
+            'artd-bml-servlet',
+            'artd-uiscene',
+        ]
+    ) do
+
+        task :reallyClean do |t|
+            log.info("deleting #{buildDir()}");
+            FileUtils.rm_rf("#{buildDir()}");
+        end
+
+        export :reallyClean
+
+    end
+
+===Project file for a simple java Jar file library from a source folder
+
+    myDir = File.dirname(__FILE__);
+    require "#{myDir}/../build-options.rb";
+
+    Rakish.Project(
+        :includes=>[Rakish::JavaProjectModule],
+        :name=>'artd-util',
+        :dependsUpon=> [
+        ]
+    ) do
+
+        export task :resources => [];
+
+        java.addSourceRoots("#{projectDir}/src");
+
+        java.addLibraryTargets();
+
+    end
+
+===Project file with dependencies and generated code using a custom tool
+
+    myDir = File.dirname(__FILE__);
+    require "#{myDir}/../build-options.rb";
+    require "#{myDir}/../artd-bml-generator/BmlGeneratorModule.rb"
+
+    Rakish.Project(
+        :includes=>[Rakish::JavaProjectModule, Rakish::BmlGeneratorModule],
+        :name=>'artd-bml-interpreter',
+        :dependsUpon=> [
+            '../artd-bml-generator',  # note it is dependedn on the generator this is also built.
+            '../artd-util',
+            '../artd-net',
+            '../artd-bml-base'
+        ]
+    ) do
+
+        export task :resources => [];
+
+        task :cleanautogen do |t|
+            FileUtils.rm_rf "#{projectDir}/gensrc";
+        end
+
+        task :cleanAll => [:clean, :cleanautogen ] do
+            FileUtils.rm_rf "#{buildDir()}/production/#{moduleName}";
+        end
+
+        generatedSource = createBmlgenTasks('./bmlsrc/*.xml',
+                                            :outPath=>'./gensrc',
+                                            :defaultPackage=>'com.artd.bml.interfaces');
+
+        export(task :autogen => generatedSource);
+
+        task :compile => [:autogen];
+
+        java.addSourceRoots("#{projectDir}/src");
+        java.addSourceRoots("#{projectDir}/gensrc", :generated=>true);
+
+        java.addProjectOutputClasspaths(
+            'artd-util',
+            'artd-net',
+            'artd-bml-base'
+        );
+
+        java.addLibraryTargets();
+
+        export (task :reallyClean => [:cleanAll])
+
+    end
+
+===The custom build module used for the gcode geenration from interface definitions
+
+    # Note to be included in in Rakish projects as a module
+
+    require 'rexml/streamlistener'
+
+    module Rakish
+
+        module BmlGeneratorModule
+
+            addInitBlock do |pnt,opts|   # this is called when the module is included on a project's class instance
+                if(pnt != nil)           # pnt parent configration or project
+                    @java_home = pnt.get(:java_home);
+                end
+                @java_home ||= File.expand_path(ENV['JAVA_HOME']);
+            end
+
+            class XMLListener
+                include Rakish::Util
+                include REXML::StreamListener
+
+                attr_accessor(:defaultPackage)
+                attr_accessor(:javaOutputDir)
+                attr_reader(:javaOutputFiles)
+
+
+                @@outPath = [ 'BMLGEN', 'Interface' ];
+
+                def initialize()
+                    @tagPath=[];
+                    @skipping=nil;
+                    @javaOutputFiles=FileSet.new();
+                end
+
+                def tag_start(name, attributes)
+                    @tagPath.push(name);
+
+                    if(@tagPath.length === @@outPath.length && @tagPath[1] === @@outPath[1])
+                        javaFileName = attributes['name'];
+                        package = attributes['java.package'] || defaultPackage;
+                        packagePath = package.gsub('.','/');
+                        javaOutputFiles.add("#{javaOutputDir}/#{packagePath}/#{javaFileName}.java");
+                    end
+                end
+                def tag_end(name)
+                    @tagPath.pop;
+                end
+            end
+
+            def createBmlgenTasks(*xmlsource)
+
+                opts = (Hash === xmlsource.last) ? xmlsource.pop : {}
+
+                opts[:outPath]||="./gensrc";
+                defaultPackage = opts[:defaultPackage]||="com.artd.bml.interfaces";
+                xmlIncludePath = opts[:xmlIncludePath]||=[];
+
+                outdir = File.expand_path(opts[:outPath]);
+
+                files = FileSet.new;
+                files.include(xmlsource);
+
+                xmlIncludePath.map! do |path|
+                    path = File.expand_path(path);
+                    path
+                end
+
+                xmlsources = [];
+                classname = "";
+
+                listener = XMLListener.new();
+                listener.defaultPackage = defaultPackage;
+                listener.javaOutputDir = outdir;
+
+                # collect up all java files this invocation of the generator will create
+                # from top level "Interface" tags in all the XML source files.
+
+                files.each do |srcname|
+                    # puts("creating task for #{srcname}");
+                    parser = REXML::Parsers::StreamParser.new(File.new(srcname), listener)
+                    parser.parse
+                    xmlsources << srcname;
+
+                end
+
+                # create one task for the combined compile for all the xml source files
+
+                batchTask = Rake::Task::define_unique_task;
+                batchTask.enhance("#{binDir()}/artd-bml-generator.jar"); # make sure this is built
+
+                ensureDirectoryTask(outdir);
+                batchTask.enhance([outdir]);
+
+                batchTask.enhance(batchTask.sources=xmlsources) do |t|
+                    cfg = t.config;
+                    FileUtils.cd cfg.projectDir do
+                        args = " -java javadir=#{outdir} java.package=#{defaultPackage}";
+                        if(xmlIncludePath.length > 0)
+                             args += " \"src.includepath=#{xmlIncludePath.join(";")}\"";
+                        end
+                        sourcexml = "\"#{t.sources.join("\" \"")}\"";
+
+                        cmd = "\"#{java_home}/bin/java\" -cp \"#{cfg.binDir}/artd-bml-generator.jar\"  com.artd.bml.CodeGenerator.XMLToCode #{args} #{sourcexml}";
+                        system(cmd);
+                    end
+                end
+                batchTask.config = self;
+
+                # create a task for each output java file dependent on the source files.
+                # if any java file is out of date invoke the combined task for all the java files once.
+
+                tasks = [];
+
+                listener.javaOutputFiles.each do |javaFile|
+                    tsk = Rake::FileTask.define_task javaFile => [xmlsources] do |t|
+                        genTask = t.config;
+                        genTask.invoke();
+                    end
+                    tsk.config = batchTask; # note this used to pass in task to be completed
+                    tasks << tsk;
+                end
+
+                task :clean do
+                    addCleanFiles(tasks);
+                end
+
+                if(tasks.length > 0)
+                    task :autogen => tasks;
+                end
+
+                tasks   # pass back the list of tasks for creating the java files.
+            end
+
+        end
+
+    end # Rakish
+
+===A project that builds a tomcat war file
+
+Though the ServletProjectModule isn't in the gem (yet) I put this here to
+show building an archive (.war file) and searching the jar file library path to
+get them.  moduleJars are built bt dependent projects and they are in the "binDir" the others come
+from the library search path.
+
+    myDir = File.dirname(__FILE__);
+    require "#{myDir}/../build-options.rb";
+    require "rakish/TomcatProjects.rb";
+
+    Rakish.Project(
+        :includes=>[Rakish::ServeletProjectModule], # note not in gem at present
+        :name=>'omp-router',
+        :dependsUpon=> [
+            '../../libs',
+            '../omp-servlet',
+            '../oms-Interfaces',
+            '../omp-smpp'
+        ]
+    ) do
+
+        export task :resources => [];
+
+        java.addSourceRoots("#{projectDir}/src");
+
+        java.addClassPaths("servlet-api.jar");
+
+        java.addProjectOutputClasspaths(
+            'artd-util',
+            'artd-net',
+            'artd-bml-base',
+            'artd-bml-interpreter',
+            'artd-bml-servlet',
+            'oms-Interfaces',
+            'omp-servlet',
+            'omp-smpp'
+        );
+
+        javac = java.javacTask
+
+        moduleJars = [
+                'artd-util.jar',
+                'artd-net.jar',
+                'artd-bml-servlet.jar',
+                'artd-bml-interpreter.jar',
+                'artd-bml-net.jar',
+                'artd-bml-generator.jar',
+                'artd-bml-base.jar',
+                'oi-xml.jar',
+                'omp-smpp.jar',
+                'omp-net.jar',
+                'oms-Dao.jar',
+                'oms-Connector.jar',
+                'omp-servlet.jar',
+                'oms-Protocol.jar',
+                'oms-Interfaces.jar'
+            ].map! { |name| File.join(binDir(), name); };
+
+        libJars = java.resolveJarsWithPath([
+              'SMPPLibrary.jar',
+              'commons-logging-1.1.3.jar',
+              'commons-logging-api-1.1.jar',
+              'commons-validator-1.3.1.jar',
+              'displaytag-1.2.jar',
+              'dom4j-1.6.1.jar',
+              'freemarker-2.3.19.jar',
+              'hibernate-c3p0-4.1.8.final.jar',
+              'hibernate-commons-annotations-4.0.5.Final.jar',
+              'hibernate-core-4.3.8.Final.jar',
+              'antlr-2.7.7.jar',
+              'hibernate-jpa-2.1-api-1.0.0.Final.jar',
+              'antlr-runtime-3.0.1.jar',
+              'jandex-1.1.0.Final.jar',
+              'javassist-3.11.0.GA.jar',
+              'javassist-3.18.1-GA.jar',
+              'javax.mail-1.4.5.jar',
+              'jboss-logging-3.1.3.GA.jar',
+              'jboss-logging-annotations-1.2.0.Beta1.jar',
+              'jboss-transaction-api_1.2_spec-1.0.0.Final.jar',
+              'jta-4.0.jar',
+              'asm-3.2.jar',
+              'log4j-1.2.17.jar',
+              'asm-attrs.jar',
+              'ognl-3.0.6.jar',
+              'c3p0-0.9.1.jar',
+              'org-apache-commons-logging.jar',
+              'cglib-2.1.96.jar',
+              'slf4j-api-1.7.10.jar',
+              'commons-fileupload-1.3.1.jar',
+              'slf4j-log4j12-1.7.10.jar',
+              'commons-httpclient-3.1.jar',
+              'struts2-core-2.3.20.jar',
+              'commons-io-2.2.jar',
+              'struts2yuiplugin-0.1-ALPHA-7.jar',
+              'commons-lang-2.4.jar',
+              'xwork-core-2.3.20.jar',
+              'commons-lang3-3.2.jar'
+            ],
+            :errorOnMissing=>true  # if one is not found this will raise an exception.
+        );
+
+        warBuilder = createWarBuilder
+
+        warBuilder.addFiles('/WEB-INF/lib', moduleJars, libJars );
+        warBuilder.addFileTree('/WEB-INF/classes', java.outputClasspath, "#{java.outputClasspath}/**/*" );
+        warBuilder.addFileTree('/', './web', './web/WEB-INF/**/*');
+
+        warFile = warBuilder.warFileTask "#{binDir()}/omp-router-0.1-dev.war" => [ :compile, :libs ];
+
+        export task :dist => [ warFile ];
+
+        createDeploymentTasks( routerConfig,
+                                :sourceWar=>warFile.name,
+                                :webPath=>"a.l" );
+
+
+    end
+

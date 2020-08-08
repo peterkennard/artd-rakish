@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="rake-targets" default="">
+
+    <!--
+    <condition property="exec.shell" value="artd-shell.bat">
+        <os family="windows"/>
+    </condition>
+    <condition property="exec.shell" value="/bin/bash">
+        <os family="unix"/>
+    </condition>
+
+    <exec executable="${exec.shell}" outputproperty="rake.ant.xml">
+        <arg value="-c"/>
+        <arg value="artd-rakish-find call-rake.xml"/>
+    </exec>
+    -->
+
+    <exec executable="artd-rakish-find" outputproperty="rake.ant.xml">
+        <arg value="call-rake.xml"/>
+    </exec>
+    <import file="${rake.ant.xml}" />
+
+    <property environment="env" />
+
+    <target name="cleanAll" description="delete output directory">
+        <call-rake target="cleanAll" />
+    </target>
+
+    <target name="installGem" description="install rakish rubygem">
+        <call-rake target="installGem"/>
+    </target>
+
+    <target name="subdirTest" description="test required subprojects">
+        <call-rake file="./test/subdir-test/rakefile.rb" target="subdir-test:test"/>
+    </target>
+
+    <target name="echoProperties" description="dunp properties to console">
+        <echoproperties/>
+    </target>
+
+</project>

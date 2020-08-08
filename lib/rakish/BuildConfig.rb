@@ -3,7 +3,7 @@ require "#{myDir}/Rakish.rb"
 
 module Rakish
 
-class InvalidConfigError < Exception
+class InvalidConfigError < Exception # :nodoc:
 	def initialize(cfg, msg)
 		super("Invalid Configuration \"#{cfg}\": #{msg}.");
 	end
@@ -19,7 +19,7 @@ module BuildConfigModule
  	#	log.debug("initializing BuildConfig #{pnt}")
  		enableNewFields do |cfg|
 			if(pnt)
- 				cfg.nativeConfigName = getInherited(:nativeConfigName);
+ 				cfg.nativeConfigName = getAnyAbove(:nativeConfigName);
  			end
  		end
  	end
@@ -71,52 +71,45 @@ module BuildConfigModule
     # pointing to the actual libraries if not there ( windows DLL libs )
 	attr_property 	:nativeLibDir
 
-    # folder to output native object and intermediate files to
-	attr_property 	:nativeObjDir
+    # folder to output native object and intermediate files to for this module
+	attr_property 	:projectObjDir
 
     # folder to output native binary dll and so files to
 	attr_property 	:binDir
-
-    # path to third party unix like utilities on windows machines
- 	attr_property	:thirdPartyPath
 
  	# parsable native configuration name as configuration and
  	# used as a reference to which librarys to link with for a particular
  	# compiler and processor configuration
 	attr_property   :nativeConfigName
 
-    # suffix to append to native output binary and library files
-    # defaults to the nativeConfigName
-	attr_property   :nativeOutputSuffix
-
-    # root folder for buuild output files
+    # root folder for build output files
 	def buildDir
-		@buildDir||=getInherited(:buildDir);
+		@buildDir||=getAnyAbove(:buildDir);
 	end
+
+    # Get output binDir for all configurations in this build area
+    def buildBinDir
+		@buildBinDir||=getAnyAbove(:buildBinDir)||"#{buildDir}/bin";
+    end
 
     # folder to output native executable and dll files to.
-    # defaults to (buildDir)/bin
+    # defaults to (buildDir)/bin/(nativeConfigName)
 	def binDir
-        @binDir||=getInherited(:binDir)||"#{buildDir()}/bin";
-	end
+	    # log.debug("getting binDir #{@binDir}");
+        @binDir||=getAnyAbove(:binDir)||"#{buildDir()}/bin/#{nativeConfigName}";
+    end
 
     # folder to output native library files and link references to.
     # defaults to (buildDir)/lib
 	def nativeLibDir
-		@nativeLibDir||=getInherited(:nativeLibDir)||"#{buildDir()}/lib";
+		@nativeLibDir||=getAnyAbove(:nativeLibDir)||"#{buildDir()}/lib";
 	end
 
     # folder to output native intermedite and object files to.
     # config defaults to (buildDir)/obj
-    # in a project module defaults to the value set in th (configValue)/(moduleName)
-	def nativeObjDir
-		@nativeObjDir||=getInherited(:nativeObjDir)||"#{buildDir()}/obj";
-	end
-
-    # suffix to add to native output files
-    # defaults to nativeConfigName
-	def nativeOutputSuffix
-		@nativeOutputSuffix||=nativeConfigName();
+    # in a project module defaults to the value set in th (configValue)/(projectName)
+	def projectObjDir
+		@projectObjDir||=getAnyAbove(:projectObjDir)||"#{buildDir()}/obj";
 	end
 
     # temporary include directory built for compiling
@@ -129,8 +122,9 @@ module BuildConfigModule
 	attr_accessor 	:verbose
 
 	def verbose?
-		@verbose ||= getInherited(:verbose);
+		@verbose ||= getAnyAbove(:verbose);
 	end
+
 end
 
 
@@ -146,12 +140,16 @@ class BuildConfig
         self.class.initializeIncluded(self,pnt,opts);
 		yield self if block_given?
     end
+
     include BuildConfigModule
+
+	attr_accessor 	:registeredName
 
 end
 
+protected
 
-# global singleton default RakishProject configuration
+# global singleton default Rakish.Project configuration
 class GlobalConfig < BuildConfig
 
 	@@gcfg = nil
@@ -166,14 +164,14 @@ class GlobalConfig < BuildConfig
 		end
 	end
 
-   	def buildDir=(val)
-   	    @buildDir=val;
-   	end
+	def buildDir=(val)
+		@buildDir=val;
+	end
 
 	def initialize(*args, &b)
 
 		if @@gcfg
-			raise("Exeption !! You can only initialize one GlobalConfig !!!")
+			raise("Exception !! You can only initialize one GlobalConfig !!!")
 		end
 
 		@@gcfg = self
@@ -189,39 +187,48 @@ class GlobalConfig < BuildConfig
 
 		super(nil,{}) {}
 
-		enableNewFields() do |cfg|
-
-			enableNewFields(&b);
-
-			enableNewFields(&@initGlobalPaths) if @initGlobalPaths;
-
-			cfg.thirdPartyPath ||= File.join(ENV['ARTD_TOOLS'],'../.');
-			cfg.thirdPartyPath = File.expand_path(cfg.thirdPartyPath);
-
-			@buildDir ||= ENV['RakishBuildRoot']||"#{Rake.original_dir}/build";
-			@buildDir = File.expand_path(@buildDir);
-
-			config = nil;
-			if(HOSTTYPE =~ /Macosx/)
-				defaultConfig = "iOS-gcc-fat-Debug";
-			else
-				defaultConfig = "Win32-VC10-MD-Debug";
+		# can this be factored out ??
+		declaringFile = './.';
+		regex = Regexp.new(Regexp.escape(File.dirname(__FILE__)));
+		caller.each do |clr|
+			unless(clr =~ regex)
+				clr =~ /\:\d/
+				declaringFile = $`;
+				break;
 			end
+		end
 
+		cd(File.dirname(declaringFile),:verbose=>false) do
+			enableNewFields() do |cfg|
 
-			# set defaults if not set above
-			@nativeLibDir ||= "#{@buildDir}/lib"
-			@binDir ||= "#{@buildDir}/bin"
+				enableNewFields(&b);
 
-			# get config from command line
-			cfg.nativeConfigName ||= ENV['nativeConfigName'];
-			cfg.nativeConfigName ||= defaultConfig
+				enableNewFields(&@initGlobalPaths) if @initGlobalPaths;
 
+				@buildDir ||= ENV['RakishBuildRoot']||"#{Rake.original_dir}/build";
+				@buildDir = File.expand_path(@buildDir);
+
+				config = nil;
+				if(HOSTTYPE =~ /Macosx/)
+					defaultConfig = "iOS-gcc-fat-Debug";
+				else
+					defaultConfig = "Win32-VC10-MD-Debug";
+				end
+
+				# set defaults if not set above
+				@nativeLibDir ||= "#{@buildDir}/lib"
+
+				# get config from command line
+				cfg.nativeConfigName ||= ENV['nativeConfigName'];
+				cfg.nativeConfigName ||= defaultConfig
+
+				binDir();
+			end
 		end
 
 		puts("host is #{HOSTTYPE()}") if self.verbose?
 
-        ensureDirectoryTask(@buildDir);
+		ensureDirectoryTask(@buildDir);
 
 		RakeFileUtils.verbose(@@gcfg.verbose?)
 		if(@@gcfg.verbose?)
@@ -235,16 +242,40 @@ class GlobalConfig < BuildConfig
 	end
 end
 
+public
+
+def self.ConfigurationLoaded(name)
+    found = build.configurationByName(name);
+end
+
+# Declare (create) a new named configuration
+#
+#  named arguments:
+#     :name         => Name for this configuration. This must be unique for all loaded projects,
+#                      defaults to 'root'.
+#     :include      => [ Array of configuration modules to include ]
+#     :inheritsFrom => Parent configuration's name.
+#                      Defaults to 'root' if name != 'root'
+
+def self.Configuration(opts={},&block)
+    name = opts[:name]||='root'
+    me = nil;
+    found = build.configurationByName(name);
+    if(name == 'root')
+        if(found)
+            log.debug("found registered config \"" + found.registeredName() + "\"");
+            return(found);
+        end
+        me = GlobalConfig.new(opts,&block);
+        me.registeredName = name;
+    else
+        return(nil); # for now.
+    end
+    me.name=name;
+    build.registerConfiguration(me);
+    me
+end
+
 
 end # module Rakish
 
-# Convenience method for Rakish::GlobalConfig.initInstance(&block)
-def InitBuildConfig(opts={},&block)
-	Rakish::GlobalConfig.new(opts,&block)
-end
-
-
-# Convenience method for Rakish::ProjectConfig.new(&block)
-def ProjectConfig(&block)
-#	Rakish::ProjectConfig.new(&block)
-end

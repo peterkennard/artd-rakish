@@ -1,0 +1,29 @@
+
+==Items To Do
+
+===Of course make a decent C++/C/asm module for msc and gcc g++ etc
+The ones in here now work but are not very elegant.  They sort of happen
+when a project needs them.
+
+===Make a usable MultiProcessTask for spawning multiple asynchronous tasks
+The one in Rake actually slows things down when too
+many are spawned due to the thread switching overhead so it really isn't practical.  What it should do is maintain a semaphore
+managed queue and only spawn as many tasks as there are processor cores on the machine to handle the big processes they
+spawn ( compilers and the like ) the little ruby tasks are better off being run in the primary thread unless they are
+doing something with a lot of waiting involved like uploading a file. In any case limiting the number of ruby threads
+would help this too.
+
+===Design and build a better configuration registration system.
+One that can deal with inheritance and overriding in
+sub projects for now there is on one global configuration for an entire module tree
+
+===Set up WindowsCPP module to get it's paths and windows sdks from standard installs.
+Using the "VCVars32.bat" files or environment
+variables from installs.  For now it uses compilers I have pre-configured in a "third-party" folder
+and the paths to their tools are hard coded.
+
+===Make tomcat servlet module releasable
+===A real manual
+===Make intellij integration module releasable (partly done)
+
+
