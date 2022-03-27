@@ -102,10 +102,35 @@ module Rakish
                     parser.parse
 
                     xmlPath = File.expand_path("#{ideaProject}/compiler.xml");
+                    if(File.file(xmlPath)) do
+                        listener = CompilerParser.new(cfg);
+                        parser = REXML::Parsers::StreamParser.new(File.new(xmlPath), listener)
+                        parser.parse
+                    end
 
-                    listener = CompilerParser.new(cfg);
-                    parser = REXML::Parsers::StreamParser.new(File.new(xmlPath), listener)
-                    parser.parse
+# this was what intellij wrote out by default before - they seem to have stopped doing it
+# <?xml version="1.0" encoding="UTF-8"?>
+# <project version="4">
+#   <component name="CompilerConfiguration">
+#     <resourceExtensions />
+#     <wildcardResourcePatterns>
+#       <entry name="!?*.java" />
+#       <entry name="!?*.form" />
+#       <entry name="!?*.class" />
+#       <entry name="!?*.groovy" />
+#       <entry name="!?*.scala" />
+#       <entry name="!?*.flex" />
+#       <entry name="!?*.kt" />
+#       <entry name="!?*.clj" />
+#       <entry name="!?*.aj" />
+#     </wildcardResourcePatterns>
+#     <annotationProcessing>
+#       <profile default="true" name="Default" enabled="false">
+#         <processorPath useClasspath="true" />
+#       </profile>
+#     </annotationProcessing>
+#   </component>
+# </project>
 
                 end
             end

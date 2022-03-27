@@ -20,6 +20,17 @@
                 <arg value="exec-rake.bat"/>
             </exec>
 
+<!--
+	In the windows case for latest intellij ant this script fails !!!
+
+                    <script language="javascript">
+                        if(project.getProperty("_rake_target_") == "_not_set_") {
+                        project.setProperty("_rake_target_", self.getOwningTarget());
+                        }
+			          </script>
+          			
+
+-->
             <macrodef name="call-rake">
                 <attribute name="file" default="./rakefile.rb"/>
                 <attribute name="target" default="_not_set_" />
@@ -30,19 +41,15 @@
                 <attribute name="idea.project" default="${user.dir}/.idea"/>
                 <sequential>
                     <property name="_rake_target_" value="@{target}" />
-                    <script language="javascript">
-                        if(project.getProperty("_rake_target_") == "_not_set_") {
-                        project.setProperty("_rake_target_", self.getOwningTarget());
-                        }
-                    </script>
                     <record name="@{log}" action="start"/>
-                    <exec executable="cmd">
+					<echo	message="@{target}" />
+					<exec executable="cmd">
                         <arg value="/c"/>
                         <arg value="@{rake.path}"/>
                         <arg value="-f"/>
                         <arg value="@{file}"/>
                         <arg value="@{trace}"/>
-                        <arg value="${_rake_target_}"/>
+                        <arg value="@{target}"/>
                         <arg value="&quot;'JAVA_HOME=@{java.home}'&quot;"/>
                         <arg value="&quot;'IDEA_PROJECT=@{idea.project}'&quot;"/>
                     </exec>
