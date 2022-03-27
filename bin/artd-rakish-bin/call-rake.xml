@@ -4,8 +4,10 @@
 	<dirname property="my.directory" file="/bin/artd-rakish-bin/call-rake.xml"/>
     <dirname property="jsdk.home" file="${java.home}/xx"/>
 
-#    <echo	message="java.home == ${java.home}" />
-#    <echo	message="jsdk.home == ${jsdk.home}" />
+    <!--
+     <echo	message="java.home == ${java.home}" />
+     <echo	message="jsdk.home == ${jsdk.home}" />
+    -->
 
     <condition property="os.windows">
 		<os family="windows"/>
