@@ -2,10 +2,9 @@
 <project name="call-rake" default="" xmlns:if="ant:if" >
 
 	<dirname property="my.directory" file="/bin/artd-rakish-bin/call-rake.xml"/>
-	<dirname property="jsdk.home" file="&quot;${java.home}&quot;"/>
+	<!-- <dirname property="jsdk.home" file="&quot;${java.home}&quot;"/> -->
 
     <echo	message="java.home == ${java.home}" />
-    <echo	message="jsdk.home == &quot;${jsdk.home}&quot;" />
 
     <condition property="os.windows">
 		<os family="windows"/>
@@ -40,7 +39,7 @@
                 <attribute name="log" default="rake.log"/>
                 <attribute name="trace" default=""/>
                 <attribute name="rake.path" default="${rake.exec.path}"/>
-                <attribute name="java.home" default="&quot;${jsdk.home}&quot;"/>
+                <attribute name="java.home" default="&quot;${java.home}&quot;"/>
                 <attribute name="idea.project" default="${user.dir}/.idea"/>
                 <sequential>
                     <property name="_rake_target_" value="@{target}" />
