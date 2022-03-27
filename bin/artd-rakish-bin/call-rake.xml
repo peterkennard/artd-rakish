@@ -40,7 +40,7 @@
                 <attribute name="file" default="./rakefile.rb"/>
                 <attribute name="target" default="_not_set_" />
                 <attribute name="log" default="rake.log"/>
-                <attribute name="trace" default=""/>
+                <attribute name="trace" default="-"/>
                 <attribute name="rake.path" default="${rake.exec.path}"/>
                 <attribute name="java.home" default="${java.home}"/>
                 <attribute name="idea.project" default="${user.dir}/.idea"/>
