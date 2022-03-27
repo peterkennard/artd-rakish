@@ -5,7 +5,7 @@
 	<dirname property="jsdk.home" file="&quot;${java.home}&quot;"/>
 
     <echo	message="java.home == ${java.home}" />
-    <echo	message="jsdk.home == ${jsdk.home}" />
+    <echo	message="jsdk.home == &quot;${jsdk.home}&quot;" />
 
     <condition property="os.windows">
 		<os family="windows"/>
