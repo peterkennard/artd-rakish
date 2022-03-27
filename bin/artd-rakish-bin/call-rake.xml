@@ -2,7 +2,7 @@
 <project name="call-rake" default="" xmlns:if="ant:if" >
 
 	<dirname property="my.directory" file="/bin/artd-rakish-bin/call-rake.xml"/>
-	<dirname property="jsdk.home" file="${java.home}"/>
+	<dirname property="jsdk.home" file="&quot;${java.home}&quot;"/>
 
     <echo	message="java.home == ${java.home}" />
     <echo	message="jsdk.home == ${jsdk.home}" />
