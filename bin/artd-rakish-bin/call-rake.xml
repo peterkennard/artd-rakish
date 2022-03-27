@@ -24,7 +24,6 @@
             <exec executable="artd-rakish-find" outputproperty="rake.exec.path">
                 <arg value="exec-rake.bat"/>
             </exec>
-
 <!--
 	In the windows case for latest intellij ant this script fails !!!
 
@@ -33,8 +32,6 @@
                         project.setProperty("_rake_target_", self.getOwningTarget());
                         }
 			          </script>
-          			
-
 -->
             <macrodef name="call-rake">
                 <attribute name="file" default="./rakefile.rb"/>
@@ -69,7 +66,7 @@
                 <attribute name="file" default="./rakefile.rb"/>
                 <attribute name="target" default="_not_set_" />
                 <attribute name="log" default="./rake.log"/>
-                <attribute name="trace" default=""/>
+                <attribute name="trace" default="-"/>
                 <attribute name="rake.path" default="${rake.exec.path}"/>
                 <attribute name="java.home" default="${jsdk.home}"/>
                 <attribute name="idea.project" default="${user.dir}/.idea"/>
