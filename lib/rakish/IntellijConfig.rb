@@ -102,7 +102,7 @@ module Rakish
                     parser.parse
 
                     xmlPath = File.expand_path("#{ideaProject}/compiler.xml");
-                    if(File.file?(xmlPath)) do
+                    if(File.file?(xmlPath))
                         listener = CompilerParser.new(cfg);
                         parser = REXML::Parsers::StreamParser.new(File.new(xmlPath), listener)
                         parser.parse
