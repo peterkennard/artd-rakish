@@ -53,7 +53,7 @@
                         <arg value="-f"/>
                         <arg value="@{file}"/>
                         <arg value="@{trace}"/>
-                        <arg value="@{target}"/>
+                        <arg value="${_rake_target_}"/>
                         <arg value="&quot;'JAVA_HOME=@{java.home}'&quot;"/>
                         <arg value="&quot;'IDEA_PROJECT=@{idea.project}'&quot;"/>
                     </exec>
