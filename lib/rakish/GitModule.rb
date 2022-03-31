@@ -25,7 +25,7 @@ module Rakish
 				end
 
 				def addRemote(dir, name, uri)
-					cd dir do
+					FileUtils.cd dir do
 						system("git remote add \"#{name}\" \"#{uri}\"");
 					end
                 end
