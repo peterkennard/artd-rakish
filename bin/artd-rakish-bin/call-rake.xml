@@ -12,9 +12,12 @@
     <condition property="os.windows">
 		<os family="windows"/>
 	</condition>
-	<condition property="os.linux">
-		<os family="unix" name="linux" />
-	</condition>
+    <condition property="os.linux">
+        <os family="unix"/>
+    </condition>
+    <condition property="os.mac">
+        <os family="mac"/>
+    </condition>
 
     <property environment="env"/>
 
@@ -25,7 +28,7 @@
                 <arg value="exec-rake.bat"/>
             </exec>
 <!--
-	In the windows case for latest intellij ant this script fails !!!
+	for latest intellij ant this script fails !!!
 
                     <script language="javascript">
                         if(project.getProperty("_rake_target_") == "_not_set_") {
@@ -35,7 +38,7 @@
 -->
             <macrodef name="call-rake">
                 <attribute name="file" default="./rakefile.rb"/>
-                <attribute name="target" default="_not_set_" />
+                <attribute name="target" default="_" />
                 <attribute name="log" default="rake.log"/>
                 <attribute name="trace" default="-"/>
                 <attribute name="rake.path" default="${rake.exec.path}"/>
@@ -59,24 +62,18 @@
             </macrodef>
         </sequential>
         <sequential if:set="os.linux">
-            <!-- in this case rake needs to be in the system path -->
             <property name="rake.exec.path"
                       value="rake" />
             <macrodef name="call-rake">
                 <attribute name="file" default="./rakefile.rb"/>
-                <attribute name="target" default="_not_set_" />
+                <attribute name="target" default="_" />
                 <attribute name="log" default="./rake.log"/>
                 <attribute name="trace" default="-"/>
                 <attribute name="rake.path" default="${rake.exec.path}"/>
-                <attribute name="java.home" default="${jsdk.home}"/>
+                <attribute name="java.home" default="${java.home}"/>
                 <attribute name="idea.project" default="${user.dir}/.idea"/>
                 <sequential>
                     <property name="_rake_target_" value="@{target}" />
-                    <script language="javascript">
-                        if(project.getProperty("_rake_target_") == "_not_set_") {
-                        project.setProperty("_rake_target_", self.getOwningTarget());
-                        }
-                    </script>
                     <record name="@{log}" action="start"/>
                     <exec executable="@{rake.path}">
                         <arg value="-f"/>
@@ -93,11 +90,10 @@
 	</macrodef>
 
 	<createOsMacros />
-
-	<!--
+<!--
     <target name="showprops">
         <echoproperties/>
     </target>
-    -->
+-->
 
 </project>
