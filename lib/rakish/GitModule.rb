@@ -17,7 +17,7 @@ module Rakish
 						puts("Git.clone -o \"#{origin}\" -n \"#{src}\" \"#{dest}\"");
 
 						system("git clone -o \"#{origin}\" -n \"#{src}\" \"#{dest}\"");
-						cd dest do
+						FileUtils.cd dest do
 							system("git config -f ./.git/config --replace-all core.autocrlf true");
 							system("git reset -q --hard");
 						end
@@ -33,7 +33,7 @@ module Rakish
 				def checkout(branch, opts={})
                     cmd = "git checkout \"#{branch}\"";
 					if(opts[:dir])
-					    cd opts[:dir] do
+					    FileUtils.cd opts[:dir] do
                             system(cmd);
                         end
                      else
