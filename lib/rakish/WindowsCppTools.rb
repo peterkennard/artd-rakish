@@ -828,7 +828,7 @@ module Rakish
 		@@resolveLinkAction_ = lambda do |t,args|
 		end
 
-		def createLinkTask(objs,cfg)
+		def createLinkTask(objs,cfg,project)
 		
             libdir = "#{cfg.nativeLibDir()}/#{cfg.configName}";
 

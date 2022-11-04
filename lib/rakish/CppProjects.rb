@@ -18,9 +18,9 @@ module CTools
 
     attr_reader :ctools
 
-	# parses and validates an unknown string configuration name 
+	# parses and validates an unknown string configuration name
 	# of the format [TargetPlatform]-[Compiler]-(items specific to compiler type)
-	# and loads if possible an instance of a set of configured "CTools" 
+	# and loads if possible an instance of a set of configured "CTools"
 	# for the specified "nativeConfigName" configuration.
 
 	def self.loadToolchain(projectName,configName,args={})
@@ -38,7 +38,7 @@ module CTools
         end
 	end
 
-	def writeLinkref(cfg,baseName,targetName)					
+	def writeLinkref(cfg,baseName,targetName)
 		defpath = "#{cfg.nativeLibDir}/#{baseName}-#{cfg.nativeConfigName}.linkref"
         reltarget = getRelativePath(targetName,cfg.nativeLibDir);
 		File.open(defpath,'w') do |f|
@@ -76,14 +76,14 @@ module CTools
 		end
 	end
 
-    # given a list of dependencies will write out a '.raked' format dependencies file 
+    # given a list of dependencies will write out a '.raked' format dependencies file
     # for the target task
 	def updateDependsFile(task, outName, dependencies)
-				
+
 		srcfile = task.source
 		tempfile = "#{outName}.temp";
-				
-		File.open(tempfile,'w') do |out|			
+
+		File.open(tempfile,'w') do |out|
 			if(dependencies.size > 0)
 				out.puts "t = Rake::Task[\'#{task.name}\'];"
 				out.puts 'if(t)'
@@ -96,12 +96,12 @@ module CTools
 				out.puts 'end'
 			end
 		end
-				
+
         # only touch file if new file differs from old one
 
 		if(!File.exists?(outName) || textFilesDiffer(outName,tempfile))
             # @#$#@$#@ messed up. set time of new file ahead by one second.
-            # seems rake time resolution is low enough that the comparison often says 
+            # seems rake time resolution is low enough that the comparison often says
             # times are equal between depends files and depends.rb.
             FileUtils.mv(tempfile, outName, :force=>true);
             time = Time.at(Time.new.to_f + 1.0);
@@ -124,7 +124,7 @@ module CTools
 	# system include paths and the like are enforced as needed for this toolset
 	def ensureConfigOptions(cfg)
 	end
-	
+
 	def systemIncludePaths
 		[]
 	end
@@ -135,7 +135,7 @@ module CTools
 
 	# return the approriate compile action to creat an object file from
 	# a source file with the specified suffix.
-	# nil if not action is available in this toolset. 
+	# nil if not action is available in this toolset.
 	def getCompileActionForSuffix(suff)
 		@@doNothingAction_
 	end
@@ -156,33 +156,33 @@ module CTools
 		tsk = Rake::FileTask.define_task obj
 		tsk.enhance(tsk.sources=[source], &action)
 		tsk.config = cfg;
-		tsk;				
+		tsk;
 	end
 
-    def createCompileTasks(files,cfg)                
+    def createCompileTasks(files,cfg)
         # format object files name
-	                                 
+
         mapstr = "#{cfg.configuredObjDir()}/%n#{objExt()}";
 
         objs=FileList[];
         files.each do |source|
-            obj = source.pathmap(mapstr);                                                         
+            obj = source.pathmap(mapstr);
             task = createCompileTask(source,obj,cfg);
             objs << obj if task;  # will be the same as task.name
         end
         objs
     end
-	
+
 	def initCompileTask(cfg)
 		cfg.project.addCleanFiles("#{cfg.configuredObjDir()}/*#{objExt()}");
 		Rake::Task.define_task :compile => [:includes,
 											cfg.configuredObjDir(),
 											:depends]
-	end	
+	end
 
  	def initDependsTask(cfg) # :nodoc:
-               
-		# create dependencies file by concatenating all .raked files				
+
+		# create dependencies file by concatenating all .raked files
 		tsk = file "#{cfg.configuredObjDir()}/depends.rb" => [ :includes, cfg.configuredObjDir() ] do |t|
 			cd(cfg.configuredObjDir(),:verbose=>false) do
 				File.open('depends.rb','w') do |out|
@@ -198,7 +198,7 @@ module CTools
 		# build and import the consolidated dependencies file
 		task :depends => [ "#{cfg.configuredObjDir()}/depends.rb" ] do |t|
 			load("#{cfg.configuredObjDir()}/depends.rb")
-		end		
+		end
 		task :cleandepends do
 			depname = "#{cfg.configuredObjDir()}/depends.rb";
 			deleteFiles("#{cfg.configuredObjDir()}/*.raked");
@@ -206,13 +206,13 @@ module CTools
 			# if there is no task defined for the 'raked' file then create a dummy
 			# that dos nothing so the prerequisites resolve - this is the case where the
 			# actual dependencies are built by compiling.
-						
+
 			tsk.prerequisites.each do |dep|
 				next unless (dep.pathmap('%x') == '.raked')
 				next if(Rake::Task::task_defined?(dep))
 				file dep # a do nothing task
 			end
-			
+
 			# same here create a dummy file with nothing in it
 			if File.exist? depname
 				File.open(depname,'w') do |out|
@@ -223,7 +223,7 @@ module CTools
 		tsk
 	end
 
-	def createLinkTask(objs,cfg)
+	def createLinkTask(objs,cfg,project)
 		log.debug("creating link task");
 		false
 	end
@@ -233,6 +233,7 @@ end # CToolx module
 module CppProjectConfig
 
     attr_reader :ctools
+    attr_reader :cMakeGenerator
 	attr_reader :cppDefines
 	attr_reader :targetType
 	attr_reader :thirdPartyLibs
@@ -247,22 +248,23 @@ module CppProjectConfig
 		@addedIncludePaths_=[]
 		@cppDefines={}
 		@incPaths_=nil;
-
+		@cMakeGenerator=nil;
 		if(pnt != nil)
 			@targetType = pnt.targetType;
 			@cppDefines.merge!(pnt.cppDefines);
 			@ctools = pnt.ctools;
+			@cMakeGenerator = pnt.cMakeGenerator;
 		end
  	end
 
    # set toolchain for a cpp configuration
    # if ther is only one non hash argument and it is a module the module is used as a pre-loaded toolchain
    # otherwise the first argument is considered a module name of the tools module to load
-   # the second argument is the configuration name assigned to it, and subsequent hash argument are the 
+   # the second argument is the configuration name assigned to it, and subsequent hash argument are the
    # initialization arguments for creating the toolchain instance.
    #
     def setToolchain(ctools,*args)
-        if(ctools.is_a?(CTools)) 
+         log.debug("setTooChain #{ctools} 1");
             @ctools = ctools;
         else
             configName = args[0];
@@ -270,6 +272,11 @@ module CppProjectConfig
             hash = {} unless hash.is_a?(Hash)
             @ctools = CTools.loadToolchain(ctools,configName,hash);
         end
+    end
+
+    def setCMakeGenerator(gen)
+         log.debug("setCMakeGenerator #{gen} 1");
+         @cMakeGenerator = gen;
     end
 
 	def binDir
@@ -289,9 +296,9 @@ module CppProjectConfig
 		defs.flatten!()
 		defs.each do |ip|
 			@addedIncludePaths_ << File.expand_path(ip);
-		end	
+		end
 		@incPaths_=nil
-	end	
+	end
 
 	def addedIncludePaths
 		@addedIncludePaths_
@@ -302,7 +309,7 @@ module CppProjectConfig
 		args.flatten!()
 		args.each do |c|
 			spl = c.split('=',2);
-			# no value is nil, XXX= will have a value of empty string "" 
+			# no value is nil, XXX= will have a value of empty string ""
 			@cppDefines[spl[0]] = spl[1];
 		end
 	end
@@ -349,7 +356,7 @@ module CppProjectConfig
 				end
 				pnt = pnt.parent
 			end until !pnt
-			if(ctools) 
+			if(ctools)
 				ctools.systemIncludePaths.each do |ip|
 					ips << ip if s.add?(ip)
 				end
@@ -359,7 +366,7 @@ module CppProjectConfig
 		@incPaths_
 	end
 
-	def addThirdPartyLibs(*args)		
+	def addThirdPartyLibs(*args)
         @thirdPartyLibs||=[]
 		@thirdPartyLibs << args
 	end
@@ -492,7 +499,7 @@ module CppProjectModule
 		ensureDirectoryTask(configuredObjDir());
 
 		## link tasks
-		tsk = tools.createLinkTask(objs,@cppBuildConfig);
+		tsk = tools.createLinkTask(objs,@cppBuildConfig,self);
 		if(tsk)
 			outdir = tsk[:linkTask].name.pathmap('%d');
 			ensureDirectoryTask(outdir);
@@ -587,6 +594,7 @@ module CTools
   class TargetConfig < BuildConfig
     include CppProjectConfig
 
+    attr_reader		:cMakeGenerator
     attr_reader		:configName
     attr_accessor   :targetName
     attr_accessor	:targetBaseName
@@ -599,6 +607,7 @@ module CTools
       @libpaths=[]; # ???
       @libs=[];
       @configName = cfgName;
+      @cMakeGenerator = pnt.cMakeGenerator;
       @ctools = tools;
       @targetBaseName = pnt.projectName;
       # @manifestFile = pnt.manifestFile;
@@ -729,8 +738,12 @@ end # end module CTools
 class BuildConfig
   # ensure added global project task dependencies
   task :clean
-  task :autogen 		=> [ :cleandepends, :includes, :vcproj ];
-  task :cleanautogen 	=> [ :cleanincludes, :cleandepends, :vcprojclean ];
+  task :cmakeClean      => [];
+  task :cmakeGen        => [];
+
+
+  task :autogen 		=> [ :cleandepends, :includes ];
+  task :cleanautogen 	=> [ :cleanincludes, :cleandepends ];
   task :cleanAll      => [ :clean, :cleanautogen ];
   task :compile 		=> [ :includes ];
   task :depends		=> [ :includes ];

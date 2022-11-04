@@ -252,7 +252,7 @@ module Rakish
             end
 
             # for consumers of CTools toolchain
-            def createLinkTask(objs,cfg)
+            def createLinkTask(objs,cfg,project)
 
                 case(cfg.targetType)
 
