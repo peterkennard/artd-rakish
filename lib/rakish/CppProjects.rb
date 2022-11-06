@@ -237,6 +237,7 @@ module CppProjectConfig
 	attr_reader :cppDefines
 	attr_reader :targetType
 	attr_reader :thirdPartyLibs
+	attr_reader :sourceSubdir
 
 	def cpp
 	    self
