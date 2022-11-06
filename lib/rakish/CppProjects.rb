@@ -563,6 +563,9 @@ module CppProjectModule
 		@cppSourceFiles||=FileSet.new
 	end
 
+    def setSourceSubdir(dir)
+       @sourceSubdir=dir
+    end
 
 	# define a configurator for the linker configuration
 	def setupLinkConfig(args={}, &b)
