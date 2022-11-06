@@ -47,7 +47,7 @@ module Rakish
 		end
 
 		def self.getConfiguredTools(strCfg,config)
-			
+
 			parsed = parseConfigString(strCfg);
 			split = parsed[:split];
 			

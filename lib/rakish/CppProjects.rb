@@ -264,7 +264,7 @@ module CppProjectConfig
    # initialization arguments for creating the toolchain instance.
    #
     def setToolchain(ctools,*args)
-         log.debug("setTooChain #{ctools} 1");
+        if(ctools.is_a?(CTools))
             @ctools = ctools;
         else
             configName = args[0];
