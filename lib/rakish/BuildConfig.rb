@@ -24,7 +24,6 @@ module BuildConfigModule
  		end
  	end
 
-
 	# constants
 	SUPPORTED_HOST_TYPES = [ 'Win64', 'Win32', 'Linux32', 'Linux64', 'Macosx64' ];
 
@@ -44,6 +43,18 @@ module BuildConfigModule
 				HOSTTYPE = 'Win32';
 			end
 			BASEHOSTTYPE = 'Windows';
+            def hostObjExt()
+                '.obj'
+            end
+			def hostLibExt()
+			    '.lib'
+			end
+			def hostDllExt()
+			    '.dll'
+			end
+			def hostExeExt()
+			    '.exe'
+			end
 		else
 			uname = %x[uname]
 			if(uname =~ /Darwin/)
@@ -58,6 +69,22 @@ module BuildConfigModule
 				HOSTTYPE = "#{htype}32"
 			end
 			BASEHOSTTYPE = 'Linux'
+            # extension for pre linked object files
+            def hostObjExt
+                '.o'
+            end
+            # extension for static library files
+            def hostLibExt
+                '.a'
+            end
+            # extension for dynamic library files
+            def hostDllExt
+                '.so'
+            end
+            # extension for executable files
+            def exeExt
+                ''
+            end
 		end
 		def HOSTTYPE
 			HOSTTYPE
@@ -66,6 +93,8 @@ module BuildConfigModule
 			BASEHOSTTYPE
 		end
 	end
+
+
 
     # folder to output native libraries and "linkref" files
     # pointing to the actual libraries if not there ( windows DLL libs )
@@ -234,6 +263,7 @@ class GlobalConfig < BuildConfig
 		if(@@gcfg.verbose?)
 			puts("Global configuration initialized")
 		end
+
 	end
 
 	# return the instance of the GlobalConfig nil if not initialized
