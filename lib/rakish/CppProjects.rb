@@ -532,10 +532,11 @@ module CppProjectModule
 		destdir = File.join(buildIncludeDir(),destdir || '');
 		ensureDirectoryTask(destdir);
 		flist = createCopyTasks(destdir,files,:config => self,&LinkIncludeAction_)
-		task :includes => flist
+		t = task :includes => flist
 		task :cleanincludes do |t|
 			deleteFiles(flist)
 		end
+		flist
 	end
 
   # add a project local include directory so files will be listed
@@ -616,6 +617,22 @@ module CTools
       @targetBaseName = pnt.projectName;
       # @manifestFile = pnt.manifestFile;
       tools.ensureConfigOptions(self);
+    end
+
+    ## default to this platform target unless tool chain is
+    ## for a different platform and it will override these.
+
+    def objExt()
+        @ctools.objExt
+    end
+    def libExt()
+        @ctools.libExt
+    end
+    def dllExt()
+        @ctools.Ext
+    end
+    def exeExt()
+        @ctools.exeExt
     end
 
     def addLibPaths(*lpaths)

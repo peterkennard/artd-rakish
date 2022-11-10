@@ -308,7 +308,8 @@ module Rake
 		@actions << b if block_given?
 		self
 	  end
-	  
+      alias :addDependencies :enhance
+
 	  def scopeExec(args=nil) # :nodoc:
 		@application.in_namespace_scope(@scope) do
 			FileUtils.cd @_p_.projectDir do
