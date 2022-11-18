@@ -605,6 +605,7 @@ module CTools
     attr_accessor	:targetBaseName
     attr_reader 	:libpaths
     attr_reader 	:libs
+    attr_accessor   :appType;
     attr_accessor   :dependencyFilesUpdated
 
     def initialize(pnt, cfgName, tools)
@@ -619,6 +620,10 @@ module CTools
       tools.ensureConfigOptions(self);
     end
 
+    def appType
+        @appType||="";
+    end
+
     ## default to this platform target unless tool chain is
     ## for a different platform and it will override these.
 
@@ -629,7 +634,7 @@ module CTools
         @ctools.libExt
     end
     def dllExt()
-        @ctools.Ext
+        @ctools.libExt
     end
     def exeExt()
         @ctools.exeExt
