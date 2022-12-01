@@ -52,7 +52,7 @@ require 'logger'
 task "" do
 end
 
-# Module containg the package Rakish
+# Module containing the package Rakish
 # includes the module ::Rakish::Logger
 #
 # :include:doc/RakishOverview.html
