@@ -70,6 +70,30 @@ module Rakish
     # set to true on a MacOS or iOS host
     HostIsMac_ = (/darwin/ =~ RUBY_PLATFORM) != nil;
 
+	if(HostIsUnix_)
+
+		def self.raspiCheck
+			if(File.exists? '/usr/bin/raspi-config')
+				releaseInfo = {};
+				File.open('/etc/os-release') do |f|
+					f.each do |line|
+						spl = line.split('=',3);
+						if(spl.length != 2)
+							puts(" more than one \"=\"");
+						else
+							spl[0].strip!
+							spl[1].strip!
+							spl[1].gsub!(/^\"|\"?$/,'') # remove containing quotes
+							releaseInfo[spl[0]] = spl[1];
+						end
+					end
+				end
+				return(true);
+			end
+			return(false);
+		end
+		HostIsRaspberiPi_ = raspiCheck
+	end
 
 	# Logger module
 	# To use this Logger initialization include it in a class or module

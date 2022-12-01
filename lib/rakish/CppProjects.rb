@@ -235,7 +235,8 @@ module CppProjectConfig
     attr_reader :ctools
     attr_reader :cMakeGenerator
 	attr_reader :cppDefines
-	attr_reader :targetType
+	attr_reader :targetType  # DLL, LIB, APP, NONE
+	attr_reader :targetPlatform
 	attr_reader :thirdPartyLibs
 	attr_reader :sourceSubdir
 
@@ -250,11 +251,13 @@ module CppProjectConfig
 		@cppDefines={}
 		@incPaths_=nil;
 		@cMakeGenerator=nil;
+
 		if(pnt != nil)
 			@targetType = pnt.targetType;
 			@cppDefines.merge!(pnt.cppDefines);
 			@ctools = pnt.ctools;
 			@cMakeGenerator = pnt.cMakeGenerator;
+		 #   @targetPlatform = pnt.targetPlatform;
 		end
  	end
 
@@ -278,6 +281,24 @@ module CppProjectConfig
     def setCMakeGenerator(gen)
          log.debug("setCMakeGenerator #{gen} 1");
          @cMakeGenerator = gen;
+    end
+
+    def getDefaultTargetPlatform
+        if(HostIsWindows_)
+            return("Windows");
+        end
+        if(HostIsMac_)
+            return("MacOS");
+        end
+        if(HostIsUnix_)
+            return("Linux");
+        end
+        return("Unknown");
+    end
+
+
+    def targetPlatform
+        @targetPlatform||=getDefaultTargetPlatform();
     end
 
 	def binDir
