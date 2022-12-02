@@ -277,6 +277,10 @@ end
 
 public
 
+def self.BuildConfig(name)
+    build.configurationByName(name);
+end
+
 def self.ConfigurationLoaded(name)
     found = build.configurationByName(name);
 end
