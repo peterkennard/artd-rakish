@@ -174,6 +174,9 @@ class BuildConfig
 
 	attr_accessor 	:registeredName
 
+    def self.getConfig(name)
+        Rakish.build.configurationByName(name);
+    end
 end
 
 protected
