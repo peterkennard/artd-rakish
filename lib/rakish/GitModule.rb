@@ -11,14 +11,13 @@ module Rakish
 			class << self
 				def clone(src,dest,opts={})
 					if(!File.directory?(dest))
-
 						origin = opts[:remote] || "origin";
 
 						puts("Git.clone -o \"#{origin}\" -n \"#{src}\" \"#{dest}\"");
-
 						system("git clone -o \"#{origin}\" -n \"#{src}\" \"#{dest}\"");
 						FileUtils.cd dest do
-							system("git config -f ./.git/config --replace-all core.autocrlf true");
+						    # TODO: set this depending on what the platform is ?
+							# system("git config -f ./.git/config --replace-all core.autocrlf true");
 							system("git reset -q --hard");
 						end
 					end
