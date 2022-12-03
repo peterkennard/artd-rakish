@@ -257,7 +257,9 @@ module CppProjectConfig
 			@cppDefines.merge!(pnt.cppDefines);
 			@ctools = pnt.ctools;
 			@cMakeGenerator = pnt.cMakeGenerator;
-		 #   @targetPlatform = pnt.targetPlatform;
+		    if(defined? pnt.targetPlatform)
+		        setTargetPlatform(pnt.targetPlatform)
+		    end
 		end
  	end
 
@@ -297,10 +299,6 @@ module CppProjectConfig
     end
 
 
-    def targetPlatform
-        @targetPlatform||=getDefaultTargetPlatform();
-    end
-
 	def binDir
 		@binDir||=(getAnyAbove(:binDir)||"#{buildDir()}/bin/#{nativeConfigName}");
 	end
@@ -325,6 +323,59 @@ module CppProjectConfig
 	def addedIncludePaths
 		@addedIncludePaths_
 	end
+
+    def targetPlatform
+        @targetPlatform||=getDefaultTargetPlatform();
+    end
+
+    def setSuffi
+        tp = targetPlatform
+        if(tp =~ /Windows/)
+            @objExt = '.obj';
+            @libExt = '.lib';
+            @dllExt = '.dll';
+            @exeExt = '.exe';
+        elsif(tp =~ /MacOS/)
+            @objExt = '.o';
+            @libExt = '.a';
+            @dllExt = '.dylib';
+            @exeExt = ''; # ??? .app ???
+        else
+            @dllExt = targetPlatform;
+        end
+    end
+
+    def setTargetPlatform(val)
+        unless (val === @targetPlatform)
+            @targetPlatform = val;
+            setSuffi
+        end
+    end
+
+    def objExt
+      unless defined? @objExt
+        setSuffi
+      end
+      @objExt
+    end
+    def libExt
+      unless defined? @libExt
+        setSuffi
+      end
+      @libExt
+    end
+    def dllExt
+      unless defined? @dllExt
+          setSuffi
+      end
+      @dllExt
+    end
+    def exeExt
+      unless defined? @exeExt
+         setSuffi
+      end
+      @exeExt
+    end
 
     # define or re-define a preprocessor value
 	def cppDefine(*args)
@@ -593,6 +644,10 @@ module CppProjectModule
 	# define a configurator for the linker configuration
 	def setupLinkConfig(args={}, &b)
 		@targetType = args[:targetType];
+        tp = args[:targetPlatform];
+        if(tp)
+		    setTargetPlatform(tp);
+        end
 		@cppConfigurator_ = b;
 	end
   alias :setupCppConfig :setupLinkConfig
@@ -643,26 +698,6 @@ module CTools
 
     def appType
         @appType||="";
-    end
-
-    ## default to this platform target unless tool chain is
-    ## for a different platform and it will override these.
-
-    def objExt()
-        @ctools.objExt
-    end
-    def libExt()
-        @ctools.libExt
-    end
-    def dllExt()
-        @ctools.libExt
-    end
-    def exeExt()
-        @ctools.exeExt
-    end
-
-    def addLibPaths(*lpaths)
-      @libpaths << lpaths
     end
 
     def addLibs(*l)
