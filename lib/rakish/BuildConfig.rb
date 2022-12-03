@@ -55,6 +55,9 @@ module BuildConfigModule
 			def hostExeExt()
 			    '.exe'
 			end
+			def pathSeparator()
+			    ';'
+			end
 		else
 			uname = %x[uname]
 			if(uname =~ /Darwin/)
@@ -85,6 +88,9 @@ module BuildConfigModule
             def exeExt
                 ''
             end
+			def pathSeparator()
+			    ':'
+			end
 		end
 		def HOSTTYPE
 			HOSTTYPE
