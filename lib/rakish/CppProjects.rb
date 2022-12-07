@@ -340,7 +340,7 @@ module CppProjectConfig
             @libExt = '.a';
             @dllExt = '.dylib';
             @exeExt = ''; # ??? .app ???
-        elseif(tp =~ /Wasm/)
+        elsif(tp =~ /Wasm/)
             @objExt = '.o'; # bc';
             @libExt = '.a';
             @dllExt = '.????'; # not supported
