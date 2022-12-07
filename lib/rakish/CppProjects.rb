@@ -340,6 +340,11 @@ module CppProjectConfig
             @libExt = '.a';
             @dllExt = '.dylib';
             @exeExt = ''; # ??? .app ???
+        elseif(tp =~ /Wasm/)
+            @objExt = '.o'; # bc';
+            @libExt = '.a';
+            @dllExt = '.????'; # not supported
+            @exeExt = '.html';
         else
             @dllExt = targetPlatform;
         end
