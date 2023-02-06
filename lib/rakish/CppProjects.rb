@@ -130,7 +130,7 @@ module CTools
 	end
 
 	@@doNothingAction_ = lambda do |t,args|
-		# log.debug("attempting to compile #{t.source} into\n    #{t}\n    in #{File.expand_path('.')}");
+		log.debug("attempting to compile #{t.source} into\n    #{t}\n    in #{File.expand_path('.')}");
 	end
 
 	# return the approriate compile action to creat an object file from

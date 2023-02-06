@@ -206,6 +206,14 @@ class GlobalConfig < BuildConfig
 		@buildDir=val;
 	end
 
+	def nativeLibDir=(val)
+		@nativeLibDir=val;
+	end
+
+	def binDir=(val)
+		@binDir=val;
+	end
+
 	def initialize(*args, &b)
 
 		if @@gcfg
@@ -239,6 +247,7 @@ class GlobalConfig < BuildConfig
 		cd(File.dirname(declaringFile),:verbose=>false) do
 			enableNewFields() do |cfg|
 
+                # this is where the config initializer is called for the global config.
 				enableNewFields(&b);
 
 				enableNewFields(&@initGlobalPaths) if @initGlobalPaths;
