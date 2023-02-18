@@ -108,7 +108,6 @@ class Build
           end
 
           unless(opts[:optional] && (!File.exist?(path)))
-            log.debug("### depends ######## #{path}")
 
             FileUtils.cd(projdir) do
               if(require(path))
