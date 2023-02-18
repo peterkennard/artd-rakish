@@ -108,12 +108,19 @@ class Build
           end
 
           unless(opts[:optional] && (!File.exist?(path)))
+            log.debug("### depends ######## #{path}")
+
             FileUtils.cd(projdir) do
               if(require(path))
-                #	puts "project #{path} loaded" if verbose?
+                puts "project #{path} loaded"; # if verbose?
               end
             end
-            projs |= @projectsByFile[path];
+            proj = @projectsByFile[path];
+            if(proj)
+                projs |= proj;
+            else
+                log.debug("\"#{path}\" does not define a Rakish.Project");
+            end
           end
         end
       rescue LoadError => e
