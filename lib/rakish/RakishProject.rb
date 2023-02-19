@@ -386,7 +386,7 @@ public
     # end
 
     projectDependencies = args[:dependsUpon] || Array.new;
-    optionalProjectDependencies = args[:dependsOptionallyUpon];
+    optionalProjectDependencies = args[:dependsUponOpt];
 
     parent = @build.configurationByName(args[:config]);
 
@@ -563,6 +563,7 @@ public
 #   :config      => explicit parent configuration name, defaults to 'root'
 #   :dependsUpon => array of project directories or specific rakefile paths this project
 #                   depends upon
+#   :dependsUponOpt => array of OPTIONAL dependencies
 #   :id          => uuid to assign to project in "uuid string format"
 #                    '2CD0548E-6945-4b77-83B9-D0993009CD75'
 #   :includes    => If provided, ProjectModules and other modules to "include" in this project.
