@@ -281,7 +281,7 @@ module CppProjectConfig
     end
 
     def setCMakeGenerator(gen)
-         log.debug("setCMakeGenerator #{gen} 1");
+         log.debug("setCMakeGenerator set to: \"#{gen}\"");
          @cMakeGenerator = gen;
     end
 
