@@ -416,7 +416,7 @@ public
       end
 
       if(optionalProjectDependencies)
-        projs = @build.loadProjects(*optionalProjectDependencies, :optional=>TRUE);
+        projs = @build.loadProjects(*optionalProjectDependencies, :optional=>true);
         @dependencies = @dependencies + (projs - @dependencies);
       end
 
