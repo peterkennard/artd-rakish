@@ -1314,10 +1314,10 @@ module Rakish
 		end
 		
 		# Create a single simple "copy" task to process source file 
-		# file of same name in destination directory
+		# file to a destination file
 		#
 		# if &block is not given, then a simple copy action
-		#    do |t| { cp(t.source, t.name) } 
+		#    do |t| { cp(t.source, t.name) }
 		# is used
 		#
 		# <b>named arguments:</b>
@@ -1325,8 +1325,8 @@ module Rakish
 		#
 		# returns the task created
 		
-		def createCopyTask(destDir,sourceFile,opts={},&block) 
-			createFileTask("#{destDir}/#{File.basename(sourceFile)}",sourceFile,opts,&block)
+		def createCopyTask(sourceFile,destFile,opts={},&block)
+			createFileTask("#{destFile}",sourceFile,opts,&block)
 		end
 		
 		
