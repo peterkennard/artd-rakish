@@ -12,7 +12,7 @@ require 'open3.rb'
 module Kernel # :nodoc:
 
 #--
-if false
+if false # set to true to view loaded items
 
   if defined?(rakish_original_require) then
 	# Ruby ships with a custom_require, override its require
