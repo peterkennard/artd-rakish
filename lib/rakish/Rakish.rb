@@ -1067,7 +1067,7 @@ module Rakish
 					rawLine = line;
 					fout.print(linePrefix) if linePrefix;
 					fout.puts line.gsub(/\#\{[^\#]+\}/) { |m|
-						eval("indent=#{$`.length}",bnd) if setIndent;
+    					eval("indent=#{$`.length}",bnd) if setIndent;
 						eval('"'+m+'"',bnd)
 					}
 				end
@@ -1357,7 +1357,7 @@ module Rakish
 			preserve = opts[:preserve];
 
 			files = FileSet.new(files); # recursively expand wildcards.
-	
+
 			destdir = File.expand_path(destdir);
 			if(destdir =~ /\/\z/)
 				# too bad rake doesn't check both, it is string based
