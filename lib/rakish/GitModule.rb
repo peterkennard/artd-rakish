@@ -14,13 +14,26 @@ module Rakish
 						origin = opts[:remote] || "origin";
 
 						puts("Git.clone -o \"#{origin}\" -n \"#{src}\" \"#{dest}\"");
-						system("git clone -o \"#{origin}\" -n \"#{src}\" \"#{dest}\"");
+						# system("git clone -o \"#{origin}\" -n \"#{src}\" \"#{dest}\"");
+						ret = `git clone -o \"#{origin}\" -n \"#{src}\" \"#{dest}\" 2>&1`
+					    if(ret =~ /fatal\:/)
+					        log.debug("#{ret}");
+					        return false;
+					    end
+					    if(!File.directory?(dest))
+					        return false;
+					    end
 						FileUtils.cd dest do
 						    # TODO: set this depending on what the platform is ?
 							# system("git config -f ./.git/config --replace-all core.autocrlf true");
 							system("git reset -q --hard");
 						end
 					end
+                    return(true);
+				end
+
+				def cloneIfAvailable(src,dest,opts={})
+			        clone(src,dest,opts);
 				end
 
 				def addRemote(dir, name, uri)
