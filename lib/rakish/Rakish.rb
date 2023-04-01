@@ -109,6 +109,10 @@ module Rakish
         $LOAD_PATH.unshift(toAdd) unless $LOAD_PATH.include?(toAdd);
     end
 
+    def self.inSetupTask()
+        (ARGV.length > 0 && (ARGV[0] =~ /[sS]etup/ ))
+    end
+
 	module Logger
 
 		@@_logger_ = ::Logger.new(STDOUT);
