@@ -8,7 +8,13 @@ module Rakish
 		# Very simple module for Git used to initialize my projects
 		module Git # :nodoc:
 
+
 			class << self
+
+                # You can disable password authentication with -o PasswordAuthentication=no. Full command would be:
+                # ssh -nT -o PasswordAuthentication=no <host>  # n no stdout output, T no tty input.
+                # GIT_SSH_COMMAND=ssh -o PasswordAuthentication=no' controls what git does with ssh
+
 				def clone(src,dest,opts={})
 					if(!File.directory?(dest))
 
@@ -46,9 +52,6 @@ module Rakish
 				end
 
 				def cloneIfAvailable(src,dest,opts={})
-                    # You can disable password authentication with -o PasswordAuthentication=no. Full command would be:
-                    # ssh -nT -o PasswordAuthentication=no <host>  # n no stdout output, T no tty input.
-                    # GIT_SSH_COMMAND=ssh -o PasswordAuthentication=no' controls what git does
                     opts[:silent] = true;
                     clone(src,dest,opts);
 				end
