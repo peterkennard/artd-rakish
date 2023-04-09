@@ -8,6 +8,12 @@ module Rakish
 		# Very simple module for Git used to initialize my projects
 		module Git # :nodoc:
 
+#     You might be able to set GIT_ASKPASS to some command that fails and returns nothing on stdout. In fact, you could probably force an error with just GIT_ASKPASS=/no/such/command –
+#     Jon Wolski
+#
+#     Can't you just filter the list before you try them? That would be more efficient. –
+#
+#     GIT_TERMINAL_PROMPT=0 –
 
 			class << self
 
