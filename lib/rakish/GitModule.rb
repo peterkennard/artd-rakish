@@ -24,17 +24,27 @@ module Rakish
 				def clone(src,dest,opts={})
 					if(!File.directory?(dest))
 
-						origin = opts[:remote] || "origin";
                         silent = opts[:silent];
 
-						puts("Git.clone -o \"#{origin}\" -n \"#{src}\" \"#{dest}\"");
+	#					puts("Git.clone -o \"#{origin}\" -n \"#{src}\" \"#{dest}\"");
 
                         ret = '';
 
                         oCommand = ENV['GIT_SSH_COMMAND']
                         begin
                             ENV['GIT_SSH_COMMAND'] = "ssh -o PasswordAuthentication=no"
- 						    ret = `git clone -o \"#{origin}\" -n \"#{src}\" \"#{dest}\" 2>&1`
+                            cmd = "git clone"
+                            if(opts[:args])
+                                cmd += " #{opts[:args]}";
+                            end
+                            cmd += " \"#{src}\" \"#{dest}\"";
+                            log.debug("#{cmd}");
+
+                            ret = "";
+                            system(cmd);
+
+                  		    # ret = "#{cmd} 2>&1`
+
                         rescue
                         ensure
                             ENV['GIT_SSH_COMMAND'] = oCommand;
@@ -48,11 +58,12 @@ module Rakish
 					    if(!File.directory?(dest))
 					        return false;
 					    end
-						FileUtils.cd dest do
-						    # TODO: set this depending on what the platform is ?
-							# system("git config -f ./.git/config --replace-all core.autocrlf true");
-							system("git reset -q --hard");
-						end
+
+# 						FileUtils.cd dest do
+# 						    # TODO: set this depending on what the platform is ?
+# 							# system("git config -f ./.git/config --replace-all core.autocrlf true");
+# 							system("git reset -q --hard");
+# 						end
 					end
                     return(true);
 				end
