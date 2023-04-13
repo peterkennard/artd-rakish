@@ -482,9 +482,9 @@ module CppProjectModule
 
 	LinkIncludeAction_ = lambda do |t,args|
 		config = t.config;
-		if(config.verbose?)
+	#	if(config.verbose?)
 			puts "generating #{t.name} from #{t.source}"
-		end
+	#	end
 
 		destfile = t.name;
 		srcpath = config.getRelativePath(t.source,File.dirname(t.name));
