@@ -113,7 +113,11 @@ module Rakish
         (ARGV.length > 0 && (ARGV[0] =~ /[sS]etup/ ))
     end
 
-	module Logger
+	# sets stdout to auto flush
+    # old_sync = $stdout.sync
+    $stdout.sync = true
+
+    module Logger
 
 		@@_logger_ = ::Logger.new(STDOUT);
 
@@ -171,7 +175,7 @@ module Rakish
 		
 		# Returns the singleton instance of ::Logger managed by the Rakish::Logger
 		def log
-			STDERR.flush;
+			# STDERR.flush;
 			::Rakish.log
 		end
 	end
@@ -299,7 +303,7 @@ module Rake
 		  $stderr.puts "(See full trace by running task with --trace)" unless options.trace
 		end
 	end
-	
+
 	class Task
 	  include Rakish::Logger
 	  
