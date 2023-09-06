@@ -24,18 +24,22 @@
     <macrodef name="createOsMacros">
         <sequential if:set="os.windows">
 
-            <exec executable="artd-rakish-find" outputproperty="rake.exec.path">
+<!--             <exec executable="artd-rakish-find" outputproperty="rake.exec.path">
                 <arg value="exec-rake.bat"/>
             </exec>
-<!--
-	for latest intellij ant this script fails !!!
-
-                    <script language="javascript">
-                        if(project.getProperty("_rake_target_") == "_not_set_") {
-                        project.setProperty("_rake_target_", self.getOwningTarget());
-                        }
-			          </script>
 -->
+            <property name="rake.exec.path"
+                      value="rake" />
+
+            <!--
+                for latest intellij ant this script fails !!!
+
+                                <script language="javascript">
+                                    if(project.getProperty("_rake_target_") == "_not_set_") {
+                                    project.setProperty("_rake_target_", self.getOwningTarget());
+                                    }
+                                  </script>
+            -->
             <macrodef name="call-rake">
                 <attribute name="file" default="./rakefile.rb"/>
                 <attribute name="target" default="_" />
@@ -54,8 +58,8 @@
                         <arg value="@{file}"/>
                         <arg value="@{trace}"/>
                         <arg value="${_rake_target_}"/>
-                        <arg value="&quot;'IDEA_PROJECT=@{idea.project}'&quot;"/>
-                        <arg value="&quot;'JAVA_HOME=@{java.home}'&quot;"/>
+                        <arg value="&quot;IDEA_PROJECT=@{idea.project}&quot;"/>
+                        <arg value="&quot;JAVA_HOME=@{java.home}&quot;"/>
                     </exec>
                     <record name="@{log}" action="stop"/>
                 </sequential>
