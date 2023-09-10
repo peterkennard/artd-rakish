@@ -12,7 +12,7 @@ require 'open3.rb'
 module Kernel # :nodoc:
 
 #--
-if false
+if false # set to true to view loaded items
 
   if defined?(rakish_original_require) then
 	# Ruby ships with a custom_require, override its require
@@ -109,7 +109,15 @@ module Rakish
         $LOAD_PATH.unshift(toAdd) unless $LOAD_PATH.include?(toAdd);
     end
 
-	module Logger
+    def self.inSetupTask()
+        (ARGV.length > 0 && (ARGV[0] =~ /[sS]etup/ ))
+    end
+
+	# sets stdout to auto flush
+    # old_sync = $stdout.sync
+    $stdout.sync = true
+
+    module Logger
 
 		@@_logger_ = ::Logger.new(STDOUT);
 
@@ -167,7 +175,7 @@ module Rakish
 		
 		# Returns the singleton instance of ::Logger managed by the Rakish::Logger
 		def log
-			STDOUT.flush;
+			# STDERR.flush;
 			::Rakish.log
 		end
 	end
@@ -295,7 +303,7 @@ module Rake
 		  $stderr.puts "(See full trace by running task with --trace)" unless options.trace
 		end
 	end
-	
+
 	class Task
 	  include Rakish::Logger
 	  
@@ -1067,7 +1075,7 @@ module Rakish
 					rawLine = line;
 					fout.print(linePrefix) if linePrefix;
 					fout.puts line.gsub(/\#\{[^\#]+\}/) { |m|
-						eval("indent=#{$`.length}",bnd) if setIndent;
+    					eval("indent=#{$`.length}",bnd) if setIndent;
 						eval('"'+m+'"',bnd)
 					}
 				end
@@ -1314,10 +1322,10 @@ module Rakish
 		end
 		
 		# Create a single simple "copy" task to process source file 
-		# file of same name in destination directory
+		# file to a destination file
 		#
 		# if &block is not given, then a simple copy action
-		#    do |t| { cp(t.source, t.name) } 
+		#    do |t| { cp(t.source, t.name) }
 		# is used
 		#
 		# <b>named arguments:</b>
@@ -1325,8 +1333,8 @@ module Rakish
 		#
 		# returns the task created
 		
-		def createCopyTask(destDir,sourceFile,opts={},&block) 
-			createFileTask("#{destDir}/#{File.basename(sourceFile)}",sourceFile,opts,&block)
+		def createCopyTask(sourceFile,destFile,opts={},&block)
+			createFileTask("#{destFile}",sourceFile,opts,&block)
 		end
 		
 		
@@ -1357,7 +1365,7 @@ module Rakish
 			preserve = opts[:preserve];
 
 			files = FileSet.new(files); # recursively expand wildcards.
-	
+
 			destdir = File.expand_path(destdir);
 			if(destdir =~ /\/\z/)
 				# too bad rake doesn't check both, it is string based

@@ -108,12 +108,18 @@ class Build
           end
 
           unless(opts[:optional] && (!File.exist?(path)))
+
             FileUtils.cd(projdir) do
               if(require(path))
-                #	puts "project #{path} loaded" if verbose?
+                puts "project #{path} loaded"; # if verbose?
               end
             end
-            projs |= @projectsByFile[path];
+            proj = @projectsByFile[path];
+            if(proj)
+                projs |= proj;
+            else
+                log.debug("\"#{path}\" does not define a Rakish.Project");
+            end
           end
         end
       rescue LoadError => e
@@ -380,7 +386,7 @@ public
     # end
 
     projectDependencies = args[:dependsUpon] || Array.new;
-    optionalProjectDependencies = args[:dependsOptionallyUpon];
+    optionalProjectDependencies = args[:dependsUponOpt];
 
     parent = @build.configurationByName(args[:config]);
 
@@ -410,7 +416,7 @@ public
       end
 
       if(optionalProjectDependencies)
-        projs = @build.loadProjects(*optionalProjectDependencies, :optional=>TRUE);
+        projs = @build.loadProjects(*optionalProjectDependencies, :optional=>true);
         @dependencies = @dependencies + (projs - @dependencies);
       end
 
@@ -557,6 +563,7 @@ public
 #   :config      => explicit parent configuration name, defaults to 'root'
 #   :dependsUpon => array of project directories or specific rakefile paths this project
 #                   depends upon
+#   :dependsUponOpt => array of OPTIONAL dependencies
 #   :id          => uuid to assign to project in "uuid string format"
 #                    '2CD0548E-6945-4b77-83B9-D0993009CD75'
 #   :includes    => If provided, ProjectModules and other modules to "include" in this project.
