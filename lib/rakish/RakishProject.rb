@@ -279,6 +279,9 @@ public
 		self
 	end
 
+  def projectByName(name)
+    Rakish.projectByName(name)
+  end
 	# list of projects specified that this is dependent on ( not recursive - only direct dependencies )
 	attr_reader :dependencies
 
