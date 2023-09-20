@@ -110,7 +110,8 @@ module Rakish
     end
 
     def self.inSetupTask()
-        (ARGV.length > 0 && (ARGV[0] =~ /[sS]etup/ ))
+        (ARGV.length > 0 && (ARGV[0] =~ /[sS]etup/ )
+          || (ARGV.length > 1 && (ARGV[0] === "__recursing__") && (ARGV[1] =~ /[sS]etup/)) 
     end
 
 	# sets stdout to auto flush
