@@ -109,12 +109,18 @@ module Rakish
         $LOAD_PATH.unshift(toAdd) unless $LOAD_PATH.include?(toAdd);
     end
 
+    # TODO: this could be optimized a bit - cache value.
     def self.inSetupTask()
-        (ARGV.length > 0 && (ARGV[0] =~ /[sS]etup/ )
-          || (ARGV.length > 1 && (ARGV[0] === "__recursing__") && (ARGV[1] =~ /[sS]etup/)) 
+        if(ARGV.length > 0 && (ARGV[0] =~ /[sS]etup/ ))
+	    return(true);
+	end
+        if(ARGV.length > 1 && (ARGV[1] =~ /[sS]etup/ ))
+	    return(ARGV[0] === "__recursing__");
+	end
+	return(false);
     end
 
-	# sets stdout to auto flush
+    # sets stdout to auto flush
     # old_sync = $stdout.sync
     $stdout.sync = true
 
