@@ -73,7 +73,7 @@ module Rakish
 	if(HostIsUnix_)
 
 		def self.raspiCheck
-			if(File.exists? '/usr/bin/raspi-config')
+			if(File.exist? '/usr/bin/raspi-config')
 				releaseInfo = {};
 				File.open('/etc/os-release') do |f|
 					f.each do |line|
@@ -756,7 +756,7 @@ module Rakish
 
         def findFile(name,opts={})
             if(File.path_is_absolute?(name))
-                onNotFound(name,opts) if(opts[:onMissing] && (!File.exists?(name)))
+                onNotFound(name,opts) if(opts[:onMissing] && (!File.exist?(name)))
                 return(name);
             end
             found = nil;
@@ -764,14 +764,14 @@ module Rakish
             @path_.each do |path|
                 path = "#{path}/#{name}";
                 unless suffi
-                    if(File.exists?(path))
+                    if(File.exist?(path))
                         found=File.absolute_path(path);
                         break;
                     end
                 else
                     suffi.each do |suff|
                         fpath="#{path}.exe";
-                        if(File.exists?(fpath))
+                        if(File.exist?(fpath))
                             found=File.absolute_path(fpath);
                             break;
                         end
@@ -935,7 +935,7 @@ module Rakish
 
 		# Get time stamp of file or directory
 		def filetime(name)
-			File.exists?(name) ? File.mtime(name.to_s) : Rake::EARLY
+			File.exist?(name) ? File.mtime(name.to_s) : Rake::EARLY
 		end
 
         # Are there any tasks in the iterable 'tasks' list with an earlier 'time' than the given time stamp?

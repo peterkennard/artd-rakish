@@ -99,7 +99,7 @@ module CTools
 
         # only touch file if new file differs from old one
 
-		if(!File.exists?(outName) || textFilesDiffer(outName,tempfile))
+		if(!File.exist?(outName) || textFilesDiffer(outName,tempfile))
             # @#$#@$#@ messed up. set time of new file ahead by one second.
             # seems rake time resolution is low enough that the comparison often says
             # times are equal between depends files and depends.rb.
@@ -190,7 +190,7 @@ module CTools
 				end
 				t.prerequisites.each do |dep|
 					next unless (dep.pathmap('%x') == '.raked')
-					next unless (File.exists?(dep))
+					next unless (File.exist?(dep))
  					system "cat \'#{dep}\' >> depends.rb"
 				end
 			end
@@ -532,7 +532,7 @@ module CppProjectModule
 			end
 			objs.each do |obj|
 			 	raked = obj.pathmap('%n.raked');
-				if(File.exists?(raked))
+				if(File.exist?(raked))
 					system "cat \'#{raked}\' >> depends.rb"
 			    	end
 			end
@@ -908,7 +908,7 @@ public
 		unless defined? @@buildId_
 			idfile = "#{@buildDir}/obj/.rakishBuildId.txt"
 
-			if File.exists? idfile
+			if File.exist? idfile
 				File.open(idfile,'r') do |file|
 					file.each_line do |l|
 						if(l =~ /buildId = "/)
