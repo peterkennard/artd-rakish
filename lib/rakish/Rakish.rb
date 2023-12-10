@@ -182,7 +182,8 @@ module Rakish
 		
 		# Returns the singleton instance of ::Logger managed by the Rakish::Logger
 		def log
-			# STDERR.flush;
+			STDERR.flush;
+			STDOUT.flush;
 			::Rakish.log
 		end
 	end
