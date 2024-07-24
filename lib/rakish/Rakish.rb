@@ -95,6 +95,23 @@ module Rakish
 		HostIsRaspberiPi_ = raspiCheck
 	end
 
+    def self.getBuildHost_()
+        if(HostIsWindows_)
+            return("Windows");
+        end
+        if(HostIsMac_)
+            return("MacOS");
+        end
+        if(HostIsUnix_)
+            return("Linux");
+        end
+        return("Unknown");
+    end
+
+    def self.buildHost()
+        @@buildHost_ ||= getBuildHost_();
+    end
+
 	# Logger module
 	# To use this Logger initialization include it in a class or module
 	# enables log.debug { "message" } etc 
