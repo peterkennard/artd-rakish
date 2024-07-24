@@ -166,6 +166,10 @@ end
 class BuildConfig
 	include Util
 
+    def buildHost()
+        Rakish::buildHost
+    end
+
     # this may need to be changed as rake evolves
     def self.task(*args,&block)
         Rake::Task.define_task(*args, &block)
