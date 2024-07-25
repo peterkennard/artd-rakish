@@ -2201,7 +2201,145 @@ module Rakish
 
 	end
 
-    # :nodoc: not used curently
-	# Semaphore = CountingSemaphore
+    class Build
+        include Rakish::Util
 
-end
+        def setStartTime()
+            log.info("Starting build.");
+            @startTime = Time.new
+        end
+
+        def initialize # :nodoc:
+
+            @projects=[]
+            @projectsByModule={}
+            @projectsByFile={}  # each entry is an array of one or more projects
+            @configurationsByName={}
+            @registrationIndex_ = 0;
+
+            task :resolve do |t|
+              if(defined? Rakish::GlobalConfig.instance.nativeConfigName)
+                  log.info "Starting build. for #{Rakish::GlobalConfig.instance.nativeConfigName}\""
+                else
+                #	if(Rakish::GlobalConfig.instance)
+                #		Rakish::GlobalConfig.instance.nativeConfigName() = "not set";
+                #	end
+                end
+                @projects.each do |p|
+                    p.preBuild
+                    p.resolveExports
+                end
+            end
+
+            task :_end_ do |t|
+                onComplete();
+            end
+
+            Rake.application.top_level_tasks.insert(0,:resolve);
+            Rake.application.top_level_tasks << :_end_;
+        end
+
+        def verbose? # :nodoc:
+            true
+        end
+
+        # Called when the rake invocation of this Rakish::Build is complete.
+        # Prints a log.info message of the time taken to execute this invocation of 'rake'.
+        def onComplete
+            dtime = Time.new.to_f - @startTime.to_f;
+            ztime = (Time.at(0).utc) + dtime;
+            puts(ztime.strftime("Build complete in %H:%M:%S:%3N"))
+            0
+        end
+
+        def registerProject(p) # :nodoc: internal used by projects to register themselves wheninitialized
+        pname = p.projectName;
+        if(@projectsByModule[pname])
+          raise("Error: project \"#{pname}\" already registered")
+        end
+        @projects << p;
+        @projectsByModule[pname]=p;
+        (@projectsByFile[p.projectFile]||=[]).push(p);
+        @registrationIndex_ = @registrationIndex_ + 1;
+        end
+
+        def registerConfiguration(c) # :nodoc: internal used by configurations to register themselves when initialized
+            if(@configurationsByName[c.name])
+                raise("Error: configuration \"#{c.name}\" already registered");
+            end
+            @configurationsByName[c.name]=c;
+        end
+
+        # Retrieve an initialized Rakish.Configuration[link:./Rakish.html#method-c-Configuration] by name.
+        # If name is nil retrieves the 'root' configuration
+        def configurationByName(name)
+        @configurationsByName[name||'root']
+        end
+
+        # Retrieve a Rakish.Project[link:./Rakish.html#method-c-Project] by the project name, nil if not found.
+        def projectByName(name)
+            @projectsByModule[name];
+        end
+
+        # load other project rakefiles from a project into the interpreter unless they have already been loaded
+        # selects namespace appropriately
+        # returns array of all projects referenced directly by this load
+
+        def loadProjects(*args) # :nodoc: knternal called by RakishProject to load dependencies.
+
+            opts = (Hash === args.last) ? args.pop : {}
+            rakefiles = FileSet.new(args);
+            projs=[];
+            FileUtils.cd File.expand_path(pwd) do;
+                namespace ':' do
+                  lastpath = '';
+                  begin
+                    rakefiles.each do |path|
+                      lastpath = path;
+                      projdir = nil;
+
+                      if(File.directory?(path))
+                        projdir = path;
+                        path = File.join(projdir,'rakefile.rb');
+                      else
+                        projdir = File.dirname(path);
+                      end
+
+                      unless(opts[:optional] && (!File.exist?(path)))
+
+                        FileUtils.cd(projdir) do
+                          if(require(path))
+                            puts "project #{path} loaded"; # if verbose?
+                          end
+                        end
+                        proj = @projectsByFile[path];
+                        if(proj)
+                            projs |= proj;
+                        else
+                            log.debug("\"#{path}\" does not define a Rakish.Project");
+                        end
+                      end
+                    end
+                  rescue LoadError => e
+                    log.error("#{e}");
+                    raise e;
+                  end
+                end # namespace
+            end # cd
+            projs
+        end
+
+    end # end Build
+
+    # global singleton for a build
+    def self.build
+        unless defined? @application
+            @application = Rakish::Build.new
+            @application.setStartTime();
+        end
+        @application
+    end
+
+    # initialize global singleton and start here
+    Rakish::build
+end # end Rakish
